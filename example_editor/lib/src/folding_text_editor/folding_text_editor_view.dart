@@ -19,6 +19,7 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
   late Editor _editor;
   late MutableDocumentComposer _composer;
   late DocumentStructure _documentStructure;
+  late ChildOnlyDocumentFoldingState _foldingState;
 
   late FocusNode _editorFocusNode;
 
@@ -56,7 +57,21 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
         ),
         ParagraphNode(
           id: Editor.createNodeId(),
+          text: AttributedText('Dies hier ist Urenkel.'),
+          metadata: {
+            'depth': 3,
+          },
+        ),
+        ParagraphNode(
+          id: Editor.createNodeId(),
           text: AttributedText('Dies hier ist ein zweites Enkelkind.'),
+          metadata: {
+            'depth': 2,
+          },
+        ),
+        ParagraphNode(
+          id: Editor.createNodeId(),
+          text: AttributedText('Dies hier ist ein drittes Enkelkind.'),
           metadata: {
             'depth': 2,
           },
@@ -72,11 +87,14 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
     );
     _documentStructure = MetadataDepthDocumentStructure(_document);
     _composer = MutableDocumentComposer();
+    _foldingState =
+        ChildOnlyDocumentFoldingState(documentStructure: _documentStructure);
     _editor = Editor(
       editables: {
         Editor.documentKey: _document,
         Editor.composerKey: _composer,
         'structure': _documentStructure,
+        'foldingState': _foldingState,
       },
       requestHandlers: List.from(defaultRequestHandlers),
       reactionPipeline: [
@@ -103,6 +121,25 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
           title: const Text('Folding Text Editor' /*l10n.counterAppBarTitle*/)),
       body: SuperEditor(
         editor: _editor,
+        stylesheet: defaultStylesheet.copyWith(
+          documentPadding: EdgeInsets.zero,
+          rules: [
+            StyleRule(
+              BlockSelector.all,
+              (doc, docNode) {
+                return {
+                  Styles.maxWidth: 640.0,
+                  Styles.padding: const CascadingPadding.symmetric(vertical: 6),
+                  Styles.textStyle: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 18,
+                    height: 1.4,
+                  ),
+                };
+              },
+            ),
+          ],
+        ),
         documentLayoutBuilder: ({
           required SingleColumnLayoutPresenter presenter,
           Key? key,
@@ -111,12 +148,14 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
           bool showDebugPaint = false,
         }) =>
             SingleColumnFoldingLayout(
-              key: key,
-              presenter: presenter,
-              componentBuilders: componentBuilders,
-              onBuildScheduled: onBuildScheduled,
-              showDebugPaint: showDebugPaint,
-            ),
+          key: key,
+          presenter: presenter,
+          componentBuilders: componentBuilders,
+          onBuildScheduled: onBuildScheduled,
+          showDebugPaint: showDebugPaint,
+          documentStructure: _documentStructure,
+          editor: _editor,
+        ),
       ),
     );
   }

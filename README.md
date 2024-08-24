@@ -26,16 +26,19 @@ pub package.
 Ich habe hier unterschiedliche Funktionen, bei denen ich prüfen muss, wo ich sie in die 
 SuperEditor-Pipeline integriere:
 
-- Darstellung: Das ist eine Aufgabe der Layout-Klasse, keine der Komponenten. Wird implementiert
+- *Darstellung* der Baumstruktur: Das ist eine Aufgabe der Layout-Klasse, keine der Komponenten. Wird implementiert
   in `SingleColumnFoldingLayout`.
 - *Ermitteln* der Dokumentstruktur: Dies muss abgekoppelt sein von einer konkreten
-  Document-Implementierung, um meine Erweitergung formatagnostisch zu halten. Die Logik wird 
+  Document-Implementierung, um meine Erweiterung format- und implementierungsagnostisch zu halten. Die Logik wird 
   gekapselt in einem `DocumentStructureProvider`. Die Frage ist, wo ich diesen andocke:
   - Als `Reaction`? Von diesen sind regelmäßig als Raktion weitere Eingriffe in die Dokument-
     Struktur zu erwarten. Das sehe ich eigentlich erstmal nicht -- wobei ich es nicht für 
     ausgeschlossen halte, dass Commands Dinge ändern, die Anlass geben, nicht nur die Struktur 
-    anzupassen, sondern bestimmte Daten auch korrigierend zurückzuschreiben.
-  - Oder als `Listener`? Diese verändern das Dokument nicht. Wenn ich zum Schluss komme, dass es
+    anzupassen, sondern bestimmte Daten auch durch die Struktur korrigierend zurückzuschreiben. 
+    Allerdings sollten Korrekturen von Fehlern der vorgelagerten Stufen hier nicht erfolgen,
+    sondern die Ursache behoben werden. Außderdem gilt, solange ich keinen Anwendungsfall habe,
+    YAGNI - you ain't gonna need it.
+  - Alternative: Als `Listener`. Diese verändern das Dokument nicht. Wenn ich zum Schluss komme, dass es
     für Änderungen an dieser Stelle keinen wirklich legitimen Grund gibt, sollte ich hierauf gehen.
     Hierfür spricht auch, dass es die Gefahr von Zirkeln vermindert, und allgemeine Erwägungen
     einer Separation of Concerns.
@@ -44,17 +47,39 @@ SuperEditor-Pipeline integriere:
   denn ein "Ausrücken" von Kindern schiebt sie z.B. oft nach unten als nächstes Geschwisterkind
   des vorherigen Elternknotens. Es ist wünschenswert, diese Logik zentral anzubieten, da 
   wahrscheinlich einige Commands darauf werden zurückgreifen müssen. Es ist außerdem wünschenswert,
-  diese Logik von meinem DocumentStructureProvider getrennt zu halten, weil durchaus ein Bedürfnis
+  diese Logik von meinem `DocumentStructureProvider` getrennt zu halten, weil durchaus ein Bedürfnis
   nach unterschiedlichen Kombinationen von Strukturgenerierung und Bearbeitungslogik bestehen 
-  können.
+  können. Effektiv ist das so eine Art Controller, oder? 
 - Der eigentliche Folding-Zustand: Abschnitte können ein- oder ausgeklappt sein und das ist
-  Zustand. Er gehört deshalb in ein `Editable`. 
+  Zustand, der gegebenenfalls auch programmatisch gesteuert werden muss (nicht nur in einem 
+  StetefulWidget). Er gehört deshalb in ein `Editable`. 
 - Auswahlverhalten: Bei einem klassischen Outline-Dokument riskiere ich unerwünschte Ergebnisse,
   wenn ich beliebige Selektionen über Node-Grenzen hinweg (z.B. auch über Kinder und Eltern
   hinweg) erlaube. Outliner wie dynalist selektieren deshalb z.B. alle Abkömmlinge, wenn ich mit
   der Selektion von einem Kind in den Eltern-Node komme; Tana wiederum macht es nochmal anders.
-  Evl. wäre es gut, mehrere `Reaction`s anzubieten, so dass der Entwickler wählen kann, welche
-  für ihn sinnvoll ist.
+  Evl. wäre es gut, mehrere `Reaction`s anzubieten, die jeweils die `Selection` verändern können,
+  so dass der Entwickler wählen kann, welche für ihn sinnvoll ist.
+
+## Wichtige aktuelle Anliegen: 
+### Layout-Klasse ausgeblendete Components überspringen lassen
+
+Hierfür müssen einige Methoden überarbeitet werden:
+  - [X] _findFirstPosition kann so bleiben, erster Node ist *nie* ausgeblendet
+  - [ ] _findLastPosition
+  - [ ] _findComponentClosestToOffset(documentOffset)
+  - [ ] _isBEyondDOcumentEnd - muss ausgeblendete Komponenten überspringen, oder diese tauchen nicht
+        in _topToBottomComponentKeys auf
+  - [ ] getEdgeForPosition - entweder mache ich das so, dass diese Methode `null` zurückgibt, wenn 
+        die übergebene DocumentPosition auf eine eingeklappte Komponente zeigt. Oder aber das Layout
+        entscheidet, in solchen Fällen erst auszuklappen, bevor es die Edge zurückgibt. Vielleicht
+        erstmal ersteres ausprobieren.
+  - [ ] getRectForPosition - siehe oben
+  - [ ] getRectForSelection - wie gehe ich mit einer Selection, die vollständig, teilweise bzw.
+        überlappend oder aber ganz umfassend über einem eingeklappten Bereich liegt. Hier spricht
+        einiges dafür, darauf zu achten, dass eine Selection, die ein Parent und eins seiner 
+        Children umfasst, zwangsläufig alle Children ganz umfasst.
+
+### DocumentStructureProvider zu einem Listener machen
 
 ## Features
 

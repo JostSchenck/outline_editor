@@ -2,13 +2,11 @@
 
 import 'dart:math';
 
-import 'package:structured_rich_text_editor/src/document_structure/document_structure.dart';
 import 'package:structured_rich_text_editor/structured_rich_text_editor.dart';
 
 import './hideable_node_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:super_editor/super_editor.dart';
 
 /// Creates a widget for a given [DocumentStructureTreeNode] that wraps the
 /// components representing that node. This widget will decide whether to
@@ -20,24 +18,61 @@ import 'package:super_editor/super_editor.dart';
 /// around the given [DocumentStructureTreeNode]s child nodes; it is the
 /// responsibility of the [SingleColumnFoldingLayout] class to recurse the
 /// document structure and call the builder where needed.
-typedef FoldingWidgetBuilder = Widget Function(
-  DocumentStructureTreeNode,
-  List<Widget> components,
-  List<Widget> childNodeWidgets,
-);
+typedef FoldingWidgetBuilder = Widget Function({
+  required DocumentStructureTreeNode treeNode,
+  required List<Widget> components,
+  required List<Widget> childNodeWidgets,
+  required Editor editor,
+});
 
-Widget _defaultFoldingWidgetBuilder(
-  DocumentStructureTreeNode treeNode,
-  List<Widget> components,
-  List<Widget> childNodeWidgets,
-) {
+Widget _defaultFoldingWidgetBuilder({
+  required DocumentStructureTreeNode treeNode,
+  required List<Widget> components,
+  required List<Widget> childNodeWidgets,
+  required Editor editor,
+}) {
   return HideableNodeWidget(
+    treeNode: treeNode,
     components: components,
     childNodeWidgets: childNodeWidgets,
+    onFoldingStart: () {
+      // If the selection or a part of it is in some child node that is about
+      // to be folded, move it to the end of the folding node itself, which
+      // will not be hidden.
+      // throw 'TODO IMPLEMENT onFoldingStart';
+      final composer = editor.maybeComposer;
+      if (composer != null &&
+          composer.selection != null &&
+          childNodeWidgets.isNotEmpty) {
+        final base = composer.selection!.base;
+        final extent = composer.selection!.extent;
+        final document = editor.document;
+        final range = treeNode.documentRangeForChildren;
+        // find first node and last node of my children and
+        // check if either base or extent is in the range between. If yes,
+        // collapse selection and move to the end of my own nodes.
+        for (var node in document.getNodesInside(range.start, range.end)) {
+          if (base.nodeId == node.id || extent.nodeId == node.id) {
+            composer.selection!.collapse();
+            final newPosition = DocumentPosition(
+              nodeId: treeNode.documentNodeIds.last,
+              nodePosition: document
+                  .getNodeById(treeNode.documentNodeIds.last)!
+                  .endPosition,
+            );
+            composer.setSelectionWithReason(
+              DocumentSelection(
+                  base: newPosition,
+                  extent: newPosition),
+            );
+          }
+        }
+      }
+    },
   );
 }
 
-/// Displays a document in a single-column layout.
+/// Displays a document in a single-column layout, allowing for folding.
 ///
 /// [SingleColumnFoldingLayout] displays a series of visual "components".
 /// The components are positioned vertically in a column with some space
@@ -60,11 +95,18 @@ class SingleColumnFoldingLayout extends StatefulWidget {
     this.onBuildScheduled,
     this.showDebugPaint = false,
     this.foldingWidgetBuilder = _defaultFoldingWidgetBuilder,
+    required this.documentStructure,
+    required this.editor,
   }) : super(key: key);
 
   /// Presenter that provides a view model for a complete single-column
   /// document layout.
   final SingleColumnLayoutPresenter presenter;
+
+  /// Editor for the shown document. We need this, because a folding layout
+  /// typically offers widgets that may need access to the Composer or the
+  /// Editor.
+  final Editor editor;
 
   /// Builders for every type of component that this layout displays.
   ///
@@ -90,6 +132,8 @@ class SingleColumnFoldingLayout extends StatefulWidget {
   /// Builder function that wraps a folding widget around the components
   /// representing a structure node.
   final FoldingWidgetBuilder foldingWidgetBuilder;
+
+  final DocumentStructure documentStructure;
 
   @override
   State createState() => _SingleColumnFoldingLayoutState();
@@ -823,26 +867,10 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   }
 
   List<Widget> _buildDocComponents() {
-    Widget _createFoldingWidgetTree({
-      required Document doc,
-      required DocumentStructureTreeNode node,
-    }) {
-      if (node.children.isEmpty) {
-        return widget.foldingWidgetBuilder(
-          node,
-          node.documentNodeIds.map((id) {
-
-            return doc.getNodeById(id)!;
-          }),
-          []
-        );
-      }
-      throw 'TODO';
-    }
-
     editorLayoutLog.fine('Building all document layout components');
 
-    final docComponents = <Widget>[];
+    // final docComponents = <Widget>[];
+
     final newComponentKeys = <String, GlobalKey>{};
     final newNodeIds = <GlobalKey, String>{};
     _topToBottomComponentKeys.clear();
@@ -850,7 +878,6 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     final viewModel = widget.presenter.viewModel;
     editorLayoutLog.fine("Rendering layout view model: ${viewModel.hashCode}");
 
-    final List<HideableNodeWidget> curHNWStack = [];
     for (final componentViewModel in viewModel.componentViewModels) {
       final componentKey = _obtainComponentKeyForDocumentNode(
         newComponentKeyMap: newComponentKeys,
@@ -860,48 +887,11 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
       editorLayoutLog
           .finer('Node -> Key: ${componentViewModel.nodeId} -> $componentKey');
 
+      // TODO: vielleicht nicht mehr erforderlich, weil ich in den Methoden,
+      // die eine Komponente nach Offset suchen, möglicherweise im Baum suchen
+      // muss? Oder ist es egal, weil die Methoden eh das Widget fragen und
+      // damit an meinen FoldingWidgets vorbei auf die Komponente gehen?
       _topToBottomComponentKeys.add(componentKey);
-
-      final newHideableNodeWidget = HideableNodeWidget(
-        components:
-            // Rebuilds whenever this particular component view model changes
-            // within the overall layout view model.
-            _PresenterComponentBuilder(
-          presenter: widget.presenter,
-          watchNode: componentViewModel.nodeId,
-          builder: (context, newComponentViewModel) {
-            // Converts the component view model into a widget.
-            return _Component(
-              componentBuilders: widget.componentBuilders,
-              componentKey: componentKey,
-              componentViewModel: newComponentViewModel,
-            );
-          },
-        ),
-        childNodeWidgets: const [],
-      );
-      docComponents.add(newHideableNodeWidget);
-      // if (docComponents.isEmpty) {
-      //   if componentVi
-      //   // TODO
-      // }
-
-      // docComponents.add(
-      //   // Rebuilds whenever this particular component view model changes
-      //   // within the overall layout view model.
-      //   _PresenterComponentBuilder(
-      //     presenter: widget.presenter,
-      //     watchNode: componentViewModel.nodeId,
-      //     builder: (context, newComponentViewModel) {
-      //       // Converts the component view model into a widget.
-      //       return _Component(
-      //         componentBuilders: widget.componentBuilders,
-      //         componentKey: componentKey,
-      //         componentViewModel: newComponentViewModel,
-      //       );
-      //     },
-      //   ),
-      // );
     }
 
     _nodeIdsToComponentKeys
@@ -917,7 +907,57 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
       editorLayoutLog.finer('   - $key: $value');
     });
 
-    return docComponents;
+    // return docComponents;
+    return widget.documentStructure.structure
+        .map((treeNode) => _createFoldingWidgetTree(
+              treeNode: treeNode,
+              newComponentKeyMap: newComponentKeys,
+            ))
+        .toList();
+
+    /// TODO: Hier wird der presenter aus super_editor benutzt, nicht der lokale
+    /// muss ich einen eigenen Presenter implementieren? Woher bekomme ich
+    /// meinen DocumentStructureProvider?
+  }
+
+  /// Recursively wraps the document nodes of the given `treeNode` and its
+  /// children into a "folding widget", ie. a generally a widget that allows
+  /// for hiding and showing of content by buttons.
+  Widget _createFoldingWidgetTree({
+    required DocumentStructureTreeNode treeNode,
+    required Map<String, GlobalKey> newComponentKeyMap,
+  }) {
+    return widget.foldingWidgetBuilder(
+      treeNode: treeNode,
+      components: treeNode.documentNodeIds.map(
+        (id) {
+          return _PresenterComponentBuilder(
+            presenter: widget.presenter,
+            watchNode: id,
+            builder: (context, newComponentViewModel) {
+              // Converts the component view model into a widget.
+              return _Component(
+                componentBuilders: widget.componentBuilders,
+                componentKey: _obtainComponentKeyForDocumentNode(
+                  newComponentKeyMap: newComponentKeyMap,
+                  nodeId: id,
+                ),
+                componentViewModel: newComponentViewModel,
+              );
+            },
+          );
+        },
+      ).toList(),
+      childNodeWidgets: treeNode.children
+          .map(
+            (childTreeNode) => _createFoldingWidgetTree(
+              treeNode: childTreeNode,
+              newComponentKeyMap: newComponentKeyMap,
+            ),
+          )
+          .toList(),
+      editor: widget.editor,
+    );
   }
 
   /// Obtains a `GlobalKey` that should be attached to the component

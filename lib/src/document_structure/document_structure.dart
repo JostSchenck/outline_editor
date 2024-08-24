@@ -4,6 +4,15 @@ import 'package:super_editor/super_editor.dart';
 abstract class DocumentStructure implements Editable {
   List<DocumentStructureTreeNode> get structure;
 
+  DocumentStructureTreeNode getTreeNodeForDocumentNode(String nodeId) {
+    for (var treeNode in structure) {
+      final foundNode = treeNode.getTreeNodeForDocumentNode(nodeId);
+      if (foundNode != null) return foundNode;
+    }
+    throw Exception(
+        'Did not find DocumentStructureTreeNode for DocumentNode $nodeId');
+  }
+
   void rebuildStructure();
 
   @override
@@ -41,10 +50,15 @@ class MetadataDepthDocumentStructure extends DocumentStructure {
     // TODO: implement rebuildStructure
     _treeNodes.clear();
     List<DocumentStructureTreeNode> treeNodeStack = [];
+    int lastDepth = 0;
     for (final documentNode in _document) {
-      final int depth = documentNode.metadata['depth'];
-      final newTreeNode =
-          DocumentStructureTreeNode(documentNodeIds: [documentNode.id]);
+      final int depth = documentNode.metadata['depth'] ?? lastDepth;
+      lastDepth = depth;
+      final newTreeNode = DocumentStructureTreeNode(
+        document: _document,
+        documentNodeIds: [documentNode.id],
+        id: 'tn_${documentNode.id}',
+      );
 
       if (depth == 0) {
         treeNodeStack.clear();
@@ -66,8 +80,8 @@ class MetadataDepthDocumentStructure extends DocumentStructure {
       } else {
         if (depth > treeNodeStack.length) {
           throw Exception('depth may only move up in single steps '
-             'but a node of depth $depth was found following one of '
-             'depth ${treeNodeStack.length-1}');
+              'but a node of depth $depth was found following one of '
+              'depth ${treeNodeStack.length - 1}');
         }
         if (depth < 0) {
           throw Exception('illegal depth of $depth found');
@@ -85,14 +99,123 @@ class DocumentStructureTreeNode {
   DocumentStructureTreeNode({
     List<String>? documentNodeIds,
     List<DocumentStructureTreeNode>? children,
+    this.parent,
+    required this.id,
+    required this.document,
   }) {
-    if (documentNodeIds!=null) _documentNodeIds.addAll(documentNodeIds);
-    if (children!=null) _children.addAll(children);
+    if (documentNodeIds != null) _documentNodeIds.addAll(documentNodeIds);
+    if (children != null) _children.addAll(children);
+    for(var child in _children) {
+      child.parent = this;
+    }
   }
 
   final List<String> _documentNodeIds = [];
   final List<DocumentStructureTreeNode> _children = [];
+  DocumentStructureTreeNode? parent;
+  final String id;
+  final Document document;
 
   List<String> get documentNodeIds => _documentNodeIds;
+
   List<DocumentStructureTreeNode> get children => _children;
+
+  /// Returns the id of the first document node in this tree node's whole
+  /// subtree (including this node itself), iterating through all descendents
+  /// if needed.
+  String? get firstDocumentNodeIdInSubtree {
+    if (_documentNodeIds.isNotEmpty) {
+      return _documentNodeIds.first;
+    }
+    return firstDocumentNodeIdInChildren;
+  }
+
+  /// Returns the id of the first document node in this tree node's child nodes,
+  /// iterating through all descendents if needed.
+  String? get firstDocumentNodeIdInChildren {
+    for (var child in _children) {
+      final returnNodeId = child.firstDocumentNodeIdInSubtree;
+      if (returnNodeId != null) {
+        return returnNodeId;
+      }
+    }
+    return null;
+  }
+
+  /// Returns the id of the last document node in this tree node's whole
+  /// subtree (including this node itself), iterating through all descendents
+  /// if needed.
+  String? get lastDocumentNodeIdInSubtree {
+    if (_children.isNotEmpty) {
+      return lastDocumentNodeIdInChildren;
+    }
+    return _documentNodeIds.isEmpty ? null : _documentNodeIds.last;
+  }
+
+  /// Returns the id of the last document node in this tree node's child nodes,
+  /// iterating through all descendents if needed.
+  String? get lastDocumentNodeIdInChildren {
+    if (_children.isEmpty) return null;
+    for (var child in _children.reversed) {
+      final returnNodeId = child.lastDocumentNodeIdInSubtree;
+      if (returnNodeId != null) {
+        return returnNodeId;
+      }
+    }
+    return null;
+  }
+
+  /// Searches this [DocumentStructureTreeNode]'s whole subtree and returns
+  /// the [DocumentStructureTreeNode] that holds the given id to a
+  /// [DocumentNode].
+  DocumentStructureTreeNode? getTreeNodeForDocumentNode(String nodeId) {
+    if (documentNodeIds.contains(nodeId)) return this;
+    for (var treeNode in children) {
+      final childRet = treeNode.getTreeNodeForDocumentNode(nodeId);
+      if (childRet != null) return childRet;
+    }
+    return null;
+  }
+
+  /// Returns a [DocumentRange] that spans the entire subtree of this
+  /// [TreeNode], ie. from the first node of this treeNode to the last
+  /// node of the last ancestor.
+  DocumentRange get documentRangeForSubtree {
+    final start = firstDocumentNodeIdInSubtree;
+    if (start == null) {
+      throw Exception('not a single document node found in subtree');
+    }
+    final end = lastDocumentNodeIdInSubtree!;
+    return document.getRangeBetween(
+      DocumentPosition(
+        nodeId: start,
+        nodePosition: document.getNodeById(start)!.beginningPosition,
+      ),
+      DocumentPosition(
+        nodeId: end,
+        nodePosition: document.getNodeById(end)!.endPosition,
+      ),
+    );
+  }
+
+  /// Returns a [DocumentRange] that spans the subtree of all children of this
+  /// [DocumentStructureTreeNode], ie. from the first node of this treeNodes
+  /// first child node to the last node of the last ancestor.
+  DocumentRange get documentRangeForChildren {
+    final start = firstDocumentNodeIdInChildren;
+    if (start == null) {
+      throw Exception('not a single document node found in subtree');
+    }
+    final end = lastDocumentNodeIdInChildren!;
+    return document.getRangeBetween(
+      DocumentPosition(
+        nodeId: start,
+        nodePosition: document.getNodeById(start)!.beginningPosition,
+      ),
+      DocumentPosition(
+        nodeId: end,
+        nodePosition: document.getNodeById(end)!.endPosition,
+      ),
+    );
+  }
 }
