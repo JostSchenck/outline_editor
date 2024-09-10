@@ -19,7 +19,7 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
   late Editor _editor;
   late MutableDocumentComposer _composer;
   late DocumentStructure _documentStructure;
-  late ChildOnlyDocumentFoldingState _foldingState;
+  late DocumentFoldingState _documentFoldingState;
 
   late FocusNode _editorFocusNode;
 
@@ -33,52 +33,58 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
     _document = MutableDocument(
       nodes: [
         ParagraphNode(
-          id: Editor.createNodeId(),
+          id: 'root_paragraph_0',
           text: AttributedText('Standard-Dokument, um auszuprobieren, wie ich '
               'einen Outline-Editor auf Basis eines eigenen DocumentLayouts '
-              'hinbekomme. '),
+              'hinbekomme. root_paragraph_0'),
           metadata: {
             'depth': 0,
           },
         ),
         ParagraphNode(
-          id: Editor.createNodeId(),
-          text: AttributedText('Dies hier ist ein erstes Child.'),
+          id: 'child_paragraph_A',
+          text: AttributedText(
+              'Dies hier ist ein erstes Child. child_paragraph_A'),
           metadata: {
             'depth': 1,
           },
         ),
         ParagraphNode(
-          id: Editor.createNodeId(),
-          text: AttributedText('Dies hier ist ein erstes Enkelkind.'),
+          id: 'grand_child_paragraph_A',
+          text: AttributedText(
+              'Dies hier ist ein erstes Enkelkind. grand_child_paragraph_A'),
           metadata: {
             'depth': 2,
           },
         ),
         ParagraphNode(
-          id: Editor.createNodeId(),
-          text: AttributedText('Dies hier ist Urenkel.'),
+          id: 'grand_grand_child_paragraph_A',
+          text: AttributedText(
+              'Dies hier ist Urenkel. grand_grand_child_paragraph_A'),
           metadata: {
             'depth': 3,
           },
         ),
         ParagraphNode(
-          id: Editor.createNodeId(),
-          text: AttributedText('Dies hier ist ein zweites Enkelkind.'),
+          id: 'grand_child_paragraph_B',
+          text: AttributedText(
+              'Dies hier ist ein zweites Enkelkind. grand_child_paragraph_B'),
           metadata: {
             'depth': 2,
           },
         ),
         ParagraphNode(
-          id: Editor.createNodeId(),
-          text: AttributedText('Dies hier ist ein drittes Enkelkind.'),
+          id: 'grand_child_paragraph_C',
+          text: AttributedText(
+              'Dies hier ist ein drittes Enkelkind. grand_child_paragraph_C'),
           metadata: {
             'depth': 2,
           },
         ),
         ParagraphNode(
-          id: Editor.createNodeId(),
-          text: AttributedText('Dies hier ist ein zweites Child.'),
+          id: 'child_paragraph_B',
+          text: AttributedText(
+              'Dies hier ist ein zweites Child. child_paragraph_B'),
           metadata: {
             'depth': 1,
           },
@@ -87,14 +93,13 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
     );
     _documentStructure = MetadataDepthDocumentStructure(_document);
     _composer = MutableDocumentComposer();
-    _foldingState =
-        ChildOnlyDocumentFoldingState(documentStructure: _documentStructure);
+    _documentFoldingState = DocumentFoldingState(documentStructure: _documentStructure);
     _editor = Editor(
       editables: {
         Editor.documentKey: _document,
         Editor.composerKey: _composer,
-        'structure': _documentStructure,
-        'foldingState': _foldingState,
+        documentStructureKey: _documentStructure,
+        documentFoldingStateKey: _documentFoldingState,
       },
       requestHandlers: List.from(defaultRequestHandlers),
       reactionPipeline: [
@@ -119,43 +124,10 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
     return Scaffold(
       appBar: AppBar(
           title: const Text('Folding Text Editor' /*l10n.counterAppBarTitle*/)),
-      body: SuperEditor(
+      body: StructuredEditor(
+        scrollController: _scrollController,
         editor: _editor,
-        stylesheet: defaultStylesheet.copyWith(
-          documentPadding: EdgeInsets.zero,
-          rules: [
-            StyleRule(
-              BlockSelector.all,
-              (doc, docNode) {
-                return {
-                  Styles.maxWidth: 640.0,
-                  Styles.padding: const CascadingPadding.symmetric(vertical: 6),
-                  Styles.textStyle: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 18,
-                    height: 1.4,
-                  ),
-                };
-              },
-            ),
-          ],
-        ),
-        documentLayoutBuilder: ({
-          required SingleColumnLayoutPresenter presenter,
-          Key? key,
-          List<ComponentBuilder> componentBuilders = const [],
-          VoidCallback? onBuildScheduled,
-          bool showDebugPaint = false,
-        }) =>
-            SingleColumnFoldingLayout(
-          key: key,
-          presenter: presenter,
-          componentBuilders: componentBuilders,
-          onBuildScheduled: onBuildScheduled,
-          showDebugPaint: showDebugPaint,
-          documentStructure: _documentStructure,
-          editor: _editor,
-        ),
+        focusNode: _editorFocusNode,
       ),
     );
   }

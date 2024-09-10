@@ -34,12 +34,14 @@ Widget _defaultFoldingWidgetBuilder({
   return HideableNodeWidget(
     treeNode: treeNode,
     components: components,
+    foldControlHeight: 18*1.4+2*8,
     childNodeWidgets: childNodeWidgets,
+    horizontalChildOffset: 30,
+    context: editor.context,
     onFoldingStart: () {
       // If the selection or a part of it is in some child node that is about
       // to be folded, move it to the end of the folding node itself, which
       // will not be hidden.
-      // throw 'TODO IMPLEMENT onFoldingStart';
       final composer = editor.maybeComposer;
       if (composer != null &&
           composer.selection != null &&
@@ -61,9 +63,7 @@ Widget _defaultFoldingWidgetBuilder({
                   .endPosition,
             );
             composer.setSelectionWithReason(
-              DocumentSelection(
-                  base: newPosition,
-                  extent: newPosition),
+              DocumentSelection(base: newPosition, extent: newPosition),
             );
           }
         }
@@ -95,7 +95,6 @@ class SingleColumnFoldingLayout extends StatefulWidget {
     this.onBuildScheduled,
     this.showDebugPaint = false,
     this.foldingWidgetBuilder = _defaultFoldingWidgetBuilder,
-    required this.documentStructure,
     required this.editor,
   }) : super(key: key);
 
@@ -133,8 +132,6 @@ class SingleColumnFoldingLayout extends StatefulWidget {
   /// representing a structure node.
   final FoldingWidgetBuilder foldingWidgetBuilder;
 
-  final DocumentStructure documentStructure;
-
   @override
   State createState() => _SingleColumnFoldingLayoutState();
 }
@@ -151,6 +148,10 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
 
   late SingleColumnLayoutPresenterChangeListener _presenterListener;
 
+  // The key for the renderBox that contains the actual document layout.
+  final GlobalKey _boxKey = GlobalKey();
+  BuildContext get boxContext => _boxKey.currentContext!;
+
   @override
   void initState() {
     super.initState();
@@ -160,6 +161,10 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
       onViewModelChange: _onViewModelChange,
     );
     widget.presenter.addChangeListener(_presenterListener);
+
+    widget.editor.foldingState.addListener(() {
+      setState(() {});
+    });
 
     // Build the view model now, so that any further changes to the
     // presenter send us a dirty notification.
@@ -224,7 +229,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
       Offset rawDocumentOffset) {
     // Constrain the incoming offset to sit within the width
     // of this document layout.
-    final docBox = context.findRenderObject() as RenderBox;
+    final docBox = boxContext.findRenderObject() as RenderBox;
     final documentOffset = Offset(
       // Notice the +1/-1. Experimentally, I determined that if we confine
       // to the exact width, that x-value is considered outside the
@@ -326,8 +331,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     final componentEdge = component.getEdgeForPosition(position.nodePosition);
 
     final componentBox = component.context.findRenderObject() as RenderBox;
-    final docOffset = componentBox.localToGlobal(Offset.zero,
-        ancestor: context.findRenderObject());
+    final docOffset = componentBox.localToGlobal(Offset.zero, ancestor: boxContext.findRenderObject());
 
     return componentEdge.translate(docOffset.dx, docOffset.dy);
   }
@@ -344,8 +348,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     final componentRect = component.getRectForPosition(position.nodePosition);
 
     final componentBox = component.context.findRenderObject() as RenderBox;
-    final docOffset = componentBox.localToGlobal(Offset.zero,
-        ancestor: context.findRenderObject());
+    final docOffset = componentBox.localToGlobal(Offset.zero, ancestor: boxContext.findRenderObject());
 
     return componentRect.translate(docOffset.dx, docOffset.dy);
   }
@@ -364,7 +367,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     final componentBoundingBoxes = <Rect>[];
 
     // Collect bounding boxes for all selected components.
-    final documentLayoutBox = context.findRenderObject() as RenderBox;
+    final documentLayoutBox = boxContext.findRenderObject() as RenderBox;
     if (base.nodeId == extent.nodeId) {
       // Selection within a single node.
       topComponent = extentComponent;
@@ -614,8 +617,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   Rect? _getLocalOverlapWithComponent(
       Rect region, DocumentComponent component) {
     final componentBox = component.context.findRenderObject() as RenderBox;
-    final contentOffset = componentBox.localToGlobal(Offset.zero,
-        ancestor: context.findRenderObject());
+    final contentOffset = componentBox.localToGlobal(Offset.zero, ancestor: boxContext.findRenderObject());
     final componentBounds = contentOffset & componentBox.size;
     editorLayoutLog.finest(
         "Component bounds: $componentBounds, versus region of interest: $region");
@@ -740,7 +742,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   }
 
   bool _isOffsetInComponent(RenderBox componentBox, Offset documentOffset) {
-    final containerBox = context.findRenderObject() as RenderBox;
+    final containerBox = boxContext.findRenderObject() as RenderBox;
     final contentOffset =
         componentBox.localToGlobal(Offset.zero, ancestor: containerBox);
     final contentRect = contentOffset & componentBox.size;
@@ -752,7 +754,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   /// bounds of the given [componentBox].
   double _getDistanceToComponent(
       RenderBox componentBox, Offset documentOffset) {
-    final documentLayoutBox = context.findRenderObject() as RenderBox;
+    final documentLayoutBox = boxContext.findRenderObject() as RenderBox;
     final componentOffset =
         componentBox.localToGlobal(Offset.zero, ancestor: documentLayoutBox);
     final componentRect = componentOffset & componentBox.size;
@@ -770,7 +772,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   }
 
   Offset _componentOffset(RenderBox componentBox, Offset documentOffset) {
-    final containerBox = context.findRenderObject() as RenderBox;
+    final containerBox = boxContext.findRenderObject() as RenderBox;
     final contentOffset =
         componentBox.localToGlobal(Offset.zero, ancestor: containerBox);
     final contentRect = contentOffset & componentBox.size;
@@ -799,23 +801,18 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   }
 
   @override
-  Offset getDocumentOffsetFromAncestorOffset(Offset ancestorOffset,
-      [RenderObject? ancestor]) {
-    return (context.findRenderObject() as RenderBox)
-        .globalToLocal(ancestorOffset, ancestor: ancestor);
+  Offset getDocumentOffsetFromAncestorOffset(Offset ancestorOffset, [RenderObject? ancestor]) {
+    return (boxContext.findRenderObject() as RenderBox).globalToLocal(ancestorOffset, ancestor: ancestor);
   }
 
   @override
-  Offset getAncestorOffsetFromDocumentOffset(Offset documentOffset,
-      [RenderObject? ancestor]) {
-    return (context.findRenderObject() as RenderBox)
-        .localToGlobal(documentOffset, ancestor: ancestor);
+  Offset getAncestorOffsetFromDocumentOffset(Offset documentOffset, [RenderObject? ancestor]) {
+    return (boxContext.findRenderObject() as RenderBox).localToGlobal(documentOffset, ancestor: ancestor);
   }
 
   @override
   Offset getGlobalOffsetFromDocumentOffset(Offset documentOffset) {
-    return (context.findRenderObject() as RenderBox)
-        .localToGlobal(documentOffset);
+    return (boxContext.findRenderObject() as RenderBox).localToGlobal(documentOffset);
   }
 
   @override
@@ -853,12 +850,16 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   @override
   Widget build(BuildContext context) {
     editorLayoutLog.fine("Building document layout");
-    final result = Padding(
-      padding: widget.presenter.viewModel.padding,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: _buildDocComponents(),
+    // REMOVED SliverToBoxAdapter, sonst gab das einen assert (RenderBox). Hä?
+    final result = SliverToBoxAdapter(
+      child: Padding(
+        key: _boxKey,
+        padding: widget.presenter.viewModel.padding,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: _buildDocComponents(),
+        ),
       ),
     );
 
@@ -879,19 +880,21 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     editorLayoutLog.fine("Rendering layout view model: ${viewModel.hashCode}");
 
     for (final componentViewModel in viewModel.componentViewModels) {
-      final componentKey = _obtainComponentKeyForDocumentNode(
-        newComponentKeyMap: newComponentKeys,
-        nodeId: componentViewModel.nodeId,
-      );
-      newNodeIds[componentKey] = componentViewModel.nodeId;
-      editorLayoutLog
-          .finer('Node -> Key: ${componentViewModel.nodeId} -> $componentKey');
+      if (widget.editor.foldingState.isVisible(componentViewModel.nodeId)) {
+        final componentKey = _obtainComponentKeyForDocumentNode(
+          newComponentKeyMap: newComponentKeys,
+          nodeId: componentViewModel.nodeId,
+        );
+        newNodeIds[componentKey] = componentViewModel.nodeId;
+        editorLayoutLog.finer(
+            'Node -> Key: ${componentViewModel.nodeId} -> $componentKey');
 
-      // TODO: vielleicht nicht mehr erforderlich, weil ich in den Methoden,
-      // die eine Komponente nach Offset suchen, möglicherweise im Baum suchen
-      // muss? Oder ist es egal, weil die Methoden eh das Widget fragen und
-      // damit an meinen FoldingWidgets vorbei auf die Komponente gehen?
-      _topToBottomComponentKeys.add(componentKey);
+        // TODO: vielleicht nicht mehr erforderlich, weil ich in den Methoden,
+        // die eine Komponente nach Offset suchen, möglicherweise im Baum suchen
+        // muss? Oder ist es egal, weil die Methoden eh das Widget fragen und
+        // damit an meinen FoldingWidgets vorbei auf die Komponente gehen?
+        _topToBottomComponentKeys.add(componentKey);
+      }
     }
 
     _nodeIdsToComponentKeys
@@ -908,7 +911,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     });
 
     // return docComponents;
-    return widget.documentStructure.structure
+    return widget.editor.documentStructure.structure
         .map((treeNode) => _createFoldingWidgetTree(
               treeNode: treeNode,
               newComponentKeyMap: newComponentKeys,
@@ -1040,8 +1043,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     final component = componentKey.currentState as DocumentComponent;
 
     final componentBox = component.context.findRenderObject() as RenderBox;
-    final contentOffset = componentBox.localToGlobal(Offset.zero,
-        ancestor: context.findRenderObject());
+    final contentOffset = componentBox.localToGlobal(Offset.zero, ancestor: boxContext.findRenderObject());
     return contentOffset & componentBox.size;
   }
 }
