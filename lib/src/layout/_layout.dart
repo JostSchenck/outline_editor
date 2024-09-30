@@ -19,10 +19,10 @@ import 'package:flutter/widgets.dart';
 /// responsibility of the [SingleColumnFoldingLayout] class to recurse the
 /// document structure and call the builder where needed.
 typedef FoldingWidgetBuilder = Widget Function({
-  required DocumentStructureTreeNode treeNode,
-  required List<Widget> components,
-  required List<Widget> childNodeWidgets,
-  required Editor editor,
+required DocumentStructureTreeNode treeNode,
+required List<Widget> components,
+required List<Widget> childNodeWidgets,
+required Editor editor,
 });
 
 Widget _defaultFoldingWidgetBuilder({
@@ -34,7 +34,7 @@ Widget _defaultFoldingWidgetBuilder({
   return HideableNodeWidget(
     treeNode: treeNode,
     components: components,
-    foldControlHeight: 18*1.4+2*8,
+    foldControlHeight: 18 * 1.4 + 2 * 8,
     childNodeWidgets: childNodeWidgets,
     horizontalChildOffset: 30,
     context: editor.context,
@@ -150,6 +150,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
 
   // The key for the renderBox that contains the actual document layout.
   final GlobalKey _boxKey = GlobalKey();
+
   BuildContext get boxContext => _boxKey.currentContext!;
 
   @override
@@ -272,7 +273,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
       GlobalKey componentKey, Offset documentOffset) {
     final component = componentKey.currentState as DocumentComponent;
     final componentBox =
-        componentKey.currentContext!.findRenderObject() as RenderBox;
+    componentKey.currentContext!.findRenderObject() as RenderBox;
     editorLayoutLog.info(' - found node at position: $component');
     final componentOffset = _componentOffset(componentBox, documentOffset);
     final componentPosition = component.getPositionAtOffset(componentOffset);
@@ -298,7 +299,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
 
     final componentKey = _topToBottomComponentKeys.first;
     final componentBox =
-        componentKey.currentContext!.findRenderObject() as RenderBox;
+    componentKey.currentContext!.findRenderObject() as RenderBox;
     final offsetAtComponent = _componentOffset(componentBox, documentOffset);
 
     return offsetAtComponent.dy < 0.0;
@@ -313,7 +314,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
 
     final componentKey = _topToBottomComponentKeys.last;
     final componentBox =
-        componentKey.currentContext!.findRenderObject() as RenderBox;
+    componentKey.currentContext!.findRenderObject() as RenderBox;
     final offsetAtComponent = _componentOffset(componentBox, documentOffset);
 
     return offsetAtComponent.dy > componentBox.size.height;
@@ -331,7 +332,8 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     final componentEdge = component.getEdgeForPosition(position.nodePosition);
 
     final componentBox = component.context.findRenderObject() as RenderBox;
-    final docOffset = componentBox.localToGlobal(Offset.zero, ancestor: boxContext.findRenderObject());
+    final docOffset = componentBox.localToGlobal(
+        Offset.zero, ancestor: boxContext.findRenderObject());
 
     return componentEdge.translate(docOffset.dx, docOffset.dy);
   }
@@ -348,7 +350,8 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     final componentRect = component.getRectForPosition(position.nodePosition);
 
     final componentBox = component.context.findRenderObject() as RenderBox;
-    final docOffset = componentBox.localToGlobal(Offset.zero, ancestor: boxContext.findRenderObject());
+    final docOffset = componentBox.localToGlobal(
+        Offset.zero, ancestor: boxContext.findRenderObject());
 
     return componentRect.translate(docOffset.dx, docOffset.dy);
   }
@@ -372,18 +375,18 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
       // Selection within a single node.
       topComponent = extentComponent;
       final componentOffsetInDocument =
-          (topComponent.context.findRenderObject() as RenderBox)
-              .localToGlobal(Offset.zero, ancestor: documentLayoutBox);
+      (topComponent.context.findRenderObject() as RenderBox)
+          .localToGlobal(Offset.zero, ancestor: documentLayoutBox);
 
       final componentBoundingBox = extentComponent
           .getRectForSelection(
-            base.nodePosition,
-            extent.nodePosition,
-          )
+        base.nodePosition,
+        extent.nodePosition,
+      )
           .translate(
-            componentOffsetInDocument.dx,
-            componentOffsetInDocument.dy,
-          );
+        componentOffsetInDocument.dx,
+        componentOffsetInDocument.dy,
+      );
       componentBoundingBoxes.add(componentBoundingBox);
     } else {
       // Selection across nodes.
@@ -399,8 +402,8 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
       for (int i = 0; i < selectedNodes.length; ++i) {
         final component = getComponentByNodeId(selectedNodes[i])!;
         final componentOffsetInDocument =
-            (component.context.findRenderObject() as RenderBox)
-                .localToGlobal(Offset.zero, ancestor: documentLayoutBox);
+        (component.context.findRenderObject() as RenderBox)
+            .localToGlobal(Offset.zero, ancestor: documentLayoutBox);
 
         if (i == 0) {
           // This is the first node. The selection goes from
@@ -456,10 +459,10 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   List<String> _getNodeIdsBetween(String baseNodeId, String extentNodeId) {
     final baseComponentKey = _nodeIdsToComponentKeys[baseNodeId]!;
     final baseComponentIndex =
-        _topToBottomComponentKeys.indexOf(baseComponentKey);
+    _topToBottomComponentKeys.indexOf(baseComponentKey);
     final extentComponentKey = _nodeIdsToComponentKeys[extentNodeId]!;
     final extentComponentIndex =
-        _topToBottomComponentKeys.indexOf(extentComponentKey);
+    _topToBottomComponentKeys.indexOf(extentComponentKey);
 
     final topNodeIndex = baseComponentIndex <= extentComponentIndex
         ? baseComponentIndex
@@ -468,7 +471,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
         ? extentComponentIndex
         : baseComponentIndex;
     final componentsInside =
-        _topToBottomComponentKeys.sublist(topNodeIndex, bottomNodeIndex + 1);
+    _topToBottomComponentKeys.sublist(topNodeIndex, bottomNodeIndex + 1);
 
     return componentsInside
         .map((componentKey) => _componentKeysToNodeIds[componentKey]!)
@@ -476,8 +479,8 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   }
 
   @override
-  DocumentSelection? getDocumentSelectionInRegion(
-      Offset baseOffset, Offset extentOffset) {
+  DocumentSelection? getDocumentSelectionInRegion(Offset baseOffset,
+      Offset extentOffset) {
     editorLayoutLog.info(
         'getDocumentSelectionInRegion() - from: $baseOffset, to: $extentOffset');
     final region = Rect.fromPoints(baseOffset, extentOffset);
@@ -495,10 +498,10 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     // component in the selection region. We obtain the document nodes from the components.
     final selectionRegionTopOffset = min(baseOffset.dy, extentOffset.dy);
     final componentSearchStartIndex =
-        max(_findComponentIndexAtOffset(selectionRegionTopOffset), 0);
+    max(_findComponentIndexAtOffset(selectionRegionTopOffset), 0);
     for (int i = componentSearchStartIndex;
-        i < _topToBottomComponentKeys.length;
-        i++) {
+    i < _topToBottomComponentKeys.length;
+    i++) {
       final componentKey = _topToBottomComponentKeys[i];
       editorLayoutLog.info(' - considering component "$componentKey"');
       if (componentKey.currentState is! DocumentComponent) {
@@ -614,10 +617,11 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   /// `component`'s bounding box.
   ///
   /// Returns `null` if there is no overlap.
-  Rect? _getLocalOverlapWithComponent(
-      Rect region, DocumentComponent component) {
+  Rect? _getLocalOverlapWithComponent(Rect region,
+      DocumentComponent component) {
     final componentBox = component.context.findRenderObject() as RenderBox;
-    final contentOffset = componentBox.localToGlobal(Offset.zero, ancestor: boxContext.findRenderObject());
+    final contentOffset = componentBox.localToGlobal(
+        Offset.zero, ancestor: boxContext.findRenderObject());
     final componentBounds = contentOffset & componentBox.size;
     editorLayoutLog.finest(
         "Component bounds: $componentBounds, versus region of interest: $region");
@@ -635,13 +639,15 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   /// If the [componentOffset] is above the component, then the component's
   /// "beginning" position is returned. If the [componentOffset] is below
   /// the component, then the component's "end" position is returned.
-  NodePosition? _getNodePositionForComponentOffset(
-      DocumentComponent component, Offset componentOffset) {
+  NodePosition? _getNodePositionForComponentOffset(DocumentComponent component,
+      Offset componentOffset) {
     if (componentOffset.dy < 0) {
       return component.getBeginningPosition();
     }
     if (componentOffset.dy >
-        component.getRectForPosition(component.getEndPosition()).bottom) {
+        component
+            .getRectForPosition(component.getEndPosition())
+            .bottom) {
       return component.getEndPosition();
     }
 
@@ -658,7 +664,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     }
 
     final componentBox =
-        componentKey.currentContext!.findRenderObject() as RenderBox;
+    componentKey.currentContext!.findRenderObject() as RenderBox;
     final componentOffset = _componentOffset(componentBox, documentOffset);
 
     final component = componentKey.currentState as DocumentComponent;
@@ -676,7 +682,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
       }
 
       final textBox =
-          componentKey.currentContext!.findRenderObject() as RenderBox;
+      componentKey.currentContext!.findRenderObject() as RenderBox;
       if (_isOffsetInComponent(textBox, documentOffset)) {
         return componentKey;
       }
@@ -697,7 +703,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
       }
 
       final componentBox =
-          componentKey.currentContext!.findRenderObject() as RenderBox;
+      componentKey.currentContext!.findRenderObject() as RenderBox;
       if (_isOffsetInComponent(componentBox, documentOffset)) {
         return componentKey;
       }
@@ -744,7 +750,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   bool _isOffsetInComponent(RenderBox componentBox, Offset documentOffset) {
     final containerBox = boxContext.findRenderObject() as RenderBox;
     final contentOffset =
-        componentBox.localToGlobal(Offset.zero, ancestor: containerBox);
+    componentBox.localToGlobal(Offset.zero, ancestor: containerBox);
     final contentRect = contentOffset & componentBox.size;
 
     return contentRect.contains(documentOffset);
@@ -752,11 +758,11 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
 
   /// Returns the vertical distance between the given [documentOffset] and the
   /// bounds of the given [componentBox].
-  double _getDistanceToComponent(
-      RenderBox componentBox, Offset documentOffset) {
+  double _getDistanceToComponent(RenderBox componentBox,
+      Offset documentOffset) {
     final documentLayoutBox = boxContext.findRenderObject() as RenderBox;
     final componentOffset =
-        componentBox.localToGlobal(Offset.zero, ancestor: documentLayoutBox);
+    componentBox.localToGlobal(Offset.zero, ancestor: documentLayoutBox);
     final componentRect = componentOffset & componentBox.size;
 
     if (documentOffset.dy < componentRect.top) {
@@ -774,7 +780,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   Offset _componentOffset(RenderBox componentBox, Offset documentOffset) {
     final containerBox = boxContext.findRenderObject() as RenderBox;
     final contentOffset =
-        componentBox.localToGlobal(Offset.zero, ancestor: containerBox);
+    componentBox.localToGlobal(Offset.zero, ancestor: containerBox);
     final contentRect = contentOffset & componentBox.size;
 
     return documentOffset - contentRect.topLeft;
@@ -790,10 +796,14 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     }
     if (key.currentState is! DocumentComponent) {
       editorLayoutLog.info(
-          'WARNING: found component but it\'s not a DocumentComponent: $nodeId, layout key: $key, state: ${key.currentState}, widget: ${key.currentWidget}, context: ${key.currentContext}');
+          'WARNING: found component but it\'s not a DocumentComponent: $nodeId, layout key: $key, state: ${key
+              .currentState}, widget: ${key.currentWidget}, context: ${key
+              .currentContext}');
       if (kDebugMode) {
         throw Exception(
-            'WARNING: found component but it\'s not a DocumentComponent: $nodeId, layout key: $key, state: ${key.currentState}, widget: ${key.currentWidget}, context: ${key.currentContext}');
+            'WARNING: found component but it\'s not a DocumentComponent: $nodeId, layout key: $key, state: ${key
+                .currentState}, widget: ${key.currentWidget}, context: ${key
+                .currentContext}');
       }
       return null;
     }
@@ -801,18 +811,23 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   }
 
   @override
-  Offset getDocumentOffsetFromAncestorOffset(Offset ancestorOffset, [RenderObject? ancestor]) {
-    return (boxContext.findRenderObject() as RenderBox).globalToLocal(ancestorOffset, ancestor: ancestor);
+  Offset getDocumentOffsetFromAncestorOffset(Offset ancestorOffset,
+      [RenderObject? ancestor]) {
+    return (boxContext.findRenderObject() as RenderBox).globalToLocal(
+        ancestorOffset, ancestor: ancestor);
   }
 
   @override
-  Offset getAncestorOffsetFromDocumentOffset(Offset documentOffset, [RenderObject? ancestor]) {
-    return (boxContext.findRenderObject() as RenderBox).localToGlobal(documentOffset, ancestor: ancestor);
+  Offset getAncestorOffsetFromDocumentOffset(Offset documentOffset,
+      [RenderObject? ancestor]) {
+    return (boxContext.findRenderObject() as RenderBox).localToGlobal(
+        documentOffset, ancestor: ancestor);
   }
 
   @override
   Offset getGlobalOffsetFromDocumentOffset(Offset documentOffset) {
-    return (boxContext.findRenderObject() as RenderBox).localToGlobal(documentOffset);
+    return (boxContext.findRenderObject() as RenderBox).localToGlobal(
+        documentOffset);
   }
 
   @override
@@ -850,7 +865,6 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   @override
   Widget build(BuildContext context) {
     editorLayoutLog.fine("Building document layout");
-    // REMOVED SliverToBoxAdapter, sonst gab das einen assert (RenderBox). Hä?
     final result = SliverToBoxAdapter(
       child: Padding(
         key: _boxKey,
@@ -912,10 +926,11 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
 
     // return docComponents;
     return widget.editor.documentStructure.structure
-        .map((treeNode) => _createFoldingWidgetTree(
-              treeNode: treeNode,
-              newComponentKeyMap: newComponentKeys,
-            ))
+        .map((treeNode) =>
+        _createFoldingWidgetTree(
+          treeNode: treeNode,
+          newComponentKeyMap: newComponentKeys,
+        ))
         .toList();
 
     /// TODO: Hier wird der presenter aus super_editor benutzt, nicht der lokale
@@ -933,7 +948,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     return widget.foldingWidgetBuilder(
       treeNode: treeNode,
       components: treeNode.documentNodeIds.map(
-        (id) {
+            (id) {
           return _PresenterComponentBuilder(
             presenter: widget.presenter,
             watchNode: id,
@@ -953,11 +968,12 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
       ).toList(),
       childNodeWidgets: treeNode.children
           .map(
-            (childTreeNode) => _createFoldingWidgetTree(
+            (childTreeNode) =>
+            _createFoldingWidgetTree(
               treeNode: childTreeNode,
               newComponentKeyMap: newComponentKeyMap,
             ),
-          )
+      )
           .toList(),
       editor: widget.editor,
     );
@@ -996,8 +1012,8 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
   /// a component whose bounds contains the offset [dy].
   ///
   /// Returns the index of the component, from top to bottom order.
-  int _binarySearchComponentIndexAtOffset(
-      double dy, int minIndex, int maxIndex) {
+  int _binarySearchComponentIndexAtOffset(double dy, int minIndex,
+      int maxIndex) {
     if (minIndex > maxIndex) {
       return -1;
     }
@@ -1026,7 +1042,7 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
       if (middleIndex - 1 >= 0) {
         // Check the gap between two components.
         final previousComponentBounds =
-            _getComponentBoundsByIndex(middleIndex - 1);
+        _getComponentBoundsByIndex(middleIndex - 1);
         final gap = componentBounds.top - previousComponentBounds.bottom;
         if ((componentBounds.top - gap / 2) < dy && dy < componentBounds.top) {
           // The component we're looking for is somewhere in the top half of the current search region.
@@ -1043,7 +1059,8 @@ class _SingleColumnFoldingLayoutState extends State<SingleColumnFoldingLayout>
     final component = componentKey.currentState as DocumentComponent;
 
     final componentBox = component.context.findRenderObject() as RenderBox;
-    final contentOffset = componentBox.localToGlobal(Offset.zero, ancestor: boxContext.findRenderObject());
+    final contentOffset = componentBox.localToGlobal(
+        Offset.zero, ancestor: boxContext.findRenderObject());
     return contentOffset & componentBox.size;
   }
 }
@@ -1059,7 +1076,7 @@ class _PresenterComponentBuilder extends StatefulWidget {
   final SingleColumnLayoutPresenter presenter;
   final String watchNode;
   final Widget Function(BuildContext, SingleColumnLayoutComponentViewModel)
-      builder;
+  builder;
 
   @override
   _PresenterComponentBuilderState createState() =>
@@ -1168,8 +1185,10 @@ class _Component extends StatelessWidget {
         // TODO: we might need a SizeChangedNotifier here for the case where two components
         //       change size exactly inversely
         component = ConstrainedBox(
-          constraints: BoxConstraints(
-              maxWidth: componentViewModel.maxWidth ?? double.infinity),
+          // FIXME: Wo ist das Problem? Constraints-Fehler taucht nur
+          // in eurynome_outline auf:
+          // constraints: BoxConstraints(maxWidth: componentViewModel.maxWidth ?? double.infinity),
+          constraints: const BoxConstraints(maxWidth: 640),
           child: SizedBox(
             width: double.infinity,
             child: Padding(

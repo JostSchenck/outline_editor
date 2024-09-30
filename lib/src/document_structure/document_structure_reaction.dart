@@ -6,7 +6,6 @@ class DocumentStructureReaction extends EditReaction {
   @override
   void modifyContent(EditContext editorContext,
       RequestDispatcher requestDispatcher, List<EditEvent> changeList) {
-    // TODO: implement modifyContent
     final DocumentStructure structure = editorContext.find('structure');
     // TODO: only rebuild structure when it may have changed, depending on changeList
     for (var event in changeList) {
@@ -31,4 +30,12 @@ class DocumentStructureChangeEvent extends DocumentEdit {
       other is DocumentStructureChangeEvent &&
           runtimeType == other.runtimeType &&
           change == other.change;
+}
+
+/// Base class for all [DocumentChange]s that affect the document's structure
+/// in contrast to a single document node.
+class DocumentStructureChange extends DocumentChange {
+  const DocumentStructureChange(this.treeNodeId);
+
+  final String treeNodeId;
 }

@@ -103,8 +103,8 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
       },
       requestHandlers: List.from(defaultRequestHandlers),
       reactionPipeline: [
-        ...List.from(defaultEditorReactions),
         DocumentStructureReaction(),
+        ...List.from(defaultEditorReactions),
       ],
     );
     _editorFocusNode = FocusNode();

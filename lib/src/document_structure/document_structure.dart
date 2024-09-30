@@ -216,6 +216,7 @@ final class DocumentStructureTreeNode extends ChangeNotifier {
   /// [DocumentNode].
   DocumentStructureTreeNode? getTreeNodeForDocumentNode(String nodeId) {
     if (documentNodeIds.contains(nodeId)) return this;
+
     for (var treeNode in children) {
       final childRet = treeNode.getTreeNodeForDocumentNode(nodeId);
       if (childRet != null) return childRet;
