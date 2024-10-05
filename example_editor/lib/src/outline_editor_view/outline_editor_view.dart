@@ -11,15 +11,10 @@ class OutlineEditorView extends StatefulWidget {
 }
 
 class _OutlineEditorViewState extends State<OutlineEditorView> {
-  // final GlobalKey _docLayoutKey = GlobalKey();
-
   late ScrollController _scrollController;
-
   late OutlineMutableDocumentByNodeDepthMetadata _document;
   late Editor _editor;
   late MutableDocumentComposer _composer;
-
-  // late DocumentFoldingState _documentFoldingState;
 
   late FocusNode _editorFocusNode;
 
@@ -92,8 +87,7 @@ class _OutlineEditorViewState extends State<OutlineEditorView> {
       ],
     );
     _composer = MutableDocumentComposer();
-    _editor =
-        createDefaultDocumentEditor(document: _document, composer: _composer);
+    _editor = createDefaultDocumentEditor(document: _document, composer: _composer);
     _editorFocusNode = FocusNode();
   }
 
@@ -110,7 +104,7 @@ class _OutlineEditorViewState extends State<OutlineEditorView> {
     // final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-          title: const Text('Folding Text Editor' /*l10n.counterAppBarTitle*/)),
+          title: const Text('Outline Editor' /*l10n.counterAppBarTitle*/)),
       backgroundColor: Colors.white,
       body: SuperEditor(
         scrollController: _scrollController,
