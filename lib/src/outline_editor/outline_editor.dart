@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:structured_rich_text_editor/src/document_structure/document_structure.dart';
-import 'package:structured_rich_text_editor/src/document_structure/document_structure_reaction.dart';
-import 'package:structured_rich_text_editor/src/folding_state/document_folding_state.dart';
-import 'package:structured_rich_text_editor/src/layout/_layout.dart';
-import 'package:structured_rich_text_editor/src/structured_editor/style.dart';
+import 'package:outline_editor/src/outline_editor/outline_editor_plugin.dart';
+import 'package:outline_editor/src/outline_editor/style.dart';
 import 'package:super_editor/super_editor.dart';
 
-/// [StructuredEditor] wraps a [SuperEditor] widget with settings for a
+/// [OutlineEditor] wraps a [SuperEditor] widget with settings for a
 /// "folding" text editing experience, like in outliners. In addition to
 /// super editor's standard editables, it expects a [DocumentStructure]
 /// implementation that is responsible for providing structure information
@@ -17,8 +14,8 @@ import 'package:super_editor/super_editor.dart';
 ///
 /// The Editor must also have a [DocumentStructureReaction] as the last
 /// reaction in its `reactionPipeline`.
-class StructuredEditor extends StatefulWidget {
-  const StructuredEditor({
+class OutlineEditor extends StatefulWidget {
+  const OutlineEditor({
     super.key,
     required this.scrollController,
     required this.editor,
@@ -44,20 +41,15 @@ class StructuredEditor extends StatefulWidget {
   final List<DocumentKeyboardAction>? keyboardActions;
 
   @override
-  State<StructuredEditor> createState() => _StructuredEditorState();
+  State<OutlineEditor> createState() => _OutlineEditorState();
 }
 
-class _StructuredEditorState extends State<StructuredEditor> {
+class _OutlineEditorState extends State<OutlineEditor> {
   late GlobalKey _docLayoutKey;
 
   @override
   void initState() {
     super.initState();
-    assert(
-        widget.editor.context.findMaybe(documentStructureKey) != null &&
-            widget.editor.context.findMaybe(documentFoldingStateKey) != null,
-        'The Editor passed to a StructuredEditor has to have a '
-        "DocumentStructure object in the list of its editables, but hasn't");
     _docLayoutKey = widget.documentLayoutKey ?? GlobalKey();
   }
 
@@ -66,29 +58,17 @@ class _StructuredEditorState extends State<StructuredEditor> {
     return SuperEditor(
       editor: widget.editor,
       scrollController: widget.scrollController,
-      stylesheet: widget.stylesheet ?? defaultStructuredEditorStylesheet,
+      stylesheet: widget.stylesheet ?? defaultOutlineEditorStylesheet,
       documentLayoutKey: _docLayoutKey,
-      documentLayoutBuilder: ({
-        required SingleColumnLayoutPresenter presenter,
-        Key? key,
-        List<ComponentBuilder> componentBuilders = const [],
-        VoidCallback? onBuildScheduled,
-        bool showDebugPaint = false,
-      }) =>
-          SingleColumnFoldingLayout(
-        key: key,
-        presenter: presenter,
-        componentBuilders: componentBuilders,
-        onBuildScheduled: onBuildScheduled,
-        showDebugPaint: showDebugPaint,
-        editor: widget.editor,
-      ),
       keyboardActions: widget.keyboardActions ?? defaultKeyboardActions,
       focusNode: widget.focusNode,
-      componentBuilders: widget.componentBuilders,
+      componentBuilders: widget.componentBuilders ?? defaultComponentBuilders,
       customStylePhases: widget.customStylePhases,
       documentOverlayBuilders: widget.documentOverlayBuilders,
       documentUnderlayBuilders: widget.documentUnderlayBuilders,
+      plugins: const {
+        OutlineEditorPlugin(),
+      },
     );
   }
 }

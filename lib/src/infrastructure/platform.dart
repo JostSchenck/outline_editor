@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-// copied from super_editor, LICENSE
+// copied from super_editor
 
 class CurrentPlatform {
   /// Whether or not we are running on an Apple device (MacOS or iOS).

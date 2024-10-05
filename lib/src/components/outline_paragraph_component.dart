@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:structured_rich_text_editor/src/components/common_animation_tools.dart';
-import 'package:structured_rich_text_editor/structured_rich_text_editor.dart';
+import 'package:outline_editor/src/components/component_animations.dart';
+import 'package:outline_editor/src/components/outline_component_mixin.dart';
+import 'package:outline_editor/outline_editor.dart';
 
 class OutlineParagraphComponentViewModel
-    extends SingleColumnLayoutComponentViewModel with TextComponentViewModel {
+    extends SingleColumnLayoutComponentViewModel
+    with TextComponentViewModel, OutlineComponentViewModel {
   OutlineParagraphComponentViewModel({
     required super.nodeId,
     required this.paragraphComponentViewModel,
-    required this.indentLevel,
+    required this.outlineIndentLevel,
+    this.isCollapsed = false, // FIXME: sollte nur in Title implementiert werden
     this.isVisible = true,
     this.hasChildren = false,
     super.padding = EdgeInsets.zero,
   });
 
   final ParagraphComponentViewModel paragraphComponentViewModel;
-  final int indentLevel;
-  final bool isVisible;
-  final bool hasChildren;
+  @override
+  int outlineIndentLevel;
+  @override
+  bool isVisible;
+  @override
+  bool hasChildren;
+  bool isCollapsed;
 
   @override
   bool get highlightWhenEmpty => paragraphComponentViewModel.highlightWhenEmpty;
@@ -45,7 +52,7 @@ class OutlineParagraphComponentViewModel
     return OutlineParagraphComponentViewModel(
       nodeId: nodeId,
       paragraphComponentViewModel: paragraphComponentViewModel.copy(),
-      indentLevel: indentLevel,
+      outlineIndentLevel: outlineIndentLevel,
       isVisible: isVisible,
       hasChildren: hasChildren,
       padding: padding,
@@ -60,20 +67,28 @@ class OutlineParagraphComponentViewModel
           runtimeType == other.runtimeType &&
           nodeId == other.nodeId &&
           paragraphComponentViewModel == other.paragraphComponentViewModel &&
-          indentLevel == other.indentLevel &&
+          outlineIndentLevel == other.outlineIndentLevel &&
           isVisible == other.isVisible &&
           hasChildren == other.hasChildren &&
-          padding == other.padding;
+          padding == other.padding &&
+          outlineIndentLevel == other.outlineIndentLevel &&
+          isCollapsed == other.isCollapsed &&
+          isVisible == other.isVisible &&
+          hasChildren == other.hasChildren;
 
   @override
   int get hashCode =>
       super.hashCode ^
       nodeId.hashCode ^
       paragraphComponentViewModel.hashCode ^
-      indentLevel.hashCode ^
+      outlineIndentLevel.hashCode ^
       isVisible.hashCode ^
       hasChildren.hashCode ^
-      padding.hashCode;
+      padding.hashCode ^
+      outlineIndentLevel.hashCode ^
+      isCollapsed.hashCode ^
+      isVisible.hashCode ^
+      hasChildren.hashCode;
 
   @override
   set highlightWhenEmpty(bool highlight) =>
@@ -110,7 +125,7 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
   SingleColumnLayoutComponentViewModel? createViewModel(
       Document document, DocumentNode node) {
     assert(
-        document is StructuredDocument,
+        document is OutlineDocument,
         'createViewModel needs a '
         'StructuredDocument, but ${document.runtimeType} was given');
 
@@ -119,36 +134,35 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
     return OutlineParagraphComponentViewModel(
       nodeId: node.id,
       paragraphComponentViewModel: paragraphViewModel,
-      indentLevel:
-          (document as StructuredDocument).getIndentationLevel(node.id),
-      hasChildren: (document as StructuredDocument)
+      outlineIndentLevel:
+          (document as OutlineDocument).getIndentationLevel(node.id),
+      hasChildren: (document as OutlineDocument)
           .getTreeNodeForDocumentNode(node.id)
           .children
           .isNotEmpty,
+      isCollapsed: false, // ############NEIN. Warum kriege ich hier nicht den Kontext des Editors?
     );
   }
 
   @override
   Widget? createComponent(SingleColumnDocumentComponentContext componentContext,
       SingleColumnLayoutComponentViewModel componentViewModel) {
-    // first of all, we find the component that we want to defer to
     assert(componentViewModel is OutlineParagraphComponentViewModel,
         "componentViewModel is no OutlineParagraphComponentViewModel but a ${componentViewModel.runtimeType}");
     return OutlineParagraphComponent(
       key: componentContext.componentKey,
-      outlineViewModel:
-          componentViewModel as OutlineParagraphComponentViewModel,
+      viewModel: componentViewModel as OutlineParagraphComponentViewModel,
     );
   }
 }
 
-class OutlineParagraphComponent extends StatefulWidget {
+class OutlineParagraphComponent extends OutlineComponent {
   const OutlineParagraphComponent({
     super.key,
-    required this.outlineViewModel,
-  });
+    required this.viewModel,
+  }) : super(outlineComponentViewModel: viewModel);
 
-  final OutlineParagraphComponentViewModel outlineViewModel;
+  final OutlineParagraphComponentViewModel viewModel;
 
   @override
   State createState() => _OutlineParagraphComponentState();
@@ -157,7 +171,8 @@ class OutlineParagraphComponent extends StatefulWidget {
 class _OutlineParagraphComponentState extends State<OutlineParagraphComponent>
     with
         ProxyDocumentComponent<OutlineParagraphComponent>,
-        ProxyTextComposable {
+        ProxyTextComposable,
+        OutlineComponentState {
   final _textKey = GlobalKey();
 
   @override
@@ -168,75 +183,58 @@ class _OutlineParagraphComponentState extends State<OutlineParagraphComponent>
       childDocumentComponentKey.currentState as TextComposable;
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      // mainAxisSize: MainAxisSize.min,
-      children: [
-        // Indent on start side
-        SizedBox(width: 20 * widget.outlineViewModel.indentLevel.toDouble()),
-        GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () {}, // toggleFoldChildren,
-          child: SizedBox(
-            width: 30, // widget.horizontalChildOffset,
-            height: 20, //widget.foldControlHeight,
-            child: widget.outlineViewModel.hasChildren
-                ? AnimatedRotation(
-              // key: ValueKey<String>(widget.treeNode.id),
-              turns: 0.0, // _isFolded ? 0.0 : 0.25,
-              duration: animationDuration,
-              curve: animationCurve,
-              child: const Icon(
-                Icons.arrow_right,
-                size: 28,
-                color: Color(0xFF999999),
-              ),
-            )
-                : const Icon(
-              Icons.horizontal_rule,
-              size: 14,
-              color: Color(0xFFB5B6B7),
-            ),
-          ),
-        ),
-        // widget.componentBuilder.createComponent(),
-        Expanded(
-          child: /*widget.componentBuilder
-              .createComponent(componentContext, widget.wrappedViewModel),*/
-              TextComponent(
-            key: _textKey,
-            text: widget.outlineViewModel.paragraphComponentViewModel.text,
+  Widget buildWrappedComponent(BuildContext context) {
+    return TextComponent(
+      key: _textKey,
+      text: widget.viewModel.paragraphComponentViewModel.text,
+      textStyleBuilder:
+          widget.viewModel.paragraphComponentViewModel.textStyleBuilder,
+      textScaler: widget.viewModel.paragraphComponentViewModel.textScaler,
+      textAlign: widget.viewModel.paragraphComponentViewModel.textAlignment,
+      metadata: widget.viewModel.paragraphComponentViewModel.blockType != null
+          ? {
+              'blockType':
+                  widget.viewModel.paragraphComponentViewModel.blockType,
+            }
+          : {},
+      textSelection: widget.viewModel.paragraphComponentViewModel.selection,
+      selectionColor:
+          widget.viewModel.paragraphComponentViewModel.selectionColor,
+      highlightWhenEmpty:
+          widget.viewModel.paragraphComponentViewModel.highlightWhenEmpty,
+      underlines:
+          widget.viewModel.paragraphComponentViewModel.createUnderlines(),
+      textDirection: widget.viewModel.paragraphComponentViewModel.textDirection,
+      showDebugPaint: false,
+    );
+  }
 
-            textStyleBuilder: widget
-                .outlineViewModel.paragraphComponentViewModel.textStyleBuilder,
-            textScaler:
-                widget.outlineViewModel.paragraphComponentViewModel.textScaler,
-            textAlign: widget
-                .outlineViewModel.paragraphComponentViewModel.textAlignment,
-            metadata:
-                widget.outlineViewModel.paragraphComponentViewModel.blockType !=
-                        null
-                    ? {
-                        'blockType': widget.outlineViewModel
-                            .paragraphComponentViewModel.blockType,
-                      }
-                    : {},
-            textSelection:
-                widget.outlineViewModel.paragraphComponentViewModel.selection,
-            selectionColor: widget
-                .outlineViewModel.paragraphComponentViewModel.selectionColor,
-            highlightWhenEmpty: widget.outlineViewModel
-                .paragraphComponentViewModel.highlightWhenEmpty,
-            underlines: widget.outlineViewModel.paragraphComponentViewModel
-                .createUnderlines(),
-            textDirection: widget
-                .outlineViewModel.paragraphComponentViewModel.textDirection,
-            showDebugPaint: false,
-          ),
-        ),
-        // const Text('Test'),
-      ],
+  @override
+  Widget? buildControls(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {}, // toggleFoldChildren,
+      child: SizedBox(
+        width: indentPerLevel, // widget.horizontalChildOffset,
+        height: 28, //widget.foldControlHeight,
+        child: widget.viewModel.hasChildren
+            ? AnimatedRotation(
+                // key: ValueKey<String>(widget.treeNode.id),
+                turns: widget.viewModel.isCollapsed ? 0.0 : 0.25,
+                duration: animationDuration,
+                curve: animationCurve,
+                child: const Icon(
+                  Icons.arrow_right,
+                  size: 28,
+                  color: Color(0xFF999999),
+                ),
+              )
+            : const Icon(
+                Icons.horizontal_rule,
+                size: 14,
+                color: Color(0xFFB5B6B7),
+              ),
+      ),
     );
   }
 }

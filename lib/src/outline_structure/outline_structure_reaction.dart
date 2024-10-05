@@ -1,16 +1,16 @@
-import 'package:structured_rich_text_editor/structured_rich_text_editor.dart';
+import 'package:outline_editor/outline_editor.dart';
 
-class DocumentStructureReaction extends EditReaction {
-  DocumentStructureReaction();
+class OutlineStructureReaction extends EditReaction {
+  OutlineStructureReaction();
 
   @override
   void modifyContent(EditContext editorContext,
       RequestDispatcher requestDispatcher, List<EditEvent> changeList) {
-    final DocumentStructure structure = editorContext.find('structure');
     // TODO: only rebuild structure when it may have changed, depending on changeList
+    assert(editorContext.document is OutlineDocument);
     for (var event in changeList) {
       if (event is DocumentEdit) {
-        structure.rebuildStructure();
+        (editorContext.document as OutlineDocument).rebuildStructure();
         break;
       }
     }
@@ -18,8 +18,8 @@ class DocumentStructureReaction extends EditReaction {
   }
 }
 
-class DocumentStructureChangeEvent extends DocumentEdit {
-  DocumentStructureChangeEvent(super.change);
+class OutlineStructureChangeEvent extends DocumentEdit {
+  OutlineStructureChangeEvent(super.change);
 
   @override
   String toString() => 'DocumentStructureChangeEvent -> $change';
@@ -27,15 +27,16 @@ class DocumentStructureChangeEvent extends DocumentEdit {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is DocumentStructureChangeEvent &&
+      other is OutlineStructureChangeEvent &&
           runtimeType == other.runtimeType &&
           change == other.change;
+
 }
 
 /// Base class for all [DocumentChange]s that affect the document's structure
 /// in contrast to a single document node.
-class DocumentStructureChange extends DocumentChange {
-  const DocumentStructureChange(this.treeNodeId);
+class OutlineStructureChange extends DocumentChange {
+  const OutlineStructureChange(this.treeNodeId);
 
   final String treeNodeId;
 }

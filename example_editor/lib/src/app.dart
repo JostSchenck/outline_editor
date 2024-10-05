@@ -1,4 +1,4 @@
-import 'package:example_editor/src/folding_text_editor/folding_text_editor_view.dart';
+import 'package:example_editor/src/outline_editor_view/outline_editor_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -68,10 +68,10 @@ class MyApp extends StatelessWidget {
                 switch (routeSettings.name) {
                   case SettingsView.routeName:
                     return SettingsView(controller: settingsController);
-                  case FoldingTextEditorView.routeName:
-                    return const FoldingTextEditorView();
+                  case OutlineEditorView.routeName:
+                    return const OutlineEditorView();
                   default:
-                    return const FoldingTextEditorView();
+                    return const OutlineEditorView();
                 }
               },
             );

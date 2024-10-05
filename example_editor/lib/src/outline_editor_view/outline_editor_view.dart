@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:structured_rich_text_editor/structured_rich_text_editor.dart';
+import 'package:outline_editor/outline_editor.dart';
 
-class FoldingTextEditorView extends StatefulWidget {
-  const FoldingTextEditorView({super.key});
+class OutlineEditorView extends StatefulWidget {
+  const OutlineEditorView({super.key});
 
-  static const routeName = '/folding_text_editor';
+  static const routeName = '/outline_editor';
 
   @override
-  State<FoldingTextEditorView> createState() => _FoldingTextEditorViewState();
+  State<OutlineEditorView> createState() => _OutlineEditorViewState();
 }
 
-class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
+class _OutlineEditorViewState extends State<OutlineEditorView> {
   // final GlobalKey _docLayoutKey = GlobalKey();
 
   late ScrollController _scrollController;
 
-  late MutableDocument _document;
+  late OutlineMutableDocumentByNodeDepthMetadata _document;
   late Editor _editor;
   late MutableDocumentComposer _composer;
-  late DocumentStructure _documentStructure;
-  late DocumentFoldingState _documentFoldingState;
+
+  // late DocumentFoldingState _documentFoldingState;
 
   late FocusNode _editorFocusNode;
 
@@ -29,8 +29,7 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
 
     _scrollController = ScrollController();
 
-    // FIXME: Probably get from widget or from provider
-    _document = MutableDocument(
+    _document = OutlineMutableDocumentByNodeDepthMetadata(
       nodes: [
         ParagraphNode(
           id: 'root_paragraph_0',
@@ -38,6 +37,7 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
               'einen Outline-Editor auf Basis eines eigenen DocumentLayouts '
               'hinbekomme. root_paragraph_0'),
           metadata: {
+            'blockType': paragraphAttribution,
             'depth': 0,
           },
         ),
@@ -91,22 +91,9 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
         ),
       ],
     );
-    _documentStructure = MetadataDepthDocumentStructure(_document);
     _composer = MutableDocumentComposer();
-    _documentFoldingState = DocumentFoldingState(documentStructure: _documentStructure);
-    _editor = Editor(
-      editables: {
-        Editor.documentKey: _document,
-        Editor.composerKey: _composer,
-        documentStructureKey: _documentStructure,
-        documentFoldingStateKey: _documentFoldingState,
-      },
-      requestHandlers: List.from(defaultRequestHandlers),
-      reactionPipeline: [
-        DocumentStructureReaction(),
-        ...List.from(defaultEditorReactions),
-      ],
-    );
+    _editor =
+        createDefaultDocumentEditor(document: _document, composer: _composer);
     _editorFocusNode = FocusNode();
   }
 
@@ -124,10 +111,14 @@ class _FoldingTextEditorViewState extends State<FoldingTextEditorView> {
     return Scaffold(
       appBar: AppBar(
           title: const Text('Folding Text Editor' /*l10n.counterAppBarTitle*/)),
-      body: StructuredEditor(
+      backgroundColor: Colors.white,
+      body: SuperEditor(
         scrollController: _scrollController,
         editor: _editor,
         focusNode: _editorFocusNode,
+        plugins: const {
+          OutlineEditorPlugin(),
+        },
       ),
     );
   }

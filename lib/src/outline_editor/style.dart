@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:super_editor/super_editor.dart';
 
-var defaultStructuredEditorStylesheet = defaultStylesheet.copyWith(
-  documentPadding: EdgeInsets.zero,
+var defaultOutlineEditorStylesheet = defaultStylesheet.copyWith(
+  documentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
   rules: [
     StyleRule(
       BlockSelector.all,

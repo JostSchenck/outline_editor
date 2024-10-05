@@ -1,5 +1,5 @@
-name: structured_rich_text_editor
-description: "A new Flutter package project."
+name: outline_editor
+description: "an outline style rich text editor made with super_editor"
 version: 0.0.1
 publish_to: none
 #homepage:
@@ -14,46 +14,35 @@ dependencies:
     sdk: flutter
   super_editor:
     git:
-      url: https://github.com/JostSchenck/super_editor.git
+      url: https://github.com/superlistapp/super_editor.git
       path: super_editor
-      ref: stable
+      ref: main
   super_editor_markdown:
     git:
-      url: https://github.com/JostSchenck/super_editor
+      url: https://github.com/superlistapp/super_editor
       path: super_editor_markdown
-      ref: stable
+      ref: main
   super_text_layout:
     git:
-      url: https://github.com/JostSchenck/super_editor.git
+      url: https://github.com/superlistapp/super_editor.git
       path: super_text_layout
-      ref: stable
+      ref: main
   attributed_text:
     git:
-      url: https://github.com/JostSchenck/super_editor
+      url: https://github.com/superlistapp/super_editor
       path: attributed_text
-      ref: stable
+      ref: main
+  logging: ^1.2.0
 
 dependency_overrides:
   super_editor:
-    git:
-      url: https://github.com/JostSchenck/super_editor.git
-      path: super_editor
-      ref: stable
+    path: ../super_editor/super_editor
   super_editor_markdown:
-    git:
-      url: https://github.com/JostSchenck/super_editor
-      path: super_editor_markdown
-      ref: stable
+    path: ../super_editor/super_editor_markdown
   super_text_layout:
-    git:
-      url: https://github.com/JostSchenck/super_editor.git
-      path: super_text_layout
-      ref: stable
+    path: ../super_editor/super_text_layout
   attributed_text:
-    git:
-      url: https://github.com/JostSchenck/super_editor
-      path: attributed_text
-      ref: stable
+    path: ../super_editor/attributed_text
 
 dev_dependencies:
   flutter_test:

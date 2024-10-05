@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:structured_rich_text_editor/src/infrastructure/platform.dart';
+import 'package:outline_editor/src/infrastructure/platform.dart';
 import 'package:super_editor/super_editor.dart';
 
 // parts copied from super_editor LICENSE
