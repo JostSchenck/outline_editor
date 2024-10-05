@@ -66,6 +66,7 @@ class _OutlineEditorViewState extends State<OutlineEditorView> {
               'Dies hier ist ein zweites Enkelkind. grand_child_paragraph_B'),
           metadata: {
             'depth': 2,
+            'collapsed': true,
           },
         ),
         ParagraphNode(
