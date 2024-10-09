@@ -22,7 +22,7 @@ class OutlineStructureChangeEvent extends DocumentEdit {
   OutlineStructureChangeEvent(super.change);
 
   @override
-  String toString() => 'DocumentStructureChangeEvent -> $change';
+  String toString() => 'OutlineStructureChangeEvent -> $change';
 
   @override
   bool operator ==(Object other) =>

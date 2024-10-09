@@ -47,6 +47,7 @@ dependency_overrides:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_test_runners: ^0.0.4
   flutter_lints: ^4.0.0
   flutter_test_robots: ^0.0.24
 

@@ -1,14 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:super_editor/super_editor.dart';
 
-/// Represents a node in the document structure. Each node contains
-/// a list of `documentNodeIds` that point to nodes that represent this one
-/// node in the structure, and on a list of other [OutlineTreenode]s
+const isCollapsedKey = 'isCollapsed';
+
+/// Represents a treenode in the document structure. Each treenode contains
+/// a list of `documentNodeIds` that point to [DocumentNodes] that represent
+/// this one Treenode, and a list of other [OutlineTreenode]s
 /// as children.
 ///
 /// [OutlineTreenode]s will not persist as objects, but are
 /// broken up into their [DocumentNode]s and added to the underlying
-/// [MutableDocument]. This means that a [OutlineTreenode] should not
+/// [MutableDocument]. This means that an [OutlineTreenode] should not
 /// contain information apart from its contained documentNodeIds or references
 /// to other tree nodes. To enforce this, this class is `final`.
 final class OutlineTreenode extends ChangeNotifier {
@@ -34,10 +36,60 @@ final class OutlineTreenode extends ChangeNotifier {
 
   List<String> get documentNodeIds => _documentNodeIds;
 
+  /// The first DocumentNode in a Treenode is considered to be the Head, in
+  /// which eg. collapsing status is stored.
+  String get headNodeId => _documentNodeIds.first;
+
+  /// Whether this Treenode is considered collapsed.
+  bool get isCollapsed =>
+      document.getNodeById(headNodeId)!.metadata[isCollapsedKey] == true;
+
+  /// Sets whether this Treenode is considered collapsed.
+  set isCollapsed(bool isCollapsed) {
+    document
+        .getNodeById(headNodeId)!
+        .putMetadataValue(isCollapsedKey, isCollapsed);
+    notifyListeners();
+  }
+
+  /// Returns a list of the Treenodes representing children of this Treenode.
   List<OutlineTreenode> get children => _children;
 
+  // this must not be used for document manipulation, but only on
+  // structure rebuilding in classes derived from OutlineDocument.
+  void addChild(OutlineTreenode child) {
+    _children.add(child);
+    child.parent = this;
+    notifyListeners();
+  }
+
+  // this must not be used for document manipulation, but only on
+  // structure rebuilding in classes derived from OutlineDocument.
+  void removeChild(OutlineTreenode child) {
+    _children.remove(child);
+    child.parent = null;
+    notifyListeners();
+  }
+
+  /// At which position in this treenode's or its children's documentNodes or
+  /// the DocumentNode with nodeId is located, ie. 0 for the first child, 1 for the
+  /// second, etc. Returns -1 if it does not find nodeId.
+  int getIndexInChildren(String nodeId) {
+    int index = _documentNodeIds.indexOf(nodeId);
+    if (index != -1) {
+      return index;
+    }
+    for (var child in _children) {
+      index = child.getIndexInChildren(nodeId);
+      if (index!=-1) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
   /// Returns the depth of this TreeNode, 0 meaning a root node.
-  int get depth => parent==null ? 0 : parent!.depth + 1;
+  int get depth => parent == null ? 0 : parent!.depth + 1;
 
   /// Returns the id of the first document node in this tree node's whole
   /// subtree (including this node itself), iterating through all descendents

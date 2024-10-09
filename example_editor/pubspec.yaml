@@ -12,8 +12,10 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  logging: ^1.2.0
   outline_editor:
     path: ..
+  super_editor_markdown: ^0.1.6
 
 dependency_overrides:
   super_editor:

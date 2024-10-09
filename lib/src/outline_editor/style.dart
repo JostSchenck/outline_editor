@@ -19,5 +19,17 @@ var defaultOutlineEditorStylesheet = defaultStylesheet.copyWith(
         };
       },
     ),
+    // StyleRule(const BlockSelector('title'), (doc, docNode) {
+    //   return {
+    //     Styles.maxWidth: 640.0,
+    //     Styles.padding: const CascadingPadding.only(top: 16, bottom: 8),
+    //     Styles.textStyle: const TextStyle(
+    //       fontStyle: FontStyle.italic,
+    //       color: Colors.black26,
+    //       fontSize: 15,
+    //       height: 1.4,
+    //     ),
+    //   };
+    // }),
   ],
 );

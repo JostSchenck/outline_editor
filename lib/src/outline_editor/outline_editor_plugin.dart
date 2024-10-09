@@ -1,14 +1,31 @@
+import 'package:outline_editor/src/commands/change_collapsed_state.dart';
+import 'package:outline_editor/src/reactions/node_visibility_reaction.dart';
 import 'package:outline_editor/src/components/outline_paragraph_component.dart';
 import 'package:outline_editor/outline_editor.dart';
 
 class OutlineEditorPlugin extends SuperEditorPlugin {
-  const OutlineEditorPlugin();
+  const OutlineEditorPlugin({
+    required this.editor,
+  });
+
+  final Editor editor;
 
   @override
   void attach(Editor editor) {
-    assert(editor.document is OutlineDocument, 'OutlineEditorPlugin '
-      'expects a Document that implements StructureDocument');
+    assert(
+        editor.document is OutlineDocument,
+        'OutlineEditorPlugin '
+        'expects a Document that implements StructureDocument');
     editor.reactionPipeline.insert(0, OutlineStructureReaction());
+    editor.reactionPipeline.insert(0, NodeVisibilityReaction(editor: editor));
+    editor.requestHandlers.add(
+      (request) => request is ChangeCollapsedStateRequest
+          ? ChangeCollapsedStateCommand(
+              nodeId: request.nodeId,
+              isCollapsed: request.isCollapsed,
+            )
+          : null,
+    );
     (editor.document as OutlineDocument).rebuildStructure();
   }
 
@@ -20,6 +37,10 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
 
   @override
   List<ComponentBuilder> get componentBuilders => [
-    const OutlineParagraphComponentBuilder(),
-  ];
+        OutlineTitleComponentBuilder(editor: editor),
+        OutlineParagraphComponentBuilder(editor: editor),
+      ];
+
+  @override
+  List<DocumentKeyboardAction> get keyboardActions => [];
 }

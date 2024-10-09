@@ -1,51 +1,80 @@
 import 'package:flutter/material.dart';
-import 'package:outline_editor/src/components/component_animations.dart';
-import 'package:outline_editor/src/components/outline_component_mixin.dart';
+import 'package:outline_editor/src/components/collapse_expand_button.dart';
+import 'package:outline_editor/src/components/outline_component_base.dart';
 import 'package:outline_editor/outline_editor.dart';
 
-class OutlineParagraphComponentViewModel
-    extends SingleColumnLayoutComponentViewModel
-    with TextComponentViewModel, OutlineComponentViewModel {
+class OutlineParagraphComponentViewModel extends OutlineComponentViewModel
+    with TextComponentViewModel {
   OutlineParagraphComponentViewModel({
     required super.nodeId,
     required this.paragraphComponentViewModel,
     required this.outlineIndentLevel,
+    required this.indexInChildren,
     this.isCollapsed = false, // FIXME: sollte nur in Title implementiert werden
     this.isVisible = true,
     this.hasChildren = false,
-    super.padding = EdgeInsets.zero,
   });
 
   final ParagraphComponentViewModel paragraphComponentViewModel;
   @override
   int outlineIndentLevel;
   @override
+  int indexInChildren;
+  @override
   bool isVisible;
   @override
   bool hasChildren;
+  @override
   bool isCollapsed;
 
   @override
   bool get highlightWhenEmpty => paragraphComponentViewModel.highlightWhenEmpty;
 
   @override
+  set highlightWhenEmpty(bool highlight) =>
+      paragraphComponentViewModel.highlightWhenEmpty = highlight;
+
+  @override
   TextSelection? get selection => paragraphComponentViewModel.selection;
+
+  @override
+  set selection(TextSelection? selection) =>
+      paragraphComponentViewModel.selection = selection;
 
   @override
   Color get selectionColor => paragraphComponentViewModel.selectionColor;
 
   @override
+  set selectionColor(Color color) =>
+      paragraphComponentViewModel.selectionColor = color;
+
+  @override
   AttributedText get text => paragraphComponentViewModel.text;
+
+  @override
+  set text(AttributedText text) => paragraphComponentViewModel.text = text;
 
   @override
   TextAlign get textAlignment => paragraphComponentViewModel.textAlignment;
 
   @override
+  set textAlignment(TextAlign alignment) =>
+      paragraphComponentViewModel.textAlignment = alignment;
+
+  @override
   TextDirection get textDirection => paragraphComponentViewModel.textDirection;
+
+  @override
+  set textDirection(TextDirection direction) =>
+      paragraphComponentViewModel.textDirection = direction;
 
   @override
   AttributionStyleBuilder get textStyleBuilder =>
       paragraphComponentViewModel.textStyleBuilder;
+
+  @override
+  set textStyleBuilder(AttributionStyleBuilder styleBuilder) =>
+      paragraphComponentViewModel.textStyleBuilder = styleBuilder;
 
   @override
   OutlineParagraphComponentViewModel copy() {
@@ -53,9 +82,10 @@ class OutlineParagraphComponentViewModel
       nodeId: nodeId,
       paragraphComponentViewModel: paragraphComponentViewModel.copy(),
       outlineIndentLevel: outlineIndentLevel,
+      indexInChildren: indexInChildren,
       isVisible: isVisible,
       hasChildren: hasChildren,
-      padding: padding,
+      isCollapsed: isCollapsed,
     );
   }
 
@@ -68,62 +98,36 @@ class OutlineParagraphComponentViewModel
           nodeId == other.nodeId &&
           paragraphComponentViewModel == other.paragraphComponentViewModel &&
           outlineIndentLevel == other.outlineIndentLevel &&
+          padding == other.padding &&
           isVisible == other.isVisible &&
           hasChildren == other.hasChildren &&
-          padding == other.padding &&
-          outlineIndentLevel == other.outlineIndentLevel &&
-          isCollapsed == other.isCollapsed &&
-          isVisible == other.isVisible &&
-          hasChildren == other.hasChildren;
+          isCollapsed == other.isCollapsed;
 
   @override
   int get hashCode =>
       super.hashCode ^
       nodeId.hashCode ^
       paragraphComponentViewModel.hashCode ^
-      outlineIndentLevel.hashCode ^
-      isVisible.hashCode ^
-      hasChildren.hashCode ^
       padding.hashCode ^
       outlineIndentLevel.hashCode ^
       isCollapsed.hashCode ^
       isVisible.hashCode ^
       hasChildren.hashCode;
-
-  @override
-  set highlightWhenEmpty(bool highlight) =>
-      paragraphComponentViewModel.highlightWhenEmpty = highlight;
-
-  @override
-  set selection(TextSelection? selection) =>
-      paragraphComponentViewModel.selection = selection;
-
-  @override
-  set selectionColor(Color color) =>
-      paragraphComponentViewModel.selectionColor = color;
-
-  @override
-  set text(AttributedText text) => paragraphComponentViewModel.text = text;
-
-  @override
-  set textAlignment(TextAlign alignment) =>
-      paragraphComponentViewModel.textAlignment = alignment;
-
-  @override
-  set textDirection(TextDirection direction) =>
-      paragraphComponentViewModel.textDirection = direction;
-
-  @override
-  set textStyleBuilder(AttributionStyleBuilder styleBuilder) =>
-      paragraphComponentViewModel.textStyleBuilder = styleBuilder;
 }
 
 class OutlineParagraphComponentBuilder implements ComponentBuilder {
-  const OutlineParagraphComponentBuilder();
+  const OutlineParagraphComponentBuilder({
+    required this.editor,
+  });
+
+  final Editor editor;
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
       Document document, DocumentNode node) {
+    if (node is! ParagraphNode) {
+      return null;
+    }
     assert(
         document is OutlineDocument,
         'createViewModel needs a '
@@ -131,16 +135,17 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
 
     final paragraphViewModel = const ParagraphComponentBuilder()
         .createViewModel(document, node) as ParagraphComponentViewModel;
+    final outlineDoc = document as OutlineDocument;
+
     return OutlineParagraphComponentViewModel(
       nodeId: node.id,
       paragraphComponentViewModel: paragraphViewModel,
-      outlineIndentLevel:
-          (document as OutlineDocument).getIndentationLevel(node.id),
-      hasChildren: (document as OutlineDocument)
-          .getTreeNodeForDocumentNode(node.id)
-          .children
-          .isNotEmpty,
-      isCollapsed: false, // ############NEIN. Warum kriege ich hier nicht den Kontext des Editors?
+      outlineIndentLevel: outlineDoc.getIndentationLevel(node.id),
+      indexInChildren: outlineDoc.indexInChildren(node.id),
+      hasChildren:
+          outlineDoc.getTreeNodeForDocumentNode(node.id).children.isNotEmpty,
+      isCollapsed: outlineDoc.isCollapsed(node.id),
+      isVisible: outlineDoc.isVisible(node.id),
     );
   }
 
@@ -152,6 +157,7 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
     return OutlineParagraphComponent(
       key: componentContext.componentKey,
       viewModel: componentViewModel as OutlineParagraphComponentViewModel,
+      editor: editor,
     );
   }
 }
@@ -160,19 +166,21 @@ class OutlineParagraphComponent extends OutlineComponent {
   const OutlineParagraphComponent({
     super.key,
     required this.viewModel,
+    required this.editor,
   }) : super(outlineComponentViewModel: viewModel);
 
   final OutlineParagraphComponentViewModel viewModel;
+  final Editor editor;
 
   @override
   State createState() => _OutlineParagraphComponentState();
 }
 
-class _OutlineParagraphComponentState extends State<OutlineParagraphComponent>
+class _OutlineParagraphComponentState
+    extends OutlineComponentState<OutlineParagraphComponent>
     with
         ProxyDocumentComponent<OutlineParagraphComponent>,
-        ProxyTextComposable,
-        OutlineComponentState {
+        ProxyTextComposable {
   final _textKey = GlobalKey();
 
   @override
@@ -210,31 +218,13 @@ class _OutlineParagraphComponentState extends State<OutlineParagraphComponent>
   }
 
   @override
-  Widget? buildControls(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {}, // toggleFoldChildren,
-      child: SizedBox(
-        width: indentPerLevel, // widget.horizontalChildOffset,
-        height: 28, //widget.foldControlHeight,
-        child: widget.viewModel.hasChildren
-            ? AnimatedRotation(
-                // key: ValueKey<String>(widget.treeNode.id),
-                turns: widget.viewModel.isCollapsed ? 0.0 : 0.25,
-                duration: animationDuration,
-                curve: animationCurve,
-                child: const Icon(
-                  Icons.arrow_right,
-                  size: 28,
-                  color: Color(0xFF999999),
-                ),
-              )
-            : const Icon(
-                Icons.horizontal_rule,
-                size: 14,
-                color: Color(0xFFB5B6B7),
-              ),
-      ),
-    );
+  Widget? buildControls(BuildContext context, int indexInChildren) {
+    if (indexInChildren==0) {
+      return CollapseExpandButton(
+        editor: widget.editor,
+        viewModel: widget.viewModel,
+      );
+    }
+    return null;
   }
 }
