@@ -3,6 +3,8 @@ import 'package:super_editor/super_editor.dart';
 
 const isCollapsedKey = 'isCollapsed';
 
+typedef OutlinePath = List<int>;
+
 /// Represents a treenode in the document structure. Each treenode contains
 /// a list of `documentNodeIds` that point to [DocumentNodes] that represent
 /// this one Treenode, and a list of other [OutlineTreenode]s
@@ -35,6 +37,18 @@ final class OutlineTreenode extends ChangeNotifier {
   final Document document;
 
   List<String> get documentNodeIds => _documentNodeIds;
+
+  /// Returns the [OutlinePath] to this treenode, which is a List<int> with
+  /// the first element being the index of my first ancestor in the root node's
+  /// children.
+  OutlinePath get path {
+    if (parent==null) {
+      return [];
+    }
+    final ret = parent!.path;
+    ret.add(parent!.children.indexOf(this));
+    return ret;
+  }
 
   /// The first DocumentNode in a Treenode is considered to be the Head, in
   /// which eg. collapsing status is stored.
@@ -71,9 +85,11 @@ final class OutlineTreenode extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// At which position in this treenode's or its children's documentNodes or
-  /// the DocumentNode with nodeId is located, ie. 0 for the first child, 1 for the
+  /// At which position in this treenode's or its children's documentNodes
+  /// the DocumentNode with nodeId is located, ie. 0 for first position, 1 for the
   /// second, etc. Returns -1 if it does not find nodeId.
+  /// This is mainly used for component building: For example, the first
+  /// node in a treenodes content might be decorated with a button or similar.
   int getIndexInChildren(String nodeId) {
     int index = _documentNodeIds.indexOf(nodeId);
     if (index != -1) {
@@ -139,11 +155,11 @@ final class OutlineTreenode extends ChangeNotifier {
   /// Searches this [OutlineTreenode]'s whole subtree and returns
   /// the [OutlineTreenode] that holds the given id to a
   /// [DocumentNode].
-  OutlineTreenode? getOutlineTreenodeForDocumentNode(String nodeId) {
-    if (documentNodeIds.contains(nodeId)) return this;
+  OutlineTreenode? getOutlineTreenodeForDocumentNodeId(String docNodeId) {
+    if (documentNodeIds.contains(docNodeId)) return this;
 
     for (var treeNode in children) {
-      final childRet = treeNode.getOutlineTreenodeForDocumentNode(nodeId);
+      final childRet = treeNode.getOutlineTreenodeForDocumentNodeId(docNodeId);
       if (childRet != null) return childRet;
     }
     return null;

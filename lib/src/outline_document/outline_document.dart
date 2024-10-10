@@ -6,41 +6,86 @@ const isHiddenKey = 'isHidden';
 /// Interface class that has to be implemented by the Document
 /// class to be used in an outline editor.
 abstract mixin class OutlineDocument implements Document {
-  List<OutlineTreenode> get rootNodes;
+  OutlineTreenode get root;
 
-  OutlineTreenode getTreeNodeForDocumentNode(String nodeId);
-
-  int getIndentationLevel(String nodeId);
-
-  /// At which position in the parent's children or the root nodes
-  /// a certain [DocumentNode] is located, ie. 0 for the first child, 1 for the
-  /// second, etc. Returns -1 if it does not find nodeId.
-  int indexInChildren(String nodeId) {
-    for(var rootNode in rootNodes) {
-      int index = rootNode.getIndexInChildren(nodeId);
-      if (index!=-1) {
-        return index;
-      }
+  OutlineTreenode getTreeNodeForDocumentNodeId(String nodeId) {
+    final ret = root.getOutlineTreenodeForDocumentNodeId(nodeId);
+    if (ret == null) {
+      throw Exception(
+          'Did not find OutlineTreenode for DocumentNode $nodeId');
     }
-    return -1;
+    return ret;
+  }
+
+  int getNodeDepth(String nodeId) => getTreeNodeForDocumentNodeId(nodeId).depth;
+
+  OutlinePath getOutlinePath(String nodeId) => getTreeNodeForDocumentNodeId(nodeId).path;
+
+  /// At which position in the parent's content a certain [DocumentNode] is
+  /// located, ie. 0 for the first child, 1 for the second, etc. Returns -1 if
+  /// it does not find nodeId. The result can be used for component building.
+  int getIndexInChildren(String docNodeId) {
+    final treeNode = getTreeNodeForDocumentNodeId(docNodeId);
+    return treeNode.documentNodeIds.indexOf(docNodeId);
   }
 
   bool isCollapsed(String nodeId);
   void setCollapsed(String nodeId, bool isCollapsed);
 
+  /// Returns whether the specified [DocumentNode] with id `nodeId` is
+  /// hidden.
   bool isHidden(String nodeId);
   void setHidden(String nodeId, bool isHidden);
 
+
   /// Return visibility of the [DocumentNode] with the given id, taking
   /// folding state of tree nodes as well as document nodes into account.
-  bool isVisible(String documentNodeId);
+  bool isVisible(String documentNodeId) {
+    // if this particular DocumentNode is already hidden, we don't have to
+    // look any further
+    if (isHidden(documentNodeId)) {
+      return false;
+    }
+    // find TreeNode corresponding to the node with id `documentNodeId`
+    final myTreeNode = getTreeNodeForDocumentNodeId(documentNodeId);
+    // search all ancestors (not my own tree node) until root and check if one
+    // is collapsed
+    var ancestor = myTreeNode.parent;
+    while (ancestor != null) {
+      if (ancestor.isCollapsed) {
+        // found an ancestor that is folded, so we as a descendent
+        // are, too
+        return false;
+      }
+      ancestor = ancestor.parent;
+    }
+    // root nodes are never hidden. All ancestors until root are visible, so
+    // we are, too
+    return true;
+  }
 
-  /// Returns the last visible node in the document before `pos`, or the node
+  /// Returns the last visible [DocumentNode] in the document before `pos`, or the node
   /// at `pos` itself, if it is visible. Note that
   /// this may not correspond to a selectable component later on. The first
   /// node in a document is always visible, so this method will always return
   /// a node.
-  DocumentNode getLastVisibleNode(DocumentPosition pos);
+  DocumentNode getLastVisibleNode(DocumentPosition pos) {
+    if (isVisible(pos.nodeId)) {
+      // nothing to do; the position is not in a hidden node.
+      return getNodeById(pos.nodeId)!;
+    }
+    // because the node at [0] must always be a root node, and root nodes must
+    // always be visible, pos.nodeId must at this point be >0
+    assert(getNodeIndexById(pos.nodeId) > 0);
+    for (var i = getNodeIndexById(pos.nodeId) - 1; i > 0; i--) {
+      if (isVisible(elementAt(i).id)) {
+        return elementAt(i);
+      }
+    }
+    throw Exception('No visible node found before $pos');
+  }
+
+
   /// Returns the first visible node in the document after `pos`, or the node
   /// at `pos` itself, if it is visible. Note that
   /// this may not correspond to a selectable component later on. Returns

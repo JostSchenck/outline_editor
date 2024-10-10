@@ -140,10 +140,10 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
     return OutlineParagraphComponentViewModel(
       nodeId: node.id,
       paragraphComponentViewModel: paragraphViewModel,
-      outlineIndentLevel: outlineDoc.getIndentationLevel(node.id),
-      indexInChildren: outlineDoc.indexInChildren(node.id),
+      outlineIndentLevel: outlineDoc.getNodeDepth(node.id),
+      indexInChildren: outlineDoc.getIndexInChildren(node.id),
       hasChildren:
-          outlineDoc.getTreeNodeForDocumentNode(node.id).children.isNotEmpty,
+          outlineDoc.getTreeNodeForDocumentNodeId(node.id).children.isNotEmpty,
       isCollapsed: outlineDoc.isCollapsed(node.id),
       isVisible: outlineDoc.isVisible(node.id),
     );

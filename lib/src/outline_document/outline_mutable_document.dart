@@ -12,18 +12,22 @@ const nodeDepthKey = 'depth';
 class OutlineMutableDocument extends MutableDocument with OutlineDocument {
   OutlineMutableDocument({
     super.nodes,
-  });
+  }) {
+    _root = OutlineTreenode(id: 'root', document: this);
+  }
+
+  late OutlineTreenode _root;
 
   @override
-  final List<OutlineTreenode> rootNodes = [];
+  OutlineTreenode get root => _root;
 
   @override
   bool isCollapsed(String nodeId) =>
-      getTreeNodeForDocumentNode(nodeId).isCollapsed;
+      getTreeNodeForDocumentNodeId(nodeId).isCollapsed;
 
   @override
   void setCollapsed(String nodeId, bool isCollapsed) {
-    getTreeNodeForDocumentNode(nodeId).isCollapsed = isCollapsed;
+    getTreeNodeForDocumentNodeId(nodeId).isCollapsed = isCollapsed;
   }
 
   @override
@@ -33,64 +37,6 @@ class OutlineMutableDocument extends MutableDocument with OutlineDocument {
   @override
   void setHidden(String nodeId, bool isHidden) {
     getNodeById(nodeId)!.putMetadataValue(isHiddenKey, isHidden);
-  }
-
-  @override
-  OutlineTreenode getTreeNodeForDocumentNode(String nodeId) {
-    for (var treeNode in rootNodes) {
-      final foundNode = treeNode.getOutlineTreenodeForDocumentNode(nodeId);
-      if (foundNode != null) return foundNode;
-    }
-    throw Exception(
-        'Did not find DocumentStructureTreeNode for DocumentNode $nodeId');
-  }
-
-  @override
-  int getIndentationLevel(String nodeId) =>
-      getTreeNodeForDocumentNode(nodeId).depth;
-
-  /// Return visibility of the [DocumentNode] with the given id, taking
-  /// folding state of tree nodes as well as document nodes into account.
-  @override
-  bool isVisible(String documentNodeId) {
-    // if this particular DocumentNode is already hidden, we don't have to
-    // look any further
-    if (isHidden(documentNodeId)) {
-      return false;
-    }
-    // find TreeNode corresponding to the node with id `documentNodeId`
-    final myTreeNode = getTreeNodeForDocumentNode(documentNodeId);
-    // search all ancestors (not my own tree node) until root and check if one
-    // is collapsed
-    var ancestor = myTreeNode.parent;
-    while (ancestor != null) {
-      if (ancestor.isCollapsed) {
-        // found an ancestor that is folded, so we as a descendent
-        // are, too
-        return false;
-      }
-      ancestor = ancestor.parent;
-    }
-    // root nodes are never hidden. All ancestors until root are visible, so
-    // we are, too
-    return true;
-  }
-
-  @override
-  DocumentNode getLastVisibleNode(DocumentPosition pos) {
-    if (isVisible(pos.nodeId)) {
-      // nothing to do; the position is not in a hidden node.
-      return getNodeById(pos.nodeId)!;
-    }
-    // because the node at [0] must always be a root node, and root nodes must
-    // always be visible, pos.nodeId must at this point be >0
-    assert(getNodeIndexById(pos.nodeId) > 0);
-    for (var i = getNodeIndexById(pos.nodeId) - 1; i > 0; i--) {
-      if (isVisible(elementAt(i).id)) {
-        return elementAt(i);
-      }
-    }
-    throw Exception('No visible node found before $pos');
   }
 
   @override
