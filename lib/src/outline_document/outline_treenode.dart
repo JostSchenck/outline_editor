@@ -51,6 +51,18 @@ final class OutlineTreenode extends ChangeNotifier {
     return ret;
   }
 
+  /// Returns the [OutlineTreenode] with the given [OutlinePath], if there
+  /// is such a descendent, else null.
+  OutlineTreenode? getOutlineTreenodeByPath(OutlinePath path) {
+    if (path.isEmpty) {
+      return null;
+    }
+    if (path.length == 1) {
+      return _children[path.first];
+    }
+    return _children[path.first].getOutlineTreenodeByPath(path.sublist(1));
+  }
+
   /// The first DocumentNode in a Treenode is considered to be the Head, in
   /// which eg. collapsing status is stored.
   String? get headNodeId => _documentNodeIds.isEmpty ? null : _documentNodeIds.first;

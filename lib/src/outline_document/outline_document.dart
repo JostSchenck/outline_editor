@@ -3,7 +3,7 @@ import 'package:super_editor/super_editor.dart';
 
 const isHiddenKey = 'isHidden';
 
-/// Interface class that has to be implemented by the Document
+/// Mixin to be used or implemented implemented by the Document
 /// class to be used in an outline editor.
 abstract mixin class OutlineDocument implements Document {
   OutlineTreenode get root;
@@ -20,6 +20,14 @@ abstract mixin class OutlineDocument implements Document {
   int getNodeDepth(String nodeId) => getTreeNodeForDocumentNodeId(nodeId).depth;
 
   OutlinePath getOutlinePath(String nodeId) => getTreeNodeForDocumentNodeId(nodeId).path;
+
+  OutlineTreenode getOutlineTreenodeByPath(OutlinePath path) {
+    final ret = root.getOutlineTreenodeByPath(path);
+    if (ret == null) {
+      throw Exception('Could not find OutlineTreenode for path $path');
+    }
+    return ret;
+  }
 
   /// At which position in the parent's content a certain [DocumentNode] is
   /// located, ie. 0 for the first child, 1 for the second, etc. Returns -1 if
