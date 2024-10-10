@@ -14,6 +14,7 @@ class OutlineMutableDocument extends MutableDocument with OutlineDocument {
     super.nodes,
   }) {
     _root = OutlineTreenode(id: 'root', document: this);
+    rebuildStructure();
   }
 
   late OutlineTreenode _root;
@@ -53,9 +54,11 @@ class OutlineMutableDocument extends MutableDocument with OutlineDocument {
   void rebuildStructure() {
     outlineDocLog
         .fine('rebuilding OutlineDocument structure from depth metadata');
-    rootNodes.clear();
-    List<OutlineTreenode> treeNodeStack = [];
-    int lastDepth = 0;
+    _root = OutlineTreenode(document: this, id: 'root');
+    List<OutlineTreenode> treeNodeStack = [root];
+    // we start at 1 because our already existing root node is depth 0 and every
+    // node found will be put into a child.
+    int lastDepth = 1;
     for (final documentNode in this) {
       final int depth = documentNode.metadata[nodeDepthKey] ?? lastDepth;
       lastDepth = depth;
@@ -64,18 +67,7 @@ class OutlineMutableDocument extends MutableDocument with OutlineDocument {
         documentNodeIds: [documentNode.id],
         id: 'tn_${documentNode.id}',
       );
-      if (depth == 0) {
-        if (treeNodeStack.length==1) {
-          // this is another paragraph right after the last on depth 0,
-          // treat this a documentnode to the same root node, rather than
-          // a sibling root node.
-          treeNodeStack.last.documentNodeIds.add(documentNode.id);
-        } else {
-          treeNodeStack.clear();
-          treeNodeStack.add(newTreeNode);
-          rootNodes.add(newTreeNode);
-        }
-      } else if (depth == treeNodeStack.length) {
+      if (depth == treeNodeStack.length) {
         // we found a new child to the top one on stack; add it to the
         // children and push it on the stack
         treeNodeStack.last.addChild(newTreeNode);

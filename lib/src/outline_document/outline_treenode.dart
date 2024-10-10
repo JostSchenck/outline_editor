@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:outline_editor/src/util/logging.dart';
 import 'package:super_editor/super_editor.dart';
 
 const isCollapsedKey = 'isCollapsed';
@@ -17,13 +18,13 @@ typedef OutlinePath = List<int>;
 /// to other tree nodes. To enforce this, this class is `final`.
 final class OutlineTreenode extends ChangeNotifier {
   OutlineTreenode({
-    List<String>? documentNodeIds,
+    List<String> documentNodeIds = const [],
     List<OutlineTreenode>? children,
     this.parent,
     required this.id,
     required this.document,
   }) {
-    if (documentNodeIds != null) _documentNodeIds.addAll(documentNodeIds);
+    _documentNodeIds.addAll(documentNodeIds);
     if (children != null) _children.addAll(children);
     for (var child in _children) {
       child.parent = this;
@@ -52,16 +53,21 @@ final class OutlineTreenode extends ChangeNotifier {
 
   /// The first DocumentNode in a Treenode is considered to be the Head, in
   /// which eg. collapsing status is stored.
-  String get headNodeId => _documentNodeIds.first;
+  String? get headNodeId => _documentNodeIds.isEmpty ? null : _documentNodeIds.first;
 
   /// Whether this Treenode is considered collapsed.
   bool get isCollapsed =>
-      document.getNodeById(headNodeId)!.metadata[isCollapsedKey] == true;
+      headNodeId==null ? false: document.getNodeById(headNodeId!)!.metadata[isCollapsedKey] == true;
 
   /// Sets whether this Treenode is considered collapsed.
   set isCollapsed(bool isCollapsed) {
+    if (headNodeId== null) {
+      outlineDocLog.fine(
+          'Tried to set isCollapsed on Treenode without headNodeId.');
+      return;
+    }
     document
-        .getNodeById(headNodeId)!
+        .getNodeById(headNodeId!)!
         .putMetadataValue(isCollapsedKey, isCollapsed);
     notifyListeners();
   }

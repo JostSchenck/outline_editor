@@ -42,7 +42,9 @@ class ChangeCollapsedStateCommand extends EditCommand {
 
     executor.logChanges([
       DocumentEdit(
-        NodeChangeEvent(treenode.headNodeId),
+        // we can assume that headNodeId can not be null, because if our nodeId
+        // exists, there is at least one documentNodeId.
+        NodeChangeEvent(treenode.headNodeId!),
       ),
       DocumentEdit(const NodeVisibilityChange()),
     ]);

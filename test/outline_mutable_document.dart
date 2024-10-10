@@ -15,40 +15,63 @@ void main() {
 
     test('rebuildStructure with empty document', () {
       document.rebuildStructure();
-      expect(document.rootNodes, isEmpty);
+      expect(document.root.children, isEmpty);
     });
 
     test('rebuildStructure with single root node', () {
       document.add(ParagraphNode(
           id: '1',
-          metadata: {nodeDepthKey: 0},
+          metadata: {nodeDepthKey: 1},
           text: AttributedText('asdf asdf')));
       document.rebuildStructure();
-      expect(document.rootNodes.length, 1);
-      expect(document.rootNodes[0].id, 'tn_1');
+      expect(document.root.children.length, 1);
+      expect(document.root.children[0].id, 'tn_1');
     });
 
     test('rebuildStructure with multiple levels', () {
       document.add(ParagraphNode(
           id: '1',
-          text: AttributedText('One more'),
-          metadata: {nodeDepthKey: 0}));
+          text: AttributedText('parent'),
+          metadata: {nodeDepthKey: 1}));
       document.add(ParagraphNode(
           id: '2',
-          text: AttributedText('Two more'),
-          metadata: {nodeDepthKey: 1}));
+          text: AttributedText('first child'),
+          metadata: {nodeDepthKey: 2}));
       document.add(ParagraphNode(
           id: '3',
-          text: AttributedText('Three more'),
-          metadata: {nodeDepthKey: 1}));
+          text: AttributedText('grand child'),
+          metadata: {nodeDepthKey: 3}));
       document.add(ParagraphNode(
           id: '4',
-          text: AttributedText('Four more'),
-          metadata: {nodeDepthKey: 2}));
+          text: AttributedText('grand grand child'),
+          metadata: {nodeDepthKey: 4}));
       document.rebuildStructure();
-      expect(document.rootNodes.length, 1);
-      expect(document.rootNodes[0].children.length, 2);
-      expect(document.rootNodes[0].children[1].children.length, 1);
+      expect(document.root.children.length, 1);
+      expect(document.root.children[0].children.length, 1);
+      expect(document.root.children[0].children[0].children.length, 1);
+    });
+
+    test('rebuildStructure treats same depth documentnodes following eachother as paragraphs of one treenode', () {
+      document.add(ParagraphNode(
+          id: '1',
+          text: AttributedText('parent'),
+          metadata: {nodeDepthKey: 1}));
+      document.add(ParagraphNode(
+          id: '2',
+          text: AttributedText('first child'),
+          metadata: {nodeDepthKey: 2}));
+      document.add(ParagraphNode(
+          id: '2',
+          text: AttributedText('second child'),
+          metadata: {nodeDepthKey: 2}));
+      document.add(ParagraphNode(
+          id: '4',
+          text: AttributedText('grand child'),
+          metadata: {nodeDepthKey: 3}));
+      document.rebuildStructure();
+      expect(document.root.children.length, 1);
+      expect(document.root.children[0].children.length, 1);
+      expect(document.root.children[0].children[0].children.length, 1);
     });
 
     test('rebuildStructure throws exception for illegal depth increase', () {
@@ -72,12 +95,12 @@ void main() {
     });
 
     test(
-        'rebuildStructure throws exception if document does not start with root node',
+        'rebuildStructure throws exception if document does not start with depth of 1',
             () {
           document.add(ParagraphNode(
               id: '1',
               text: AttributedText('First node'),
-              metadata: {nodeDepthKey: 1}));
+              metadata: {nodeDepthKey: 2}));
           expect(() => document.rebuildStructure(), throwsException);
         });
 
