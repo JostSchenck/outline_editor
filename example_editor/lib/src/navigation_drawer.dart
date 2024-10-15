@@ -1,5 +1,6 @@
 import 'package:example_editor/src/outline_editor/mutable_document_depth_metadata.dart';
 import 'package:example_editor/src/outline_editor/mutable_document_heading_metadata.dart';
+import 'package:example_editor/src/outline_editor/outline_tree_document.dart';
 import 'package:flutter/material.dart';
 
 class OutlineExampleNavigationDrawer extends StatelessWidget {
@@ -25,6 +26,13 @@ class OutlineExampleNavigationDrawer extends StatelessWidget {
           onTap: () {
             Navigator.popAndPushNamed(
                 context, MutableDocumentHeadingMetadataView.routeName);
+          },
+        ),
+        ListTile(
+          title: const Text('tree document'),
+          onTap: () {
+            Navigator.popAndPushNamed(
+                context, OutlineTreeDocumentView.routeName);
           },
         ),
       ],

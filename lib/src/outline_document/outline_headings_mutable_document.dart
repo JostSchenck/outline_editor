@@ -10,35 +10,38 @@ class OutlineHeadingsMutableDocument extends OutlineMutableDocument {
   @override
   void rebuildStructure() {
     outlineDocLog.fine('rebuilding OutlineDocument structure from header attributions');
-    rootNodes.clear();
-    List<OutlineTreenode> treeNodeStack = [];
-    int currentDepth = 0;
+    // root = OutlineTreenode(id: 'root', document: this);
+    root.children.clear();
+    List<OutlineTreenode> treeNodeStack = [root];
+    // we start at 1 because our already existing root node is depth 0 and every
+    // node found will be put into a child.
+    int currentDepth = 1;
     for (final documentNode in this) {
       final currentAttribution = documentNode.metadata['blockType'];
       var createNewTreenode = false;
 
       if (currentAttribution == null || currentAttribution==paragraphAttribution) {
         outlineDocLog.fine('no header for node ${documentNode.id}, assuming depth $currentDepth');
-        if (rootNodes.isEmpty) {
+        if (root.children.isEmpty) {
           createNewTreenode = true;
         }
       } else if (currentAttribution == header1Attribution) {
-        currentDepth = 0;
-        createNewTreenode = true;
-      } else if (currentAttribution == header2Attribution) {
         currentDepth = 1;
         createNewTreenode = true;
-      } else if (currentAttribution == header3Attribution) {
+      } else if (currentAttribution == header2Attribution) {
         currentDepth = 2;
         createNewTreenode = true;
-      } else if (currentAttribution == header4Attribution) {
+      } else if (currentAttribution == header3Attribution) {
         currentDepth = 3;
         createNewTreenode = true;
-      } else if (currentAttribution == header5Attribution) {
+      } else if (currentAttribution == header4Attribution) {
         currentDepth = 4;
         createNewTreenode = true;
-      } else if (currentAttribution == header6Attribution) {
+      } else if (currentAttribution == header5Attribution) {
         currentDepth = 5;
+        createNewTreenode = true;
+      } else if (currentAttribution == header6Attribution) {
+        currentDepth = 6;
         createNewTreenode = true;
       } else {
         outlineDocLog.fine(
@@ -49,14 +52,10 @@ class OutlineHeadingsMutableDocument extends OutlineMutableDocument {
       if (createNewTreenode) {
         final newTreeNode = OutlineTreenode(
             document: this,
-            documentNodeIds: [documentNode.id],
+            documentNodes: [documentNode],
             id: 'tn_${documentNode.id}',
         );
-        if (currentDepth==0) {
-          treeNodeStack.clear();
-          treeNodeStack.add(newTreeNode);
-          rootNodes.add(newTreeNode);
-        } else if (currentDepth == treeNodeStack.length) {
+        if (currentDepth == treeNodeStack.length) {
           // we found a new child to the top one on stack; add it to the
           // children and push it on the stack
           treeNodeStack.last.addChild(newTreeNode);
@@ -80,7 +79,7 @@ class OutlineHeadingsMutableDocument extends OutlineMutableDocument {
         }
       }
       else {
-        treeNodeStack.last.documentNodeIds.add(documentNode.id);
+        treeNodeStack.last.documentNodes.add(documentNode);
       }
     }
   }

@@ -20,7 +20,7 @@ class CollapseExpandButton extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () {
-        commandLog.fine('tap!');
+        commandLog.fine('tap! setting isCollapsed to ${!viewModel.isCollapsed}');
         editor.execute([
           ChangeCollapsedStateRequest(
             nodeId: viewModel.nodeId,

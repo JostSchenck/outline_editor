@@ -130,8 +130,8 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
     }
     assert(
         document is OutlineDocument,
-        'createViewModel needs a '
-        'StructuredDocument, but ${document.runtimeType} was given');
+        'createViewModel needs an '
+        'OutlineDocument, but ${document.runtimeType} was given');
 
     final paragraphViewModel = const ParagraphComponentBuilder()
         .createViewModel(document, node) as ParagraphComponentViewModel;
@@ -140,10 +140,10 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
     return OutlineParagraphComponentViewModel(
       nodeId: node.id,
       paragraphComponentViewModel: paragraphViewModel,
-      outlineIndentLevel: outlineDoc.getIndentationLevel(node.id),
-      indexInChildren: outlineDoc.indexInChildren(node.id),
+      outlineIndentLevel: outlineDoc.getTreenodeDepth(node.id),
+      indexInChildren: outlineDoc.getIndexInChildren(node.id),
       hasChildren:
-          outlineDoc.getTreeNodeForDocumentNode(node.id).children.isNotEmpty,
+          outlineDoc.getOutlineTreenodeForDocumentNodeId(node.id).children.isNotEmpty,
       isCollapsed: outlineDoc.isCollapsed(node.id),
       isVisible: outlineDoc.isVisible(node.id),
     );

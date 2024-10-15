@@ -37,12 +37,14 @@ class ChangeCollapsedStateCommand extends EditCommand {
     commandLog.fine(
         'executing ChangeCollapsedStateCommand, setting $nodeId to $isCollapsed');
     final outlineDoc = context.document as OutlineDocument;
-    final treenode = outlineDoc.getTreeNodeForDocumentNode(nodeId);
+    final treenode = outlineDoc.getOutlineTreenodeForDocumentNodeId(nodeId);
     treenode.isCollapsed = isCollapsed;
 
     executor.logChanges([
       DocumentEdit(
-        NodeChangeEvent(treenode.headNodeId),
+        // we can assume that headNodeId can not be null, because if our nodeId
+        // exists, there is at least one documentNodeId.
+        NodeChangeEvent(treenode.headNode!.id),
       ),
       DocumentEdit(const NodeVisibilityChange()),
     ]);

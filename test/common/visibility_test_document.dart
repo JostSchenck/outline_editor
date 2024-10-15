@@ -6,26 +6,26 @@ void prepareVisibilityTestDocument(OutlineMutableDocument document) {
   document.add(ParagraphNode(
       id: '1',
       text: AttributedText('One more'),
-      metadata: {nodeDepthKey: 0}));
+      metadata: {nodeDepthKey: 1}));
   document.add(ParagraphNode(
       id: '2',
       text: AttributedText('Two more'),
-      metadata: {nodeDepthKey: 1, isCollapsedKey: true}));
+      metadata: {nodeDepthKey: 2, isCollapsedKey: true}));
   document.add(ParagraphNode(
       id: '3',
       text: AttributedText('Three more'),
-      metadata: {nodeDepthKey: 2})); // should be hidden
+      metadata: {nodeDepthKey: 3})); // should be hidden
   document.add(ParagraphNode(
       id: '4',
       text: AttributedText('Four more'),
-      metadata: {nodeDepthKey: 3})); // should be hidden
+      metadata: {nodeDepthKey: 4})); // should be hidden
   document.add(ParagraphNode(
       id: '5',
       text: AttributedText('Another ...'),
-      metadata: {nodeDepthKey: 1, isCollapsedKey: true}));
+      metadata: {nodeDepthKey: 2, isCollapsedKey: true}));
   document.add(ParagraphNode(
       id: '6',
       text: AttributedText('and another'),
-      metadata: {nodeDepthKey: 2})); // should be hidden
+      metadata: {nodeDepthKey: 3})); // should be hidden
   document.rebuildStructure();
 }
