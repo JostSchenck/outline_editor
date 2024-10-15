@@ -12,7 +12,7 @@ class NodeVisibilityReaction extends EditReaction {
       OutlineDocument outlineDoc,
       DocumentSelection selection) {
     DocumentNode? lastVisibleNode =
-        outlineDoc.getLastVisibleNode(selection.base);
+        outlineDoc.getLastVisibleDocumentNode(selection.base);
     while (lastVisibleNode is! TextNode) {
       lastVisibleNode = outlineDoc.getNodeBefore(lastVisibleNode!);
       assert(lastVisibleNode != null,
@@ -37,7 +37,7 @@ class NodeVisibilityReaction extends EditReaction {
       OutlineDocument outlineDoc,
       DocumentSelection selection) {
     DocumentNode? nextVisibleNode =
-        outlineDoc.getNextVisibleNode(selection.base);
+        outlineDoc.getNextVisibleDocumentnode(selection.base);
     while (nextVisibleNode is! TextNode) {
       nextVisibleNode = outlineDoc.getNodeAfter(nextVisibleNode!);
       if (nextVisibleNode == null) {

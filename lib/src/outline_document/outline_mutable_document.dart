@@ -23,25 +23,25 @@ class OutlineMutableDocument extends MutableDocument with OutlineDocument {
   OutlineTreenode get root => _root;
 
   @override
-  bool isCollapsed(String nodeId) =>
-      getTreeNodeForDocumentNodeId(nodeId).isCollapsed;
+  bool isCollapsed(String treeNodeId) =>
+      getOutlineTreenodeForDocumentNodeId(treeNodeId).isCollapsed;
 
   @override
-  void setCollapsed(String nodeId, bool isCollapsed) {
-    getTreeNodeForDocumentNodeId(nodeId).isCollapsed = isCollapsed;
+  void setCollapsed(String treeNodeId, bool isCollapsed) {
+    getOutlineTreenodeForDocumentNodeId(treeNodeId).isCollapsed = isCollapsed;
   }
 
   @override
-  bool isHidden(String nodeId) =>
-      getNodeById(nodeId)!.getMetadataValue(isHiddenKey) == true;
+  bool isHidden(String documentNodeId) =>
+      getNodeById(documentNodeId)!.getMetadataValue(isHiddenKey) == true;
 
   @override
-  void setHidden(String nodeId, bool isHidden) {
-    getNodeById(nodeId)!.putMetadataValue(isHiddenKey, isHidden);
+  void setHidden(String documentNodeId, bool isHidden) {
+    getNodeById(documentNodeId)!.putMetadataValue(isHiddenKey, isHidden);
   }
 
   @override
-  DocumentNode? getNextVisibleNode(DocumentPosition pos) {
+  DocumentNode? getNextVisibleDocumentnode(DocumentPosition pos) {
     for (var i = getNodeIndexById(pos.nodeId); i < nodeCount; i++) {
       if (isVisible(elementAt(i).id)) {
         return elementAt(i);
@@ -64,7 +64,7 @@ class OutlineMutableDocument extends MutableDocument with OutlineDocument {
       lastDepth = depth;
       final newTreeNode = OutlineTreenode(
         document: this,
-        documentNodeIds: [documentNode.id],
+        documentNodes: [documentNode],
         id: 'tn_${documentNode.id}',
       );
       if (depth == treeNodeStack.length) {
@@ -76,7 +76,7 @@ class OutlineMutableDocument extends MutableDocument with OutlineDocument {
         // we found a paragraph that is on the same depth as the
         // paragraph before. Treat this as part of the same treenode
         // instead of creating siblings.
-        treeNodeStack.last.documentNodeIds.add(documentNode.id);
+        treeNodeStack.last.documentNodes.add(documentNode);
       } else if (depth > 0 && depth <= treeNodeStack.length - 2) {
         // we found a new sibling to one on stack; add it to the children of
         // the parent of the last one on this depth of stack, then shorten the

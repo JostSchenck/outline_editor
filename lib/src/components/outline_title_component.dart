@@ -157,10 +157,10 @@ class OutlineTitleComponentBuilder implements ComponentBuilder {
 
     return OutlineTitleComponentViewModel(
       nodeId: node.id,
-      outlineIndentLevel: outlineDoc.getNodeDepth(node.id),
+      outlineIndentLevel: outlineDoc.getTreenodeDepth(node.id),
       indexInChildren: outlineDoc.getIndexInChildren(node.id),
       hasChildren:
-          outlineDoc.getTreeNodeForDocumentNodeId(node.id).children.isNotEmpty,
+          outlineDoc.getOutlineTreenodeForDocumentNodeId(node.id).children.isNotEmpty,
       isCollapsed: outlineDoc.isCollapsed(node.id),
       isVisible: outlineDoc.isVisible(node.id),
       selectionColor: const Color(0x00000000),

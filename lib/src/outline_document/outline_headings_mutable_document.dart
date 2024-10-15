@@ -52,7 +52,7 @@ class OutlineHeadingsMutableDocument extends OutlineMutableDocument {
       if (createNewTreenode) {
         final newTreeNode = OutlineTreenode(
             document: this,
-            documentNodeIds: [documentNode.id],
+            documentNodes: [documentNode],
             id: 'tn_${documentNode.id}',
         );
         if (currentDepth == treeNodeStack.length) {
@@ -79,7 +79,7 @@ class OutlineHeadingsMutableDocument extends OutlineMutableDocument {
         }
       }
       else {
-        treeNodeStack.last.documentNodeIds.add(documentNode.id);
+        treeNodeStack.last.documentNodes.add(documentNode);
       }
     }
   }

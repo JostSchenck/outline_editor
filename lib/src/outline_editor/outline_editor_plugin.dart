@@ -15,7 +15,7 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
     assert(
         editor.document is OutlineDocument,
         'OutlineEditorPlugin '
-        'expects a Document that implements StructureDocument');
+        'expects a Document that implements OutlineDocument');
     editor.reactionPipeline.insert(0, OutlineStructureReaction());
     editor.reactionPipeline.insert(0, NodeVisibilityReaction(editor: editor));
     editor.requestHandlers.add(
