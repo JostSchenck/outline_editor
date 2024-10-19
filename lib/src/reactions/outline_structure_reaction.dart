@@ -1,4 +1,5 @@
 import 'package:outline_editor/outline_editor.dart';
+import 'package:outline_editor/src/util/logging.dart';
 
 class OutlineStructureReaction extends EditReaction {
   OutlineStructureReaction();
@@ -6,15 +7,14 @@ class OutlineStructureReaction extends EditReaction {
   @override
   void modifyContent(EditContext editorContext,
       RequestDispatcher requestDispatcher, List<EditEvent> changeList) {
-    // TODO: only rebuild structure when it may have changed, depending on changeList
     assert(editorContext.document is OutlineDocument);
-    for (var event in changeList) {
-      if (event is DocumentEdit) {
-        (editorContext.document as OutlineDocument).rebuildStructure();
-        break;
+    final outlineDoc = editorContext.document as OutlineDocument;
+    for (var editevent in changeList) {
+      if (editevent is DocumentEdit) {
+        outlineDoc.rebuildStructure();
       }
+      super.modifyContent(editorContext, requestDispatcher, changeList);
     }
-    super.modifyContent(editorContext, requestDispatcher, changeList);
   }
 }
 

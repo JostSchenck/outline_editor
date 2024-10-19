@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart';
 import 'package:outline_editor/src/util/logging.dart';
 import 'package:super_editor/super_editor.dart';
 
@@ -27,7 +26,7 @@ class DocumentNodePath {
 /// [MutableDocument]. This means that an [OutlineTreenode] should not
 /// contain information apart from its contained documentNodeIds or references
 /// to other tree nodes. To enforce this, this class is `final`.
-final class OutlineTreenode extends ChangeNotifier with Iterable<DocumentNode> {
+final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNode> {
   OutlineTreenode({
     List<DocumentNode> documentNodes = const [],
     List<OutlineTreenode>? children,
@@ -48,6 +47,38 @@ final class OutlineTreenode extends ChangeNotifier with Iterable<DocumentNode> {
   OutlineTreenode? parent;
   final String id;
   final Document document;
+
+  // TODO: test
+  void traverseUpDown(void Function(OutlineTreenode) visitor) {
+    visitor(this);
+    for(var child in _children) {
+      child.traverseUpDown(visitor);
+    }
+  }
+
+
+  // TODO: test
+  void traverseDownUp(void Function(OutlineTreenode) visitor) {
+    for(var child in _children) {
+      child.traverseDownUp(visitor);
+    }
+    visitor(this);
+  }
+
+  void purgeStaleChildren() {
+    final staleChildren = [];
+    for (final child in children) {
+      child.purgeStaleChildren();
+      if (child.documentNodes.isEmpty && child.children.isEmpty) {
+        outlineDocLog.fine('found stale child ...');
+        staleChildren.add(child);
+      }
+    }
+    for (final child in staleChildren) {
+      outlineDocLog.fine('... purging');
+      removeChild(child);
+    }
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -155,26 +186,38 @@ final class OutlineTreenode extends ChangeNotifier with Iterable<DocumentNode> {
     }
     outlineDocLog.fine('set isCollapsed to $isCollapsed');
     headNode!.putMetadataValue(isCollapsedKey, isCollapsed);
-    notifyListeners();
+    // notifyListeners();
   }
 
   /// Returns a list of the Treenodes representing children of this Treenode.
-  List<OutlineTreenode> get children => _children;
+  List<OutlineTreenode> get children => UnmodifiableListView(_children);
 
-  // this must not be used for document manipulation, but only on
-  // structure rebuilding in classes derived from OutlineDocument.
-  void addChild(OutlineTreenode child) {
-    _children.add(child);
+  /// For legacy document classes that operate on lists of nodes internally,
+  /// like OutlineMutableDocument or OutlineHeadingsMutableDocument, this must
+  /// not be used for document manipulation, but only on
+  /// structure rebuilding in classes derived from OutlineDocument.
+  ///
+  /// For OutlineTreeDocument, this can be used for docuemnt manipulation.
+  void addChild(OutlineTreenode child, [int index = -1]) {
+    if (index>=0) {
+      _children.insert(index, child);
+    } else {
+      _children.add(child);
+    }
     child.parent = this;
-    notifyListeners();
+    // notifyListeners();
   }
 
-  // this must not be used for document manipulation, but only on
-  // structure rebuilding in classes derived from OutlineDocument.
+  /// For legacy document classes that operate on lists of nodes internally,
+  /// like OutlineMutableDocument or OutlineHeadingsMutableDocument, this must
+  /// not be used for document manipulation, but only on
+  /// structure rebuilding in classes derived from OutlineDocument.
+  ///
+  /// For OutlineTreeDocument, this can be used for docuemnt manipulation.
   void removeChild(OutlineTreenode child) {
     _children.remove(child);
     child.parent = null;
-    notifyListeners();
+    // notifyListeners();
   }
 
   /// At which position in this treenode's or its children's documentNodes

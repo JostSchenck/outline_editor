@@ -9,7 +9,7 @@ class TitleNode extends TextNode {
   TitleNode({
     required super.id,
     required super.text,
-    required super.metadata,
+    super.metadata,
   })  {
     if (getMetadataValue("blockType") == null) {
       putMetadataValue("blockType", titleAttribution);

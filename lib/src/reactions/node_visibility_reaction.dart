@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:outline_editor/outline_editor.dart';
 
 class NodeVisibilityReaction extends EditReaction {
@@ -67,6 +68,7 @@ class NodeVisibilityReaction extends EditReaction {
     final selection = editorContext.composer.selection;
 
     if (changeList.any((event) => event is NodeVisibilityChangeEvent)) {
+    // if (changeList.firstWhereOrNull((element) => element is NodeVisibilityChangeEvent,)) {
       if (selection == null) return;
       if (selection.isCollapsed) {
         // the selection is collapsed. If the cursor is placed in a node that

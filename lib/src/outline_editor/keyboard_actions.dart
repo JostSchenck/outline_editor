@@ -1,10 +1,72 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:outline_editor/outline_editor.dart';
+import 'package:outline_editor/src/commands/insert_outline_treenode.dart';
 import 'package:outline_editor/src/infrastructure/platform.dart';
-import 'package:super_editor/super_editor.dart';
+import 'package:outline_editor/src/infrastructure/uuid.dart';
+// parts copied from super_editor LICENSE
 
-// adopted from super_editor
-ExecutionInstruction moveUpAndDownWithArrowKeysPassingHiddenNodes({
+ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
+  required SuperEditorContext editContext,
+  required KeyEvent keyEvent,
+}) {
+  if (keyEvent is! KeyDownEvent && keyEvent is! KeyRepeatEvent) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  if (keyEvent.logicalKey != LogicalKeyboardKey.enter) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final selection = editContext.composer.selection;
+  if (selection == null) return ExecutionInstruction.continueExecution;
+  final outlineDoc = editContext.document as OutlineTreeDocument;
+
+  if (HardwareKeyboard.instance.isControlPressed) {
+    if (selection.isCollapsed) {
+      editContext.editor.execute([
+        InsertOutlineTreenodeRequest(
+          existingNode: outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId),
+          newNode: OutlineTreenode(
+            id: uuid.v4(),
+            document: outlineDoc,
+            documentNodes: [
+              TitleNode(id: uuid.v4(), text: AttributedText('New OutlineTreenode')),
+              ParagraphNode(id: uuid.v4(), text: AttributedText('')),
+            ],
+          ),
+          createChild: true,
+        )
+      ]);
+      return ExecutionInstruction.haltExecution;
+    }
+    return ExecutionInstruction.continueExecution;
+  }
+  if (HardwareKeyboard.instance.isShiftPressed) {
+    if (selection.isCollapsed) {
+      editContext.editor.execute([
+        InsertOutlineTreenodeRequest(
+          existingNode: outlineDoc.getOutlineTreenodeForDocumentNodeId(
+              selection.base.nodeId),
+          newNode: OutlineTreenode(
+            id: uuid.v4(),
+            document: outlineDoc,
+            documentNodes: [
+              TitleNode(id: uuid.v4(), text: AttributedText('New OutlineTreenode')),
+              ParagraphNode(id: uuid.v4(), text: AttributedText('')),
+            ],
+          ),
+          createChild: false,
+        )
+      ]);
+      return ExecutionInstruction.haltExecution;
+    }
+    return ExecutionInstruction.continueExecution;
+  }
+  return ExecutionInstruction.continueExecution;
+}
+
+ExecutionInstruction moveUpAndDownWithArrowKeysWithFolding({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
 }) {
@@ -20,7 +82,8 @@ ExecutionInstruction moveUpAndDownWithArrowKeysPassingHiddenNodes({
     return ExecutionInstruction.continueExecution;
   }
 
-  if (CurrentPlatform.isWeb && (editContext.composer.composingRegion.value != null)) {
+  if (CurrentPlatform.isWeb &&
+      (editContext.composer.composingRegion.value != null)) {
     // We are composing a character on web. It's possible that a native element is being displayed,
     // like an emoji picker or a character selection panel.
     // We need to let the OS handle the key so the user can navigate
@@ -29,11 +92,13 @@ ExecutionInstruction moveUpAndDownWithArrowKeysPassingHiddenNodes({
     return ExecutionInstruction.blocked;
   }
 
-  if (defaultTargetPlatform == TargetPlatform.windows && HardwareKeyboard.instance.isAltPressed) {
+  if (defaultTargetPlatform == TargetPlatform.windows &&
+      HardwareKeyboard.instance.isAltPressed) {
     return ExecutionInstruction.continueExecution;
   }
 
-  if (defaultTargetPlatform == TargetPlatform.linux && HardwareKeyboard.instance.isAltPressed) {
+  if (defaultTargetPlatform == TargetPlatform.linux &&
+      HardwareKeyboard.instance.isAltPressed) {
     return ExecutionInstruction.continueExecution;
   }
 
@@ -44,11 +109,13 @@ ExecutionInstruction moveUpAndDownWithArrowKeysPassingHiddenNodes({
         expand: HardwareKeyboard.instance.isShiftPressed,
         movementModifier: MovementModifier.paragraph,
       );
-    } else if (CurrentPlatform.isApple && HardwareKeyboard.instance.isMetaPressed) {
-      didMove =
-          editContext.commonOps.moveSelectionToBeginningOfDocument(expand: HardwareKeyboard.instance.isShiftPressed);
+    } else if (CurrentPlatform.isApple &&
+        HardwareKeyboard.instance.isMetaPressed) {
+      didMove = editContext.commonOps.moveSelectionToBeginningOfDocument(
+          expand: HardwareKeyboard.instance.isShiftPressed);
     } else {
-      didMove = editContext.commonOps.moveCaretUp(expand: HardwareKeyboard.instance.isShiftPressed);
+      didMove = editContext.commonOps
+          .moveCaretUp(expand: HardwareKeyboard.instance.isShiftPressed);
     }
   } else {
     if (CurrentPlatform.isApple && HardwareKeyboard.instance.isAltPressed) {
@@ -56,12 +123,18 @@ ExecutionInstruction moveUpAndDownWithArrowKeysPassingHiddenNodes({
         expand: HardwareKeyboard.instance.isShiftPressed,
         movementModifier: MovementModifier.paragraph,
       );
-    } else if (CurrentPlatform.isApple && HardwareKeyboard.instance.isMetaPressed) {
-      didMove = editContext.commonOps.moveSelectionToEndOfDocument(expand: HardwareKeyboard.instance.isShiftPressed);
+    } else if (CurrentPlatform.isApple &&
+        HardwareKeyboard.instance.isMetaPressed) {
+      didMove = editContext.commonOps.moveSelectionToEndOfDocument(
+          expand: HardwareKeyboard.instance.isShiftPressed);
     } else {
-      didMove = editContext.commonOps.moveCaretDown(expand: HardwareKeyboard.instance.isShiftPressed);
+      //didMove = SECommonOps.moveCaretDownWithFolding(expand: HardwareKeyboard.instance.isShiftPressed, editor: editContext.editor);
+      didMove = editContext.commonOps
+          .moveCaretDown(expand: HardwareKeyboard.instance.isShiftPressed);
     }
   }
 
-  return didMove ? ExecutionInstruction.haltExecution : ExecutionInstruction.continueExecution;
+  return didMove
+      ? ExecutionInstruction.haltExecution
+      : ExecutionInstruction.continueExecution;
 }

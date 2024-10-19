@@ -213,4 +213,35 @@ void main() {
       // TODO
     });
   });
+
+  group('OutlineTreeNode traversal methods', () {
+    late OutlineTreeDocument document;
+
+    setUp(() {
+      document = OutlineTreeDocument();
+      // will not be purged, although it has no documentNodes, as b2 will not
+      // be purged, so it has one child
+      document.root.addChild(OutlineTreenode(id: 'a', document: document));
+      // will be purged, as it has  empty documentNodes and its only child is purged
+      document.root.children[0].addChild(OutlineTreenode(id: 'b', document: document));
+      // will be purged as empty documentNodes and no children
+      document.root.children[0].children[0].addChild(OutlineTreenode(id: 'c', document: document));
+      // will not be purged, because it has document nodes
+      document.root.children[0].addChild(
+          OutlineTreenode(id: 'b2', document: document, documentNodes: [ParagraphNode(id: 'dn1', text: AttributedText('text'))]));
+      // will be purged, as it has empty documentNodes and no children
+      document.root.addChild(OutlineTreenode(id: 'd', document: document));
+    });
+
+    test('purgeStaleChildren finds all stale children and removes them recursively', () {
+      document.root.purgeStaleChildren();
+      expect(document.root.children.length, 1);
+      expect(document.root.children[0].id, 'a');
+      expect(document.root.children[0].children.length, 1);
+      expect(document.root.children[0].children[0].id, 'b2');
+      expect(document.root.children[0].children[0].children.length, 0);
+    });
+  });
+
+
 }

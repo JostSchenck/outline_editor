@@ -30,11 +30,14 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
         id: '1',
         document: _document,
         documentNodes: [
-          ParagraphNode(
+          TitleNode(
               id: '1a',
               text: AttributedText('First Paragraph of a root node')),
           ParagraphNode(
               id: '1b',
+              text: AttributedText('First Paragraph of a root node')),
+          ParagraphNode(
+              id: '1c',
               text: AttributedText('Second Paragraph of a root node')),
         ],
         children: [
@@ -42,11 +45,14 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
             id: '2',
             document: _document,
             documentNodes: [
-              ParagraphNode(
+              TitleNode(
                   id: '2a',
                   text: AttributedText('This is a child tree node')),
               ParagraphNode(
                   id: '2b',
+                  text: AttributedText('with its first paragraph')),
+              ParagraphNode(
+                  id: '2c',
                   text: AttributedText('with its second paragraph')),
             ],
             children: [
@@ -54,7 +60,7 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
                 id: '2-1',
                 document: _document,
                 documentNodes: [
-                  ParagraphNode(
+                  TitleNode(
                       id: '2-1a',
                       text: AttributedText('grand child yay')),
                   ParagraphNode(
@@ -71,12 +77,12 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
             id: '3',
             document: _document,
             documentNodes: [
-              ParagraphNode(
+              TitleNode(
                   id: '3a',
                   text: AttributedText('And another child')),
               ParagraphNode(
                   id: '3b',
-                  text: AttributedText('with a second paragraph')),
+                  text: AttributedText('with a paragraph')),
             ],
             children: [
 
@@ -90,31 +96,31 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
         id: '4',
         document: _document,
         documentNodes: [
-          ParagraphNode(
+          TitleNode(
               id: '4a',
               text: AttributedText('There can be more than one root node')),
           ParagraphNode(
               id: '4b',
-              text: AttributedText('Second Paragraph of another root node')),
+              text: AttributedText('although internally there is one root')),
         ],
         children: [
           OutlineTreenode(
             id: '5',
             document: _document,
             documentNodes: [
-              ParagraphNode(
+              TitleNode(
                   id: '5a',
                   text: AttributedText('This is a child tree node')),
               ParagraphNode(
                   id: '5b',
-                  text: AttributedText('with its second paragraph')),
+                  text: AttributedText('with its text')),
             ],
             children: [
               OutlineTreenode(
                 id: '6',
                 document: _document,
                 documentNodes: [
-                  ParagraphNode(
+                  TitleNode(
                       id: '6a',
                       text: AttributedText('grand child yay')),
                   ParagraphNode(

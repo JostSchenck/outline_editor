@@ -46,7 +46,7 @@ class ChangeCollapsedStateCommand extends EditCommand {
         // exists, there is at least one documentNodeId.
         NodeChangeEvent(treenode.headNode!.id),
       ),
-      DocumentEdit(const NodeVisibilityChange()),
+      NodeVisibilityChangeEvent(const NodeVisibilityChange()),
     ]);
   }
 }

@@ -319,8 +319,12 @@ class OutlineTreeDocument
 
   @override
   void rebuildStructure() {
-    // do nothing here, as our tree structure is already our
-    // single source of truth
+    // in general, our outline is our single source of truth, where
+    // we operate on directly, so here should in theory be nothing to do.
+    // However, reusing certain SuperEditor behaviors (like deleting text)
+    // can lead to DocumentNodes being removed without the OutlineTreeDocument
+    // knowing, so we check for "stale", empty OutlineTreenodes here.
+    _root.purgeStaleChildren();
   }
 
   @override
