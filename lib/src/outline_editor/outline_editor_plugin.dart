@@ -1,5 +1,9 @@
 import 'package:outline_editor/src/commands/change_collapsed_state.dart';
+import 'package:outline_editor/src/commands/delete_outline_treenode.dart';
+import 'package:outline_editor/src/commands/insert_documentnode_in_outlinetreenode.dart';
 import 'package:outline_editor/src/commands/insert_outline_treenode.dart';
+import 'package:outline_editor/src/commands/merge_outline_treenodes.dart';
+import 'package:outline_editor/src/commands/move_documentnode_into_treenode.dart';
 import 'package:outline_editor/src/outline_editor/keyboard_actions.dart';
 import 'package:outline_editor/src/reactions/node_visibility_reaction.dart';
 import 'package:outline_editor/src/components/outline_paragraph_component.dart';
@@ -29,12 +33,34 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
               )
             : null,
         (request) => request is InsertOutlineTreenodeRequest
-        ? InsertOutlineTreenodeCommand(
-          existingNode: request.existingNode,
-          newNode: request.newNode,
-          createChild: request.createChild,
-          index: request.index,
-        )
+            ? InsertOutlineTreenodeCommand(
+                existingNode: request.existingNode,
+                newNode: request.newNode,
+                createChild: request.createChild,
+                index: request.index,
+              )
+            : null,
+        (request) => request is DeleteOutlineTreenodeRequest
+            ? DeleteOutlineTreenodeCommand(
+                outlineTreenode: request.outlineTreenode)
+            : null,
+        (request) => request is MergeOutlineTreenodesRequest
+            ? MergeOutlineTreenodesCommand(
+                treenodeMergedInto: request.treenodeMergedInto,
+                mergedTreenode: request.mergedTreenode,
+              )
+            : null,
+        (request) => request is InsertDocumentNodeInOutlineTreenodeRequest
+            ? InsertDocumentNodeInOutlineTreenodeCommand(
+                documentNode: request.documentNode,
+                outlineTreenode: request.outlineTreenode,
+                index: request.index)
+            : null,
+        (request) => request is MoveDocumentNodeIntoTreenodeRequest
+            ? MoveDocumentNodeIntoTreenodeCommand(
+                documentNode: request.documentNode,
+                outlineTreenode: request.outlineTreenode,
+                index: request.index)
             : null,
       ],
     );
@@ -45,6 +71,10 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
   void detach(Editor editor) {
     editor.reactionPipeline
         .removeWhere((element) => element is OutlineStructureReaction);
+    editor.reactionPipeline
+        .removeWhere((element) => element is NodeVisibilityReaction);
+
+    // TODO: find a way to remove the request handlers. There is no analogon to getters like "componentBuilders"
   }
 
   @override
@@ -55,6 +85,7 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
 
   @override
   List<DocumentKeyboardAction> get keyboardActions => [
-    insertTreenodeOnShiftOrCtrlEnter,
-  ];
+        backspaceEdgeCasesInOutlineTreeDocument,
+        insertTreenodeOnShiftOrCtrlEnter,
+      ];
 }

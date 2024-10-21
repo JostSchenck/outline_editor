@@ -22,12 +22,30 @@ abstract mixin class OutlineDocument implements Document {
   TreenodePath getOutlinePath(String nodeId) =>
       getOutlineTreenodeForDocumentNodeId(nodeId).path;
 
-  OutlineTreenode getTreenodeByPath(TreenodePath path) {
+  OutlineTreenode getOutlineTreenodeByPath(TreenodePath path) {
     final ret = root.getOutlineTreenodeByPath(path);
     if (ret == null) {
       throw Exception('Could not find OutlineTreenode for path $path');
     }
     return ret;
+  }
+
+  // test
+  OutlineTreenode getOutlineTreenodeById(String id) {
+    final ret = root.getOutlineTreenodeById(id);
+    if (ret == null) {
+      throw Exception('Could not find OutlineTreenode for id $id');
+    }
+    return ret;
+  }
+
+  OutlineTreenode? getOutlineTreenodeBeforeTreenode(OutlineTreenode treenode) {
+    if (treenode.parent==null) return null;
+    final childIndex = treenode.parent!.children.indexOf(treenode);
+    if (childIndex==0) {
+      return treenode.parent;
+    }
+    return (treenode.parent!.children[childIndex-1].lastOutlineTreeNodeInSubtree);
   }
 
   /// At which position in the parent's content a certain [DocumentNode] is

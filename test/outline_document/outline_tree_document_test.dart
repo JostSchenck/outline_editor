@@ -149,8 +149,8 @@ main() {
     });
 
     test('when nodes are collapse, child nodes and their document nodes are hidden', () {
-      outlineTreeDocument.getTreenodeByPath([0,0]).isCollapsed = true;
-      expect(outlineTreeDocument.getTreenodeByPath([0, 0]).isCollapsed, true);
+      outlineTreeDocument.getOutlineTreenodeByPath([0,0]).isCollapsed = true;
+      expect(outlineTreeDocument.getOutlineTreenodeByPath([0, 0]).isCollapsed, true);
       expect(outlineTreeDocument.isVisible('2-1b'), false);
       expect(outlineTreeDocument.isVisible('2b'), true);
       expect(outlineTreeDocument.isVisible('1a'), true);

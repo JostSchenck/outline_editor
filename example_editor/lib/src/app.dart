@@ -1,6 +1,4 @@
-import 'package:example_editor/src/outline_editor/mutable_document_depth_metadata.dart';
-import 'package:example_editor/src/outline_editor/mutable_document_heading_metadata.dart';
-import 'package:example_editor/src/outline_editor/outline_tree_document.dart';
+import 'package:example_editor/src/outline_editor/outline_tree_document_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -70,10 +68,6 @@ class MyApp extends StatelessWidget {
                 switch (routeSettings.name) {
                   case SettingsView.routeName:
                     return SettingsView(controller: settingsController);
-                  case MutableDocumentDepthMetadataView.routeName:
-                    return const MutableDocumentDepthMetadataView();
-                  case MutableDocumentHeadingMetadataView.routeName:
-                    return const MutableDocumentHeadingMetadataView();
                   case OutlineTreeDocumentView.routeName:
                     return const OutlineTreeDocumentView();
                   default:

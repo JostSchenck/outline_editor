@@ -1,6 +1,4 @@
-import 'package:example_editor/src/outline_editor/mutable_document_depth_metadata.dart';
-import 'package:example_editor/src/outline_editor/mutable_document_heading_metadata.dart';
-import 'package:example_editor/src/outline_editor/outline_tree_document.dart';
+import 'package:example_editor/src/outline_editor/outline_tree_document_view.dart';
 import 'package:flutter/material.dart';
 
 class OutlineExampleNavigationDrawer extends StatelessWidget {
@@ -14,20 +12,20 @@ class OutlineExampleNavigationDrawer extends StatelessWidget {
           decoration: BoxDecoration(color: Colors.blue),
           child: Text('Example configurations'),
         ),
-        ListTile(
-          title: const Text('by depth metadata'),
-          onTap: () {
-            Navigator.popAndPushNamed(
-                context, MutableDocumentDepthMetadataView.routeName);
-          },
-        ),
-        ListTile(
-          title: const Text('by heading blockType'),
-          onTap: () {
-            Navigator.popAndPushNamed(
-                context, MutableDocumentHeadingMetadataView.routeName);
-          },
-        ),
+        // ListTile(
+        //   title: const Text('by depth metadata'),
+        //   onTap: () {
+        //     Navigator.popAndPushNamed(
+        //         context, MutableDocumentDepthMetadataView.routeName);
+        //   },
+        // ),
+        // ListTile(
+        //   title: const Text('by heading blockType'),
+        //   onTap: () {
+        //     Navigator.popAndPushNamed(
+        //         context, MutableDocumentHeadingMetadataView.routeName);
+        //   },
+        // ),
         ListTile(
           title: const Text('tree document'),
           onTap: () {

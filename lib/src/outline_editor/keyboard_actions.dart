@@ -1,10 +1,100 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:outline_editor/outline_editor.dart';
+import 'package:outline_editor/src/commands/delete_outline_treenode.dart';
 import 'package:outline_editor/src/commands/insert_outline_treenode.dart';
+import 'package:outline_editor/src/commands/merge_outline_treenodes.dart';
 import 'package:outline_editor/src/infrastructure/platform.dart';
 import 'package:outline_editor/src/infrastructure/uuid.dart';
 // parts copied from super_editor LICENSE
+
+ExecutionInstruction backspaceEdgeCasesInOutlineTreeDocument({
+  required SuperEditorContext editContext,
+  required KeyEvent keyEvent,
+}) {
+  if (keyEvent is! KeyDownEvent && keyEvent is! KeyRepeatEvent) {
+    return ExecutionInstruction.continueExecution;
+  }
+  if (keyEvent.logicalKey != LogicalKeyboardKey.backspace) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  // we only care about collapsed selections
+  final selection = editContext.composer.selection;
+  if (selection == null) return ExecutionInstruction.continueExecution;
+  if (!selection.isCollapsed) return ExecutionInstruction.continueExecution;
+
+  // we only care, if the cursor is at the start of a text node
+  final outlineDoc = editContext.document as OutlineTreeDocument;
+  final outlineNode =
+      outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.start.nodeId);
+  if (selection.start.nodePosition is! TextNodePosition) {
+    return ExecutionInstruction.continueExecution;
+  }
+  final textNodePosition = selection.start.nodePosition as TextNodePosition;
+  if (textNodePosition.offset != 0) {
+    return ExecutionInstruction.continueExecution;
+  }
+  final textNode = outlineDoc.getNodeById(selection.start.nodeId)!;
+
+  if (textNode is TitleNode) {
+    // if at the beginning of a non-empty title node, or an empty title node
+    // with following document nodes, just move caret to the end of the
+    // preceding node. If it's all empty, do the same but also delete the
+    // Treenode. If only the title node is empty, do the same and merge Treenodes
+    final nodeBefore = outlineDoc.getNodeBefore(textNode);
+    if (nodeBefore == null || nodeBefore is! TextNode) {
+      return ExecutionInstruction.haltExecution;
+    }
+    final deleteOutlineNode = outlineNode.isConsideredEmpty;
+    final mergeNodes = !deleteOutlineNode &&
+        outlineNode.headNode is TitleNode &&
+        (outlineNode.headNode as TitleNode).text.text.isEmpty;
+    final treenodeBefore = mergeNodes
+        ? outlineDoc.getOutlineTreenodeBeforeTreenode(outlineNode)
+        : null;
+    if (mergeNodes && treenodeBefore == null) {
+      return ExecutionInstruction.haltExecution;
+    }
+
+    editContext.editor.execute([
+      ChangeSelectionRequest(
+        DocumentSelection.collapsed(
+            position: DocumentPosition(
+          nodeId: nodeBefore.id,
+          nodePosition: TextNodePosition(offset: nodeBefore.text.text.length),
+        )),
+        SelectionChangeType.placeCaret,
+        'moved caret on backspace without deleting anything',
+      ),
+      if (deleteOutlineNode)
+        DeleteOutlineTreenodeRequest(outlineTreenode: outlineNode),
+      if (mergeNodes)
+        MergeOutlineTreenodesRequest(
+          treenodeMergedInto: treenodeBefore!,
+          mergedTreenode: outlineNode,
+        ),
+    ]);
+    return ExecutionInstruction.haltExecution;
+  } else {
+    final nodeBefore = outlineDoc.getNodeBefore(textNode);
+    if (nodeBefore is TitleNode) {
+      editContext.editor.execute([
+        ChangeSelectionRequest(
+          DocumentSelection.collapsed(
+              position: DocumentPosition(
+                  nodeId: nodeBefore.id,
+                  nodePosition:
+                      TextNodePosition(offset: nodeBefore.text.text.length))),
+          SelectionChangeType.deleteContent,
+          'Backspace pressed',
+        )
+      ]);
+      return ExecutionInstruction.haltExecution;
+    }
+  }
+  return ExecutionInstruction.continueExecution;
+}
 
 ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
   required SuperEditorContext editContext,
@@ -26,12 +116,14 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
     if (selection.isCollapsed) {
       editContext.editor.execute([
         InsertOutlineTreenodeRequest(
-          existingNode: outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId),
+          existingNode: outlineDoc
+              .getOutlineTreenodeForDocumentNodeId(selection.base.nodeId),
           newNode: OutlineTreenode(
             id: uuid.v4(),
             document: outlineDoc,
             documentNodes: [
-              TitleNode(id: uuid.v4(), text: AttributedText('New OutlineTreenode')),
+              TitleNode(
+                  id: uuid.v4(), text: AttributedText('New OutlineTreenode')),
               ParagraphNode(id: uuid.v4(), text: AttributedText('')),
             ],
           ),
@@ -46,13 +138,14 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
     if (selection.isCollapsed) {
       editContext.editor.execute([
         InsertOutlineTreenodeRequest(
-          existingNode: outlineDoc.getOutlineTreenodeForDocumentNodeId(
-              selection.base.nodeId),
+          existingNode: outlineDoc
+              .getOutlineTreenodeForDocumentNodeId(selection.base.nodeId),
           newNode: OutlineTreenode(
             id: uuid.v4(),
             document: outlineDoc,
             documentNodes: [
-              TitleNode(id: uuid.v4(), text: AttributedText('New OutlineTreenode')),
+              TitleNode(
+                  id: uuid.v4(), text: AttributedText('New OutlineTreenode')),
               ParagraphNode(id: uuid.v4(), text: AttributedText('')),
             ],
           ),

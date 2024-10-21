@@ -14,7 +14,7 @@ class TestOutlineEditor extends StatefulWidget {
 
 class _TestOutlineEditorState extends State<TestOutlineEditor> {
   late ScrollController _scrollController;
-  late OutlineMutableDocument _document;
+  late OutlineTreeDocument _document;
   late Editor _editor;
   late MutableDocumentComposer _composer;
   late FocusNode _editorFocusNode;
@@ -22,8 +22,7 @@ class _TestOutlineEditorState extends State<TestOutlineEditor> {
   @override
   void initState() {
     super.initState();
-    _document = OutlineMutableDocument();
-    prepareVisibilityTestDocument(_document);
+    _document = getVisibilityTestDocument();
     _scrollController = ScrollController();
     _composer = MutableDocumentComposer();
     _editor = createDefaultDocumentEditor(document: _document, composer: _composer);

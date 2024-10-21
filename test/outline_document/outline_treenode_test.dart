@@ -1,21 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:outline_editor/outline_editor.dart';
-import 'package:outline_editor/src/outline_document/outline_treenode.dart';
 
 import '../common/visibility_test_document.dart';
 
 void main() {
   group('OutlineTreeNode visibility (hiding and collapsing) of nodes', () {
-    late OutlineMutableDocument document;
+    late OutlineTreeDocument document;
 
     setUp(() {
-      document = OutlineMutableDocument();
+      document = getVisibilityTestDocument();
     });
 
     test(
         'DocumentNodes are hidden when they belong to an OutlineTreeNode that has an ancestor with isCollapsed set to true',
         () {
-      prepareVisibilityTestDocument(document);
       expect(document.isVisible('2'), true);
       expect(document.isVisible('3'), false);
       expect(document.isVisible('4'), false);
@@ -26,7 +24,6 @@ void main() {
     test(
         'getLastVisibleNode correctly gives the last visible node starting with the given one',
         () {
-      prepareVisibilityTestDocument(document);
       expect(
           document
               .getLastVisibleDocumentNode(const DocumentPosition(
@@ -68,7 +65,6 @@ void main() {
     test(
         'getNextVisibleNode correctly gives the next visible node starting with the given one',
         () {
-      prepareVisibilityTestDocument(document);
       expect(
           document
               .getNextVisibleDocumentnode(const DocumentPosition(
@@ -107,10 +103,10 @@ void main() {
   });
 
   group('OutlineTreeNode adding and removing nodes', () {
-    late OutlineMutableDocument document;
+    late OutlineTreeDocument document;
 
     setUp(() {
-      document = OutlineMutableDocument();
+      document = OutlineTreeDocument();
       document.root.addChild(OutlineTreenode(id: 'a', document: document));
       document.root.addChild(OutlineTreenode(id: 'b', document: document));
       document.root.addChild(OutlineTreenode(id: 'd', document: document));
@@ -132,7 +128,7 @@ void main() {
         reason: 'wrong number of children',
       );
       expect(
-        document.getTreenodeByPath([1, 0]).id,
+        document.getOutlineTreenodeByPath([1, 0]).id,
         'c',
         reason: 'added grand child not found by path',
       );
@@ -159,20 +155,19 @@ void main() {
   });
 
   group('OutlineTreeNode addressing nodes by id or path', () {
-    late OutlineMutableDocument document;
+    late OutlineTreeDocument document;
 
     setUp(() {
-      document = OutlineMutableDocument();
+      document = getVisibilityTestDocument();
     });
 
     test('OutlineTreeNodes can be retrieved by their path', () {
-      prepareVisibilityTestDocument(document);
-      expect(document.getTreenodeByPath([0]).headNode!.id, '1');
-      expect(document.getTreenodeByPath([0, 1]).headNode!.id, '5');
+      expect(document.getOutlineTreenodeByPath([0]).headNode!.id, '1');
+      expect(document.getOutlineTreenodeByPath([0, 1]).headNode!.id, '5');
       // and a relative path
       expect(
           document
-              .getTreenodeByPath([0, 1])
+              .getOutlineTreenodeByPath([0, 1])
               .getOutlineTreenodeByPath([0])!
               .headNode!
               .id,
@@ -180,12 +175,11 @@ void main() {
     });
 
     test('OutlineTreeNodes can be retrieved by their treeNodeId', () {
-      prepareVisibilityTestDocument(document);
       expect(
           document.root
               .getOutlineTreenodeByPath([0, 1, 0])!
               .documentNodes
-              .first!
+              .first
               .id,
           '6');
       expect(document.root.getOutlineTreenodeForDocumentNodeId('4')!.path,
@@ -193,7 +187,6 @@ void main() {
     });
 
     test('DocumentNodes in the document can be retrieved by their id', () {
-      prepareVisibilityTestDocument(document);
       expect(
           (document.root.getDocumentNodeById('1')! as ParagraphNode).text.text,
           'One more');
@@ -208,7 +201,6 @@ void main() {
     test(
         'DocumentNodes in the document can be retrieved by their DocumentNodePath',
         () {
-      prepareVisibilityTestDocument(document);
       // expect(actual, matcher);
       // TODO
     });

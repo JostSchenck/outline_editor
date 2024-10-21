@@ -1,5 +1,4 @@
 import 'package:outline_editor/outline_editor.dart';
-import 'package:outline_editor/src/reactions/node_visibility_reaction.dart';
 import 'package:outline_editor/src/util/logging.dart';
 
 class InsertOutlineTreenodeRequest implements EditRequest {

@@ -31,6 +31,7 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     List<DocumentNode> documentNodes = const [],
     List<OutlineTreenode>? children,
     this.parent,
+    bool collapsed = false,
     required this.id,
     required this.document,
   }) {
@@ -38,6 +39,9 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     if (children != null) _children.addAll(children);
     for (var child in _children) {
       child.parent = this;
+    }
+    if (collapsed) {
+      isCollapsed = true;
     }
   }
 
@@ -79,6 +83,8 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
       removeChild(child);
     }
   }
+
+  bool get isConsideredEmpty => documentNodes.every((n) => n is TextNode && n.text.text.isEmpty);
 
   @override
   bool operator ==(Object other) =>
@@ -144,6 +150,17 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
         docNodePath.docNodeIndex,
       ),
     );
+  }
+
+  OutlineTreenode? getOutlineTreenodeById(String id) {
+    if (id == this.id) {
+      return this;
+    }
+    for (var child in _children) {
+      final ret = child.getOutlineTreenodeById(id);
+      if (ret != null) return ret;
+    }
+    return null;
   }
 
   DocumentNode? getDocumentNodeById(String docNodeId) {
