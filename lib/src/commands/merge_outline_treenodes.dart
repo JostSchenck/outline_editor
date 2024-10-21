@@ -1,6 +1,7 @@
 import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/commands/delete_outline_treenode.dart';
 import 'package:outline_editor/src/commands/move_documentnode_into_treenode.dart';
+import 'package:outline_editor/src/commands/reparent_outlinetreenode.dart';
 import 'package:outline_editor/src/util/logging.dart';
 
 class MergeOutlineTreenodesRequest implements EditRequest {
@@ -15,10 +16,10 @@ class MergeOutlineTreenodesRequest implements EditRequest {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is MergeOutlineTreenodesRequest &&
-              runtimeType == other.runtimeType &&
-              treenodeMergedInto == other.treenodeMergedInto &&
-              mergedTreenode == other.mergedTreenode;
+      other is MergeOutlineTreenodesRequest &&
+          runtimeType == other.runtimeType &&
+          treenodeMergedInto == other.treenodeMergedInto &&
+          mergedTreenode == other.mergedTreenode;
 
   @override
   int get hashCode =>
@@ -34,23 +35,26 @@ class MergeOutlineTreenodesCommand extends EditCommand {
   @override
   void execute(EditContext context, CommandExecutor executor) {
     commandLog.fine(
-        'executing InsertOutlineTreenodeCommand, appending $mergedTreenode to $treenodeMergedInto');
-    if (mergedTreenode.documentNodes.isEmpty) {
-      // nothing to do except removing this contentless treenode
-      executor.executeCommand(
-          DeleteOutlineTreenodeCommand(outlineTreenode: mergedTreenode));
-      return;
-    }
-    // if first documentNode is a TitleNode, ditch it
+        'executing MergeOutlineTreenodesCommand, appending $mergedTreenode to $treenodeMergedInto');
+    // if first documentNode is a TitleNode, ditch it, as the TitleNode of the
+    // other Treenode wins
     if (mergedTreenode.headNode is TitleNode) {
-      executor.executeCommand(DeleteNodeCommand(nodeId: mergedTreenode.headNode!.id));
+      executor.executeCommand(
+          DeleteNodeCommand(nodeId: mergedTreenode.headNode!.id));
     }
     // append all documentNodes of the merged node one after one to the node merged into
-    for (final docNode in mergedTreenode) {
+    for (final docNode in [...mergedTreenode.documentNodes]) {
       executor.executeCommand(MoveDocumentNodeIntoTreenodeCommand(
           documentNode: docNode,
           outlineTreenode: treenodeMergedInto,
           index: -1));
+    }
+    // prepend all children of the merged node one after one to the node merged into
+    for (final child in [...mergedTreenode.children.reversed]) {
+      executor.executeCommand(ReparentOutlineTreenodeCommand(
+          childTreenode: child,
+          newParentTreenode: treenodeMergedInto,
+          index: 0));
     }
     executor.executeCommand(
         DeleteOutlineTreenodeCommand(outlineTreenode: mergedTreenode));

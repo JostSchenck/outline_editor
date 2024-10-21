@@ -3,18 +3,18 @@ import 'package:outline_editor/src/util/logging.dart';
 
 class InsertOutlineTreenodeRequest implements EditRequest {
   InsertOutlineTreenodeRequest({
-    required this.existingNode,
-    required this.newNode,
+    required this.existingTreenode,
+    required this.newTreenode,
     required this.createChild,
     this.index = -1,
   });
 
   /// The existing node which serves as a reference for the new node, either
   /// as a parent or as a sibling.
-  final OutlineTreenode existingNode;
+  final OutlineTreenode existingTreenode;
 
   /// The new node to be inserted.
-  final OutlineTreenode newNode;
+  final OutlineTreenode newTreenode;
 
   /// true, if the new node should be a child of the existing node, false if it
   /// should be a sibling.
@@ -32,11 +32,11 @@ class InsertOutlineTreenodeRequest implements EditRequest {
       identical(this, other) ||
       other is InsertOutlineTreenodeRequest &&
           runtimeType == other.runtimeType &&
-          existingNode == other.existingNode &&
-          newNode == other.newNode;
+          existingTreenode == other.existingTreenode &&
+          newTreenode == other.newTreenode;
 
   @override
-  int get hashCode => super.hashCode ^ existingNode.hashCode ^ newNode.hashCode;
+  int get hashCode => super.hashCode ^ existingTreenode.hashCode ^ newTreenode.hashCode;
 }
 
 class InsertOutlineTreenodeCommand extends EditCommand {
@@ -61,7 +61,7 @@ class InsertOutlineTreenodeCommand extends EditCommand {
       if (index == -1) {
         existingNode.addChild(newNode);
       } else {
-        existingNode.children.insert(index, newNode);
+        existingNode.addChild(newNode, index);
       }
     } else {
       assert(existingNode.parent != null);
@@ -85,12 +85,12 @@ class InsertOutlineTreenodeCommand extends EditCommand {
           ),
         ),
     ]);
-    executor.executeCommand(ChangeSelectionCommand(
-        DocumentSelection.collapsed(
-            position: DocumentPosition(
-                nodeId: firstDocNode.id,
-                nodePosition: const TextNodePosition(offset: 0))),
-        SelectionChangeType.insertContent,
-        'outlinetreenode insertion'));
+    // executor.executeCommand(ChangeSelectionCommand(
+    //     DocumentSelection.collapsed(
+    //         position: DocumentPosition(
+    //             nodeId: firstDocNode.id,
+    //             nodePosition: const TextNodePosition(offset: 0))),
+    //     SelectionChangeType.insertContent,
+    //     'outlinetreenode insertion'));
   }
 }
