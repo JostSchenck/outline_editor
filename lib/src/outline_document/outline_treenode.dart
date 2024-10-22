@@ -26,7 +26,9 @@ class DocumentNodePath {
 /// [MutableDocument]. This means that an [OutlineTreenode] should not
 /// contain information apart from its contained documentNodeIds or references
 /// to other tree nodes. To enforce this, this class is `final`.
-final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNode> {
+final class OutlineTreenode /*extends ChangeNotifier */
+    with
+        Iterable<DocumentNode> {
   OutlineTreenode({
     List<DocumentNode> documentNodes = const [],
     List<OutlineTreenode>? children,
@@ -55,15 +57,14 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
   // TODO: test
   void traverseUpDown(void Function(OutlineTreenode) visitor) {
     visitor(this);
-    for(var child in _children) {
+    for (var child in _children) {
       child.traverseUpDown(visitor);
     }
   }
 
-
   // TODO: test
   void traverseDownUp(void Function(OutlineTreenode) visitor) {
-    for(var child in _children) {
+    for (var child in _children) {
       child.traverseDownUp(visitor);
     }
     visitor(this);
@@ -84,7 +85,10 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     }
   }
 
-  bool get isConsideredEmpty => documentNodes.every((n) => n is TextNode && n.text.text.isEmpty);
+  bool get isConsideredEmpty =>
+      documentNodes.length == 1 &&
+      documentNodes[0] is TextNode &&
+      (documentNodes[0] as TextNode).text.text.isEmpty;
 
   @override
   bool operator ==(Object other) =>
@@ -216,7 +220,7 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
   ///
   /// For OutlineTreeDocument, this can be used for docuemnt manipulation.
   void addChild(OutlineTreenode child, [int index = -1]) {
-    if (index>=0) {
+    if (index >= 0) {
       _children.insert(index, child);
     } else {
       _children.add(child);
@@ -255,6 +259,10 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     }
     return -1;
   }
+
+  /// Convenience method to retrieve the index this OutlineTreenode holds
+  /// in its parents list of children, or -1 if root.
+  int get childIndex => parent == null ? -1 : parent!.children.indexOf(this);
 
   /// Returns the depth of this TreeNode, 0 meaning a root node.
   int get depth => parent == null ? 0 : parent!.depth + 1;
