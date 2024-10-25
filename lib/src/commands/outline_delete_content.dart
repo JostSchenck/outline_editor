@@ -1,5 +1,3 @@
-import 'package:super_editor/super_editor.dart';
-
 /// This command is used as a replacement for super_editor's DeleteContentCommand
 /// when receiving a DeleteContentRequest, as deleting ranges in an outline
 /// needs taking care of the structure.
@@ -7,6 +5,7 @@ import 'package:super_editor/super_editor.dart';
 /// TODO: Maybe not needed if we take care of always correcting the selection
 /// to a legal state.
 ///
+/*
 class OutlineDeleteContentCommand extends EditCommand {
   OutlineDeleteContentCommand({
     required this.documentRange,
@@ -25,3 +24,4 @@ class OutlineDeleteContentCommand extends EditCommand {
 
   }
 }
+*/
