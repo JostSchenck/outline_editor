@@ -89,27 +89,8 @@ abstract mixin class OutlineDocument implements Document {
   /// Return visibility of the [DocumentNode] with the given id, taking
   /// folding state of tree nodes as well as document nodes into account.
   bool isVisible(String documentNodeId) {
-    // if this particular DocumentNode is already hidden, we don't have to
-    // look any further
-    if (isHidden(documentNodeId)) {
-      return false;
-    }
-    // find TreeNode corresponding to the node with id `documentNodeId`
     final myTreeNode = getOutlineTreenodeForDocumentNodeId(documentNodeId);
-    // search all ancestors (not my own tree node) until root and check if one
-    // is collapsed
-    var ancestor = myTreeNode.parent;
-    while (ancestor != null) {
-      if (ancestor.isCollapsed) {
-        // found an ancestor that is folded, so we as a descendent
-        // are, too
-        return false;
-      }
-      ancestor = ancestor.parent;
-    }
-    // root nodes are never hidden. All ancestors until root are visible, so
-    // we are, too
-    return true;
+    return !myTreeNode.hasContentHidden && myTreeNode.isVisible;
   }
 
   /// Returns the last visible [DocumentNode] in the document before `pos`, or the node

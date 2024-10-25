@@ -42,7 +42,7 @@ class OutlineTreeDocument
   /// 'logical root node' but only over all children; this way, we have a
   /// single root internally, while users can create more than one root node.
   @override
-  Iterator<DocumentNode> get iterator => _root.documentNodesChildren.iterator;
+  Iterator<DocumentNode> get iterator => _root.nodesChildren.iterator;
 
   @override
   DocumentNode get first {
