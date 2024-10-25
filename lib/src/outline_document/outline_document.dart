@@ -1,3 +1,4 @@
+import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/outline_document/outline_treenode.dart';
 import 'package:super_editor/super_editor.dart';
 
@@ -102,8 +103,13 @@ abstract mixin class OutlineDocument implements Document {
   /// Return visibility of the [DocumentNode] with the given id, taking
   /// folding state of tree nodes as well as document nodes into account.
   bool isVisible(String documentNodeId) {
+    final myDocNode = getNodeById(documentNodeId);
     final myTreeNode = getOutlineTreenodeForDocumentNodeId(documentNodeId);
-    return !myTreeNode.hasContentHidden && myTreeNode.isVisible;
+    if (myDocNode is TitleNode) {
+      return myTreeNode.isVisible;
+    } else {
+      return !myTreeNode.hasContentHidden && myTreeNode.isVisible;
+    }
   }
 
   /// Returns the last visible [DocumentNode] in the document before `pos`, or the node
@@ -119,7 +125,7 @@ abstract mixin class OutlineDocument implements Document {
     // because the node at [0] must always be a root node, and root nodes must
     // always be visible, pos.nodeId must at this point be >0
     assert(getNodeIndexById(pos.nodeId) > 0);
-    for (var i = getNodeIndexById(pos.nodeId) - 1; i > 0; i--) {
+    for (var i = getNodeIndexById(pos.nodeId) - 1; i >= 0; i--) {
       if (isVisible(elementAt(i).id)) {
         return elementAt(i);
       }
