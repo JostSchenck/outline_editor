@@ -6,7 +6,7 @@ OutlineTreeDocument getVisibilityTestDocument() {
     OutlineTreenode(
       id: 'tn_1',
       document: document,
-      documentNodes: [
+      contentNodes: [
         ParagraphNode(
           id: '1',
           text: AttributedText('One more'),
@@ -16,7 +16,7 @@ OutlineTreeDocument getVisibilityTestDocument() {
         OutlineTreenode(
           id: 'tn_2',
           document: document,
-          documentNodes: [
+          contentNodes: [
             ParagraphNode(
               id: '2',
               text: AttributedText('Two more'),
@@ -27,7 +27,7 @@ OutlineTreeDocument getVisibilityTestDocument() {
             OutlineTreenode(
               id: 'tn_3',
               document: document,
-              documentNodes: [
+              contentNodes: [
                 ParagraphNode(
                   id: '3',
                   text: AttributedText('Three more'),
@@ -37,7 +37,7 @@ OutlineTreeDocument getVisibilityTestDocument() {
                 OutlineTreenode(
                   id: 'tn_4',
                   document: document,
-                  documentNodes: [
+                  contentNodes: [
                     ParagraphNode(
                       id: '4',
                       text: AttributedText('Four more'),
@@ -52,7 +52,7 @@ OutlineTreeDocument getVisibilityTestDocument() {
         OutlineTreenode(
           id: 'tn_5',
           document: document,
-          documentNodes: [
+          contentNodes: [
             ParagraphNode(
               id: '5',
               text: AttributedText('Another ...'),
@@ -63,7 +63,7 @@ OutlineTreeDocument getVisibilityTestDocument() {
             OutlineTreenode(
               id: 'tn_6',
               document: document,
-              documentNodes: [
+              contentNodes: [
                 ParagraphNode(
                   id: '6',
                   text: AttributedText('and another'),

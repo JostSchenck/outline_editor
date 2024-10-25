@@ -62,11 +62,11 @@ class DeleteOutlineTreenodeCommand extends EditCommand {
       return;
     }
     executor.logChanges([
-      for (int i = 0; i < outlineTreenode.documentNodes.length; i++)
+      for (int i = 0; i < outlineTreenode.nodes.length; i++)
         DocumentEdit(
           NodeRemovedEvent(
-            outlineTreenode.documentNodes[i].id,
-            outlineTreenode.documentNodes[i],
+            outlineTreenode.nodes[i].id,
+            outlineTreenode.nodes[i],
           ),
         ),
     ]);

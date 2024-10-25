@@ -71,17 +71,13 @@ class InsertOutlineTreenodeCommand extends EditCommand {
       );
     }
 
-    final firstDocNode = newNode.firstDocumentNodeInSubtree;
-    if (firstDocNode == null) {
-      return;
-    }
-    final firstDocNodeIndex = outlineDoc.getNodeIndexById(firstDocNode.id);
+    final titleNodeIndex = outlineDoc.getNodeIndexById(newNode.titleNode.id);
     executor.logChanges([
-      for (int i = 0; i < newNode.documentNodes.length; i++)
+      for (int i = 0; i < newNode.nodes.length; i++)
         DocumentEdit(
           NodeInsertedEvent(
-            newNode.documentNodes[i].id,
-            firstDocNodeIndex + i,
+            newNode.nodes[i].id,
+            titleNodeIndex + i,
           ),
         ),
     ]);

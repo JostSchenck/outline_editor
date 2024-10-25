@@ -44,9 +44,9 @@ class MoveDocumentNodeIntoTreenodeCommand extends EditCommand {
     commandLog.fine(
         'executing MoveDocumentNodeIntoTreenodeCommand, moving $documentNode to OutlineTreenode $outlineTreenode');
     executor.executeCommand(DeleteNodeCommand(nodeId: documentNode.id));
-    executor.executeCommand(InsertDocumentNodeInOutlineTreenodeCommand(
+    executor.executeCommand(InsertDocumentNodeInTreenodeContentCommand(
         documentNode: documentNode,
         outlineTreenode: outlineTreenode,
-        index: index == -1 ? outlineTreenode.documentNodes.length : index));
+        index: index == -1 ? outlineTreenode.nodes.length : index));
   }
 }

@@ -9,7 +9,7 @@ abstract mixin class OutlineDocument implements Document {
   OutlineTreenode get root;
 
   OutlineTreenode getOutlineTreenodeForDocumentNodeId(String nodeId) {
-    final ret = root.getOutlineTreenodeForDocumentNodeId(nodeId);
+    final ret = root.getOutlineTreenodeByDocumentNodeId(nodeId);
     if (ret == null) {
       throw Exception('Did not find OutlineTreenode for DocumentNode $nodeId');
     }
@@ -31,10 +31,19 @@ abstract mixin class OutlineDocument implements Document {
   }
 
   // test
-  OutlineTreenode getOutlineTreenodeById(String id) {
-    final ret = root.getOutlineTreenodeById(id);
+  OutlineTreenode getOutlineTreenodeById(String treenodeId) {
+    final ret = root.getOutlineTreenodeById(treenodeId);
     if (ret == null) {
-      throw Exception('Could not find OutlineTreenode for id $id');
+      throw Exception('Could not find OutlineTreenode for id $treenodeId');
+    }
+    return ret;
+  }
+
+  // test
+  OutlineTreenode getOutlineTreenodeByDocumentNodeId(String docNodeId) {
+    final ret = root.getOutlineTreenodeByDocumentNodeId(docNodeId);
+    if (ret == null) {
+      throw Exception('Could not find OutlineTreenode for docNodeId $docNodeId');
     }
     return ret;
   }
@@ -53,8 +62,8 @@ abstract mixin class OutlineDocument implements Document {
   /// it does not find nodeId. The result can be used for component building.
   int getIndexInChildren(String docNodeId) {
     final treeNode = getOutlineTreenodeForDocumentNodeId(docNodeId);
-    for (var i = 0; i < treeNode.documentNodes.length; i++) {
-      if (treeNode.documentNodes[i].id == docNodeId) {
+    for (var i = 0; i < treeNode.nodes.length; i++) {
+      if (treeNode.nodes[i].id == docNodeId) {
         return i;
       }
     }

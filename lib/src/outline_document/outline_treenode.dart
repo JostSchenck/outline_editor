@@ -1,11 +1,20 @@
 import 'package:collection/collection.dart';
+import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/util/logging.dart';
-import 'package:super_editor/super_editor.dart';
+
+import '../infrastructure/uuid.dart';
 
 const isCollapsedKey = 'isCollapsed';
 
+/// A [TreenodePath] references an [OutlineTreenode] in a document. It
+/// consists of a series of integer, each referencing a child index, starting
+/// with the children of the document's root node.
 typedef TreenodePath = List<int>;
 
+/// A [DocumentNodePath] is used to address a [DocumentNode] in an
+/// [OutlineTreeDocument]. It consists of a `treenodePath`, only addressing
+/// the [OutlineTreenode] that contains this DocumentNode] and then the
+/// index of the [DocumentNode] in the treenode's `documentNodes` list.
 class DocumentNodePath {
   DocumentNodePath(
     this.treenodePath,
@@ -17,8 +26,8 @@ class DocumentNodePath {
 }
 
 /// Represents a treenode in the document structure. Each treenode contains
-/// a list of `documentNodeIds` that point to [DocumentNodes] that represent
-/// this one Treenode, and a list of other [OutlineTreenode]s
+/// a `titleNode` and a list of `contentNodes` that point to [DocumentNodes]
+/// that represent this one Treenode, and a list of other [OutlineTreenode]s
 /// as children.
 ///
 /// [OutlineTreenode]s will not persist as objects, but are
@@ -26,44 +35,47 @@ class DocumentNodePath {
 /// [MutableDocument]. This means that an [OutlineTreenode] should not
 /// contain information apart from its contained documentNodeIds or references
 /// to other tree nodes. To enforce this, this class is `final`.
-final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNode> {
+final class OutlineTreenode /*extends ChangeNotifier */
+    with
+        Iterable<DocumentNode> {
   OutlineTreenode({
-    List<DocumentNode> documentNodes = const [],
+    TitleNode? titleNode,
+    List<DocumentNode> contentNodes = const [],
     List<OutlineTreenode>? children,
     this.parent,
     bool collapsed = false,
     required this.id,
     required this.document,
   }) {
-    _documentNodes.addAll(documentNodes);
-    if (children != null) _children.addAll(children);
-    for (var child in _children) {
-      child.parent = this;
+    _titleNode =
+        titleNode ?? TitleNode(id: uuid.v4(), text: AttributedText(''));
+    _contentNodes.addAll(contentNodes);
+    if (children != null) {
+      for (var child in children) {
+        addChild(child);
+      }
     }
-    if (collapsed) {
-      isCollapsed = true;
-    }
+    isCollapsed = collapsed;
   }
 
-  // final List<String> _documentNodeIds = [];
-  final List<DocumentNode> _documentNodes = [];
+  late TitleNode _titleNode;
+  final List<DocumentNode> _contentNodes = [];
   final List<OutlineTreenode> _children = [];
   OutlineTreenode? parent;
   final String id;
   final Document document;
 
-  // TODO: test
+// TODO: test
   void traverseUpDown(void Function(OutlineTreenode) visitor) {
     visitor(this);
-    for(var child in _children) {
+    for (var child in _children) {
       child.traverseUpDown(visitor);
     }
   }
 
-
-  // TODO: test
+// TODO: test
   void traverseDownUp(void Function(OutlineTreenode) visitor) {
-    for(var child in _children) {
+    for (var child in _children) {
       child.traverseDownUp(visitor);
     }
     visitor(this);
@@ -73,7 +85,7 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     final staleChildren = [];
     for (final child in children) {
       child.purgeStaleChildren();
-      if (child.documentNodes.isEmpty && child.children.isEmpty) {
+      if (child.titleNode.text.text.isEmpty && child.contentNodes.isEmpty && child.children.isEmpty) {
         outlineDocLog.fine('found stale child ...');
         staleChildren.add(child);
       }
@@ -84,7 +96,9 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     }
   }
 
-  bool get isConsideredEmpty => documentNodes.every((n) => n is TextNode && n.text.text.isEmpty);
+  bool get isConsideredEmpty =>
+      nodes.every((n) => n is TextNode && n.text.text.isEmpty) &&
+      _titleNode.text.text.isEmpty;
 
   @override
   bool operator ==(Object other) =>
@@ -93,26 +107,34 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
           id == other.id &&
           parent == other.parent &&
           document == other.document &&
+          titleNode == other.titleNode &&
           const DeepCollectionEquality()
-              .equals(_documentNodes, other._documentNodes) &&
+              .equals(_contentNodes, other._contentNodes) &&
           const DeepCollectionEquality().equals(_children, other._children);
 
   @override
   int get hashCode =>
-      _documentNodes.hashCode ^
+      _contentNodes.hashCode ^
+      _titleNode.hashCode ^
       _children.hashCode ^
       id.hashCode ^
       parent.hashCode ^
       document.hashCode;
 
-  List<DocumentNode> get documentNodes => _documentNodes;
+  TitleNode get titleNode => _titleNode;
+  List<DocumentNode> get contentNodes => _contentNodes;
+  List<DocumentNode> get nodes => [_titleNode, ..._contentNodes];
 
-  List<DocumentNode> get subtreeDocumentNodes {
+  List<DocumentNode> get documentNodesSubtree {
     return [
-      ..._documentNodes,
-      for (var child in _children) ...child.subtreeDocumentNodes,
+      titleNode,
+      ..._contentNodes,
+      ...documentNodesChildren,
     ];
   }
+
+  List<DocumentNode> get documentNodesChildren =>
+    [for (var child in _children) ...child.documentNodesSubtree];
 
   /// Returns the [TreenodePath] to this treenode, which is a List<int> with
   /// the first element being the index of my first ancestor in the root node's
@@ -123,7 +145,7 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     }
     final ret = parent!.path;
     ret.add(parent!.children.indexOf(this));
-    return ret;
+    return [...parent!.path, childIndex];
   }
 
   /// Returns the [OutlineTreenode] with the given [TreenodePath], if there
@@ -138,11 +160,19 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     return _children[path.first].getOutlineTreenodeByPath(path.sublist(1));
   }
 
+  OutlineTreenode getLastOutlineTreenodeInSubtree() {
+    if (children.isNotEmpty) {
+      return children.last.getLastOutlineTreenodeInSubtree();
+    } else {
+      return this;
+    }
+  }
+
   /// Returns the [OutlineTreenode] with the given [DocumentNodePath], if there
   /// is one in this subtree, else null.
   DocumentNode? getDocumentNodeByPath(DocumentNodePath docNodePath) {
     if (docNodePath.treenodePath.isEmpty) {
-      return documentNodes[docNodePath.docNodeIndex];
+      return nodes[docNodePath.docNodeIndex];
     }
     return _children[docNodePath.treenodePath.first].getDocumentNodeByPath(
       DocumentNodePath(
@@ -164,7 +194,7 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
   }
 
   DocumentNode? getDocumentNodeById(String docNodeId) {
-    var ret = _documentNodes.firstWhereOrNull((e) => e.id == docNodeId);
+    var ret = nodes.firstWhereOrNull((e) => e.id == docNodeId);
     if (ret != null) return ret;
     for (var child in _children) {
       ret = child.getDocumentNodeById(docNodeId);
@@ -174,7 +204,7 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
   }
 
   DocumentNodePath? getPathToDocumentNode(DocumentNode docNode) {
-    final index = _documentNodes.indexOf(docNode);
+    final index = nodes.indexOf(docNode);
     if (index != -1) {
       return DocumentNodePath(path, index);
     }
@@ -185,38 +215,22 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     return null;
   }
 
-  /// The first DocumentNode in a Treenode is considered to be the Head, in
-  /// which eg. collapsing status is stored.
-  DocumentNode? get headNode =>
-      _documentNodes.isEmpty ? null : _documentNodes.first;
-
   /// Whether this Treenode is considered collapsed.
   bool get isCollapsed =>
-      headNode == null ? false : headNode!.metadata[isCollapsedKey] == true;
+      titleNode.metadata[isCollapsedKey] == true;
 
   /// Sets whether this Treenode is considered collapsed.
   set isCollapsed(bool isCollapsed) {
-    if (headNode == null) {
-      outlineDocLog
-          .fine('Tried to set isCollapsed on Treenode without headNodeId.');
-      return;
-    }
     outlineDocLog.fine('set isCollapsed to $isCollapsed');
-    headNode!.putMetadataValue(isCollapsedKey, isCollapsed);
+    titleNode.putMetadataValue(isCollapsedKey, isCollapsed);
     // notifyListeners();
   }
 
   /// Returns a list of the Treenodes representing children of this Treenode.
   List<OutlineTreenode> get children => UnmodifiableListView(_children);
 
-  /// For legacy document classes that operate on lists of nodes internally,
-  /// like OutlineMutableDocument or OutlineHeadingsMutableDocument, this must
-  /// not be used for document manipulation, but only on
-  /// structure rebuilding in classes derived from OutlineDocument.
-  ///
-  /// For OutlineTreeDocument, this can be used for docuemnt manipulation.
   void addChild(OutlineTreenode child, [int index = -1]) {
-    if (index>=0) {
+    if (index >= 0) {
       _children.insert(index, child);
     } else {
       _children.add(child);
@@ -225,12 +239,6 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     // notifyListeners();
   }
 
-  /// For legacy document classes that operate on lists of nodes internally,
-  /// like OutlineMutableDocument or OutlineHeadingsMutableDocument, this must
-  /// not be used for document manipulation, but only on
-  /// structure rebuilding in classes derived from OutlineDocument.
-  ///
-  /// For OutlineTreeDocument, this can be used for docuemnt manipulation.
   void removeChild(OutlineTreenode child) {
     _children.remove(child);
     child.parent = null;
@@ -242,13 +250,13 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
   /// second, etc. Returns -1 if it does not find nodeId.
   /// This is mainly used for component building: For example, the first
   /// node in a treenodes content might be decorated with a button or similar.
-  int getIndexInChildren(String nodeId) {
-    int index = _documentNodes.indexOf(document.getNodeById(nodeId)!);
+  int getIndexInSubtree(String nodeId) {
+    int index = nodes.indexOf(document.getNodeById(nodeId)!);
     if (index != -1) {
       return index;
     }
     for (var child in _children) {
-      index = child.getIndexInChildren(nodeId);
+      index = child.getIndexInSubtree(nodeId);
       if (index != -1) {
         return index;
       }
@@ -256,15 +264,20 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     return -1;
   }
 
+  /// Convenience method to retrieve the index this OutlineTreenode holds
+  /// in its parents list of children, or -1 if root.
+  int get childIndex => parent == null ? -1 : parent!.children.indexOf(this);
+
   /// Returns the depth of this TreeNode, 0 meaning a root node.
-  int get depth => parent == null ? 0 : parent!.depth + 1;
+  /// Implementation begins with -1 as we skip the internal 'logical root node'.
+  int get depth => parent == null ? -1 : parent!.depth + 1;
 
   /// Returns the first document node in this tree node's whole
   /// subtree (including this node itself), iterating through all descendents
   /// if needed.
   DocumentNode? get firstDocumentNodeInSubtree {
-    if (_documentNodes.isNotEmpty) {
-      return _documentNodes.first;
+    if (nodes.isNotEmpty) {
+      return _contentNodes.first;
     }
     return firstDocumentNodeInChildren;
   }
@@ -288,7 +301,7 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     if (_children.isNotEmpty) {
       return lastDocumentNodeInChildren;
     }
-    return _documentNodes.isEmpty ? null : _documentNodes.last;
+    return nodes.last;
   }
 
   /// Returns the last document node in this tree node's child nodes,
@@ -304,7 +317,7 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
     return null;
   }
 
-  /// Returns the [OutlineTreenode] that will be evaluated last in this
+  /// Returns the [OutlineTreenode] that will be presented last in this
   /// node's whole subtree.
   OutlineTreenode get lastOutlineTreeNodeInSubtree {
     if (_children.isNotEmpty) {
@@ -316,14 +329,24 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
   /// Searches this [OutlineTreenode]'s whole subtree and returns
   /// the [OutlineTreenode] that holds the given id to a
   /// [DocumentNode].
-  OutlineTreenode? getOutlineTreenodeForDocumentNodeId(String docNodeId) {
-    if (documentNodes.where((e) => e.id == docNodeId).isNotEmpty) return this;
+  OutlineTreenode? getOutlineTreenodeByDocumentNodeId(String docNodeId) {
+    if (nodes.where((e) => e.id == docNodeId).isNotEmpty) return this;
 
     for (var treeNode in children) {
-      final childRet = treeNode.getOutlineTreenodeForDocumentNodeId(docNodeId);
+      final childRet = treeNode.getOutlineTreenodeByDocumentNodeId(docNodeId);
       if (childRet != null) return childRet;
     }
     return null;
+  }
+
+  OutlineTreenode get outlineTreenodeBefore {
+    if (parent==null) {
+      throw Exception('tried finding OutlineTreenode before root, this is not allowed');
+    }
+    if (childIndex==0) {
+      return parent!;
+    }
+    return parent!.children[childIndex-1].getLastOutlineTreenodeInSubtree();
   }
 
   /// Returns a [DocumentRange] that spans the entire subtree of this
@@ -369,7 +392,9 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
   }
 
   @override
-  Iterator<DocumentNode> get iterator => subtreeDocumentNodes.iterator;
+  // we only use child nodes for iterating if this is the root node, as
+  // having content in the root would lead to problems eg. when inserting later
+  Iterator<DocumentNode> get iterator => parent==null ? documentNodesChildren.iterator : documentNodesSubtree.iterator;
 
   /// Returns whether the subtree of this [OutlineTreenode] has
   /// equivalent content to the one in `other`.
@@ -378,14 +403,15 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
   /// within them, like the text of a paragraph, but ignores node IDs and
   /// ignores the runtime type of the [Document], itself.
   bool hasEquivalentContent(OutlineTreenode other) {
-    if (documentNodes.length != other.documentNodes.length) {
+    if (!titleNode.hasEquivalentContent(other.titleNode)) return false;
+    if (contentNodes.length != other.contentNodes.length) {
       return false;
     }
     if (children.length != other.children.length) {
       return false;
     }
-    for (int i = 0; i < documentNodes.length; i++) {
-      if (!documentNodes[i].hasEquivalentContent(other.documentNodes[i])) {
+    for (int i = 0; i < nodes.length; i++) {
+      if (!nodes[i].hasEquivalentContent(other.nodes[i])) {
         return false;
       }
     }
@@ -398,27 +424,3 @@ final class OutlineTreenode /*extends ChangeNotifier */with Iterable<DocumentNod
   }
 }
 
-/// An iterator that iterates over all [DocumentNode]s in an [OutlineTreenode]
-/// and its children. As with all iterators, behavior in case of changes
-/// to the underlying collections is not defined.
-// class OutlineDocumentNodeIterator implements Iterator<DocumentNode> {
-//   OutlineDocumentNodeIterator(this.root) {
-//     final List<DocumentNode> compoundDocumentNodes = [];
-//     if (root.documentNodes.isNotEmpty) {
-//       compoundDocumentNodes.addAll(root.documentNodes);
-//     }
-//     for (var child in root.children) {
-//       compoundDocumentNodes.addAll(child.documentNodes);
-//     }
-//     compoundIterator = root.subtreeDocumentNodes.iterator;
-//   }
-//
-//   final OutlineTreenode root;
-//   late Iterator<DocumentNode> compoundIterator;
-//
-//   @override
-//   DocumentNode get current => compoundIterator.current;
-//
-//   @override
-//   bool moveNext() => compoundIterator.moveNext();
-// }

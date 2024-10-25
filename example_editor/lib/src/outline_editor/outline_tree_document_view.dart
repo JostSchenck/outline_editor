@@ -8,7 +8,8 @@ class OutlineTreeDocumentView extends StatefulWidget {
   static const routeName = '/outline_tree_document';
 
   @override
-  State<OutlineTreeDocumentView> createState() => _OutlineTreeDocumentViewState();
+  State<OutlineTreeDocumentView> createState() =>
+      _OutlineTreeDocumentViewState();
 }
 
 class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
@@ -29,13 +30,11 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
       OutlineTreenode(
         id: '1',
         document: _document,
-        documentNodes: [
-          TitleNode(
-              id: '1a',
-              text: AttributedText('First Paragraph of a root node')),
+        titleNode: TitleNode(
+            id: '1a', text: AttributedText('First Paragraph of a root node')),
+        contentNodes: [
           ParagraphNode(
-              id: '1b',
-              text: AttributedText('First Paragraph of a root node')),
+              id: '1b', text: AttributedText('First Paragraph of a root node')),
           ParagraphNode(
               id: '1c',
               text: AttributedText('Second Paragraph of a root node')),
@@ -44,49 +43,37 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
           OutlineTreenode(
             id: '2',
             document: _document,
-            documentNodes: [
-              TitleNode(
-                  id: '2a',
-                  text: AttributedText('This is a child tree node')),
+            titleNode: TitleNode(
+                id: '2a', text: AttributedText('This is a child tree node')),
+            contentNodes: [
               ParagraphNode(
-                  id: '2b',
-                  text: AttributedText('with its first paragraph')),
+                  id: '2b', text: AttributedText('with its first paragraph')),
               ParagraphNode(
-                  id: '2c',
-                  text: AttributedText('with its second paragraph')),
+                  id: '2c', text: AttributedText('with its second paragraph')),
             ],
             children: [
               OutlineTreenode(
                 id: '2-1',
                 document: _document,
-                documentNodes: [
-                  TitleNode(
-                      id: '2-1a',
-                      text: AttributedText('grand child yay')),
+                titleNode: TitleNode(
+                    id: '2-1a', text: AttributedText('grand child yay')),
+                contentNodes: [
                   ParagraphNode(
-                      id: '2-1b',
-                      text: AttributedText('still a grand child')),
+                      id: '2-1b', text: AttributedText('still a grand child')),
                 ],
-                children: [
-
-                ],
+                children: [],
               )
             ],
           ),
           OutlineTreenode(
             id: '3',
             document: _document,
-            documentNodes: [
-              TitleNode(
-                  id: '3a',
-                  text: AttributedText('And another child')),
-              ParagraphNode(
-                  id: '3b',
-                  text: AttributedText('with a paragraph')),
+            titleNode:
+                TitleNode(id: '3a', text: AttributedText('And another child')),
+            contentNodes: [
+              ParagraphNode(id: '3b', text: AttributedText('with a paragraph')),
             ],
-            children: [
-
-            ],
+            children: [],
           )
         ],
       ),
@@ -95,10 +82,10 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
       OutlineTreenode(
         id: '4',
         document: _document,
-        documentNodes: [
-          TitleNode(
-              id: '4a',
-              text: AttributedText('There can be more than one root node')),
+        titleNode: TitleNode(
+            id: '4a',
+            text: AttributedText('There can be more than one root node')),
+        contentNodes: [
           ParagraphNode(
               id: '4b',
               text: AttributedText('although internally there is one root')),
@@ -107,29 +94,22 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
           OutlineTreenode(
             id: '5',
             document: _document,
-            documentNodes: [
-              TitleNode(
-                  id: '5a',
-                  text: AttributedText('This is a child tree node')),
-              ParagraphNode(
-                  id: '5b',
-                  text: AttributedText('with its text')),
+            titleNode: TitleNode(
+                id: '5a', text: AttributedText('This is a child tree node')),
+            contentNodes: [
+              ParagraphNode(id: '5b', text: AttributedText('with its text')),
             ],
             children: [
               OutlineTreenode(
                 id: '6',
                 document: _document,
-                documentNodes: [
-                  TitleNode(
-                      id: '6a',
-                      text: AttributedText('grand child yay')),
+                titleNode: TitleNode(
+                    id: '6a', text: AttributedText('grand child yay')),
+                contentNodes: [
                   ParagraphNode(
-                      id: '6b',
-                      text: AttributedText('still a grand child')),
+                      id: '6b', text: AttributedText('still a grand child')),
                 ],
-                children: [
-
-                ],
+                children: [],
               )
             ],
           ),
@@ -154,7 +134,7 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: const Text('MutableDocument structured by depth metadata')),
+          title: const Text('OutlineTreeDocument')),
       drawer: const OutlineExampleNavigationDrawer(),
       backgroundColor: Colors.white,
       body: SuperEditor(
