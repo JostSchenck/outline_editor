@@ -1,5 +1,15 @@
 library outline_editor;
 
+export 'src/commands/hide_show_content_nodes.dart';
+export 'src/commands/insert_documentnode_in_outlinetreenode.dart';
+export 'src/commands/insert_outline_treenode.dart';
+export 'src/commands/merge_outline_treenodes.dart';
+export 'src/commands/move_documentnode_into_treenode.dart';
+export 'src/commands/reparent_outlinetreenode.dart';
+export 'src/commands/change_collapsed_state.dart';
+export 'src/commands/delete_outline_treenode.dart';
+export 'src/commands/outline_delete_content.dart';
+
 export 'src/components/outline_title_component.dart';
 export 'src/outline_document/outline_document.dart';
 export 'src/outline_document/outline_tree_document.dart';

@@ -134,7 +134,12 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: const Text('OutlineTreeDocument')),
+        title: const Text('OutlineTreeDocument'),
+        actions: [
+          IconButton(onPressed: () => _editor.execute([HideShowContentNodesRequest(hideContent: true)]), icon: const Icon(Icons.arrow_drop_up) ),
+          IconButton(onPressed: () => _editor.execute([HideShowContentNodesRequest(hideContent: false)]), icon: const Icon(Icons.arrow_drop_down)),
+        ],
+      ),
       drawer: const OutlineExampleNavigationDrawer(),
       backgroundColor: Colors.white,
       body: SuperEditor(

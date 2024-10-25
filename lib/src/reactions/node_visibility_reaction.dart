@@ -39,6 +39,13 @@ class NodeVisibilityReaction extends EditReaction {
       DocumentSelection selection) {
     DocumentNode? nextVisibleNode =
         outlineDoc.getNextVisibleDocumentnode(selection.base);
+    if (nextVisibleNode == null) {
+      // we moved into an invisible area at the end of the document; in this
+      // case, we can not move further, but must move back into a visible area.
+      _collapseAtLastVisibleTextNodePosition(
+          requestDispatcher, outlineDoc, selection);
+      return;
+    }
     while (nextVisibleNode is! TextNode) {
       nextVisibleNode = outlineDoc.getNodeAfter(nextVisibleNode!);
       if (nextVisibleNode == null) {
@@ -68,7 +75,7 @@ class NodeVisibilityReaction extends EditReaction {
     final selection = editorContext.composer.selection;
 
     if (changeList.any((event) => event is NodeVisibilityChangeEvent)) {
-    // if (changeList.firstWhereOrNull((element) => element is NodeVisibilityChangeEvent,)) {
+      // if (changeList.firstWhereOrNull((element) => element is NodeVisibilityChangeEvent,)) {
       if (selection == null) return;
       if (selection.isCollapsed) {
         // the selection is collapsed. If the cursor is placed in a node that
@@ -136,6 +143,10 @@ class NodeVisibilityReaction extends EditReaction {
           // cursor moved in invisible area. This should at this point only
           // have happened because of user interaction in form of pushing caret
           // left or right or moving it up and down.
+          if (selectionEvent.oldSelection==null) {
+            // apparently, this can happen
+            return;
+          }
           if (outlineDoc
                   .getNodeIndexById(selectionEvent.oldSelection!.base.nodeId) <
               outlineDoc

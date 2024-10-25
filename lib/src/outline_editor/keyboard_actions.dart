@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/commands/change_collapsed_state.dart';
@@ -6,7 +5,6 @@ import 'package:outline_editor/src/commands/delete_outline_treenode.dart';
 import 'package:outline_editor/src/commands/insert_documentnode_in_outlinetreenode.dart';
 import 'package:outline_editor/src/commands/insert_outline_treenode.dart';
 import 'package:outline_editor/src/commands/merge_outline_treenodes.dart';
-import 'package:outline_editor/src/infrastructure/platform.dart';
 import 'package:outline_editor/src/infrastructure/uuid.dart';
 // parts copied from super_editor LICENSE
 
@@ -370,6 +368,7 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
   return ExecutionInstruction.continueExecution;
 }
 
+/*
 ExecutionInstruction moveUpAndDownWithArrowKeysWithFolding({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
@@ -442,3 +441,4 @@ ExecutionInstruction moveUpAndDownWithArrowKeysWithFolding({
       ? ExecutionInstruction.haltExecution
       : ExecutionInstruction.continueExecution;
 }
+*/
