@@ -7,7 +7,7 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
     OutlineTreenode(
       id: changeIds ? 'asdf1' : '1',
       document: outlineTreeDocument,
-      documentNodes: [
+      contentNodes: [
         ParagraphNode(
             id: changeIds ? 'asdf1a' : '1a',
             text: AttributedText('First Paragraph of a root node')),
@@ -19,7 +19,7 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
         OutlineTreenode(
           id: changeIds ? 'asdf2' : '2',
           document: outlineTreeDocument,
-          documentNodes: [
+          contentNodes: [
             ParagraphNode(
                 id: changeIds ? 'asdf2a' : '2a',
                 text: AttributedText('This is a child tree node')),
@@ -31,7 +31,7 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
             OutlineTreenode(
               id: changeIds ? 'asdf2-1' : '2-1',
               document: outlineTreeDocument,
-              documentNodes: [
+              contentNodes: [
                 ParagraphNode(
                     id: changeIds ? 'asdf2-1a' : '2-1a',
                     text: AttributedText('grand child yay')),
@@ -48,7 +48,7 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
         OutlineTreenode(
           id: changeIds ? 'asdf3' : '3',
           document: outlineTreeDocument,
-          documentNodes: [
+          contentNodes: [
             ParagraphNode(
                 id: changeIds ? 'asdf3a' : '3a',
                 text: AttributedText('And another child')),
@@ -67,7 +67,7 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
     OutlineTreenode(
       id: changeIds ? 'asdf4' : '4',
       document: outlineTreeDocument,
-      documentNodes: [
+      contentNodes: [
         ParagraphNode(
             id: changeIds ? 'asdf4a' : '4a',
             text: AttributedText('There can be more than one root node')),
@@ -79,7 +79,7 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
         OutlineTreenode(
           id: changeIds ? 'asdf5' : '5',
           document: outlineTreeDocument,
-          documentNodes: [
+          contentNodes: [
             ParagraphNode(
                 id: changeIds ? 'asdf5a' : '5a',
                 text: AttributedText('This is a child tree node')),
@@ -91,7 +91,7 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
             OutlineTreenode(
               id: changeIds ? 'asdf6' : '6',
               document: outlineTreeDocument,
-              documentNodes: [
+              contentNodes: [
                 ParagraphNode(
                     id: changeIds ? 'asdf6a' : '6a',
                     text: AttributedText('grand child yay')),

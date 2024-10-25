@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:outline_editor/outline_editor.dart';
+import 'package:outline_editor/src/commands/change_collapsed_state.dart';
 import 'package:outline_editor/src/commands/delete_outline_treenode.dart';
 import 'package:outline_editor/src/commands/insert_documentnode_in_outlinetreenode.dart';
 import 'package:outline_editor/src/commands/insert_outline_treenode.dart';
@@ -25,6 +26,7 @@ ExecutionInstruction backspaceEdgeCasesInOutlineTreeDocument({
   if (selection == null) return ExecutionInstruction.continueExecution;
   if (!selection.isCollapsed) return ExecutionInstruction.continueExecution;
 
+  // we only care, if the cursor is at the start of a text node
   final outlineDoc = editContext.document as OutlineTreeDocument;
   final outlineNode =
       outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
@@ -32,6 +34,7 @@ ExecutionInstruction backspaceEdgeCasesInOutlineTreeDocument({
     return ExecutionInstruction.continueExecution;
   }
   final textNodePosition = selection.base.nodePosition as TextNodePosition;
+
   // we only care, if the cursor is at the start of a text node
   if (textNodePosition.offset != 0) {
     return ExecutionInstruction.continueExecution;
@@ -46,8 +49,7 @@ ExecutionInstruction backspaceEdgeCasesInOutlineTreeDocument({
       return ExecutionInstruction.haltExecution;
     }
     final mergeNodes = outlineNode.isConsideredEmpty ||
-        outlineNode.headNode is TitleNode &&
-            (outlineNode.headNode as TitleNode).text.text.isEmpty;
+        outlineNode.titleNode.text.text.isEmpty;
     final treenodeBefore = mergeNodes
         ? outlineDoc.getOutlineTreenodeBeforeTreenode(outlineNode)
         : null;
@@ -91,8 +93,9 @@ ExecutionInstruction backspaceEdgeCasesInOutlineTreeDocument({
       ]);
       return ExecutionInstruction.haltExecution;
     }
+    // simple DocumentNode in content -- let SuperEditor do the rest
+    return ExecutionInstruction.continueExecution;
   }
-  return ExecutionInstruction.continueExecution;
 }
 
 ExecutionInstruction deleteEdgeCasesInOutlineTreeDocument({
@@ -113,7 +116,7 @@ ExecutionInstruction deleteEdgeCasesInOutlineTreeDocument({
 
   final outlineDoc = editContext.document as OutlineTreeDocument;
   final outlineNode =
-  outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
+      outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
   if (selection.base.nodePosition is! TextNodePosition) {
     return ExecutionInstruction.continueExecution;
   }
@@ -136,9 +139,9 @@ ExecutionInstruction deleteEdgeCasesInOutlineTreeDocument({
       ChangeSelectionRequest(
         DocumentSelection.collapsed(
             position: DocumentPosition(
-              nodeId: nodeAfter.id,
-              nodePosition: const TextNodePosition(offset: 0),
-            )),
+          nodeId: nodeAfter.id,
+          nodePosition: const TextNodePosition(offset: 0),
+        )),
         SelectionChangeType.placeCaret,
         'moved caret on delete without deleting anything',
       ),
@@ -155,14 +158,12 @@ ExecutionInstruction deleteEdgeCasesInOutlineTreeDocument({
           DocumentSelection.collapsed(
               position: DocumentPosition(
                   nodeId: nodeAfter.id,
-                  nodePosition:
-                  const TextNodePosition(offset: 0))),
+                  nodePosition: const TextNodePosition(offset: 0))),
           SelectionChangeType.deleteContent,
           'Backspace pressed',
         ),
         // delete empty paragraph on backspace
-        if (textNode.text.text.isEmpty)
-          DeleteNodeRequest(nodeId: textNode.id),
+        if (textNode.text.text.isEmpty) DeleteNodeRequest(nodeId: textNode.id),
       ]);
       return ExecutionInstruction.haltExecution;
     }
@@ -170,7 +171,9 @@ ExecutionInstruction deleteEdgeCasesInOutlineTreeDocument({
   return ExecutionInstruction.continueExecution;
 }
 
-ExecutionInstruction enterEdgeCasesInOutlineTreeDocument({
+
+
+ExecutionInstruction enterInOutlineTreeDocument({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
 }) {
@@ -189,27 +192,31 @@ ExecutionInstruction enterEdgeCasesInOutlineTreeDocument({
     return ExecutionInstruction.continueExecution;
   }
 
-  // we only care, if the cursor is at the end of a text node
   final outlineDoc = editContext.document as OutlineTreeDocument;
+  // nothing to do if there is no selection
   if (editContext.composer.selection == null) {
     return ExecutionInstruction.continueExecution;
   }
   final selection = editContext.composer.selection!;
   final outlineTreenode =
       outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
+  // we're not ready with non-text nodes yet
   if (selection.base.nodePosition is! TextNodePosition) {
     return ExecutionInstruction.continueExecution;
   }
   final textNodePosition = selection.base.nodePosition as TextNodePosition;
-  final textNode = outlineDoc.getNodeById(selection.base.nodeId);
+  final textNode = outlineDoc.getNodeById(selection.base.nodeId) as TextNode;
+
   if (textNode is TitleNode) {
     if (textNodePosition.offset == 0) {
       // enter pressed at the start of a title node -- prepend a sibling Treenode
-      final newOutlineTreenode =
-          OutlineTreenode(id: uuid.v4(), document: outlineDoc, documentNodes: [
-        TitleNode(id: uuid.v4(), text: AttributedText('')),
-        ParagraphNode(id: uuid.v4(), text: AttributedText('')),
-      ]);
+      final newOutlineTreenode = OutlineTreenode(
+        id: uuid.v4(),
+        document: outlineDoc,
+        // contentNodes: [
+        //   ParagraphNode(id: uuid.v4(), text: AttributedText('')),
+        // ],
+      );
       editContext.editor.execute([
         InsertOutlineTreenodeRequest(
           existingTreenode: outlineTreenode.parent!,
@@ -220,7 +227,7 @@ ExecutionInstruction enterEdgeCasesInOutlineTreeDocument({
         ChangeSelectionRequest(
             DocumentSelection.collapsed(
               position: DocumentPosition(
-                nodeId: newOutlineTreenode.documentNodes.first.id,
+                nodeId: newOutlineTreenode.titleNode.id,
                 nodePosition: const TextNodePosition(offset: 0),
               ),
             ),
@@ -229,12 +236,44 @@ ExecutionInstruction enterEdgeCasesInOutlineTreeDocument({
       ]);
       return ExecutionInstruction.haltExecution;
     }
-    // now we only have to handle the case of the cursor being at the
-    // end when enter is pressed, everything else standard super_editor is
-    // just fine
-    if (textNodePosition.offset != (textNode as TextNode).text.text.length) {
-      return ExecutionInstruction.continueExecution;
+    if (textNodePosition.offset <= textNode.text.text.length) {
+      // Enter pressed somewhere else in a title node: Jump to start of content,
+      // inserting a ParagraphNode if needed
+      if (outlineTreenode.contentNodes.isEmpty) {
+        final newParagraphNode = ParagraphNode(id: uuid.v4(), text: AttributedText(''));
+        editContext.editor.execute([
+            InsertDocumentNodeInOutlineTreenodeRequest(
+              documentNode: newParagraphNode,
+              outlineTreenode: outlineTreenode,
+            ),
+          ChangeSelectionRequest(
+              DocumentSelection.collapsed(
+                position: DocumentPosition(
+                  nodeId: newParagraphNode.id,
+                  nodePosition: const TextNodePosition(offset: 0),
+                ),
+              ),
+              SelectionChangeType.insertContent,
+              'inserted content paragraph'),
+        ]);
+      } else {
+        editContext.editor.execute([
+          ChangeSelectionRequest(
+              DocumentSelection.collapsed(
+                position: DocumentPosition(
+                  nodeId: outlineTreenode.contentNodes.first.id,
+                  nodePosition: const TextNodePosition(offset: 0),
+                ),
+              ),
+              SelectionChangeType.insertContent,
+              'jumped to content'),
+        ]);
+      }
+      return ExecutionInstruction.haltExecution;
     }
+
+    // now we only have to handle the case of the cursor being at the
+    // end when enter is pressed
     // TODO: Hidden-Status berücksichtigen https://github.com/JostSchenck/outline_editor/issues/7
     final newDocNode = ParagraphNode(id: uuid.v4(), text: AttributedText(''));
     editContext.editor.execute([
@@ -276,26 +315,25 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
 
   if (HardwareKeyboard.instance.isControlPressed) {
     if (selection.isCollapsed) {
+      final parentTreenode =
+          outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
       final newTreenode = OutlineTreenode(
         id: uuid.v4(),
         document: outlineDoc,
-        documentNodes: [
-          TitleNode(id: uuid.v4(), text: AttributedText('')),
-          ParagraphNode(id: uuid.v4(), text: AttributedText('')),
-        ],
       );
       editContext.editor.execute([
+        if (parentTreenode.isCollapsed)
+          ChangeCollapsedStateRequest(
+              treenodeId: parentTreenode.id, isCollapsed: false),
         InsertOutlineTreenodeRequest(
-          existingTreenode: outlineDoc
-              .getOutlineTreenodeForDocumentNodeId(selection.base.nodeId),
+          existingTreenode: parentTreenode,
           newTreenode: newTreenode,
           createChild: true,
         ),
         ChangeSelectionRequest(
             DocumentSelection.collapsed(
                 position: DocumentPosition(
-                    nodeId: newTreenode.first.id,
-                    // FIXME: make this TitleNode, when those are separated
+                    nodeId: newTreenode.titleNode.id,
                     nodePosition: const TextNodePosition(offset: 0))),
             SelectionChangeType.insertContent,
             'outlinetreenode insertion'),
@@ -309,10 +347,6 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
       final newTreenode = OutlineTreenode(
         id: uuid.v4(),
         document: outlineDoc,
-        documentNodes: [
-          TitleNode(id: uuid.v4(), text: AttributedText('')),
-          ParagraphNode(id: uuid.v4(), text: AttributedText('')),
-        ],
       );
       editContext.editor.execute([
         InsertOutlineTreenodeRequest(
@@ -324,8 +358,7 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
         ChangeSelectionRequest(
             DocumentSelection.collapsed(
                 position: DocumentPosition(
-                    nodeId: newTreenode.first.id,
-                    // FIXME: make this TitleNode, when those are separated
+                    nodeId: newTreenode.titleNode.id,
                     nodePosition: const TextNodePosition(offset: 0))),
             SelectionChangeType.insertContent,
             'outlinetreenode insertion'),

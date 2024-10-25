@@ -30,7 +30,7 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
             (request) =>
         request is ChangeCollapsedStateRequest
             ? ChangeCollapsedStateCommand(
-          nodeId: request.nodeId,
+          treenodeId: request.treenodeId,
           isCollapsed: request.isCollapsed,
         )
             : null,
@@ -57,7 +57,7 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
             : null,
             (request) =>
         request is InsertDocumentNodeInOutlineTreenodeRequest
-            ? InsertDocumentNodeInOutlineTreenodeCommand(
+            ? InsertDocumentNodeInTreenodeContentCommand(
             documentNode: request.documentNode,
             outlineTreenode: request.outlineTreenode,
             index: request.index)
@@ -100,7 +100,7 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
   @override
   List<DocumentKeyboardAction> get keyboardActions =>
       [
-        enterEdgeCasesInOutlineTreeDocument,
+        enterInOutlineTreeDocument,
         deleteEdgeCasesInOutlineTreeDocument,
         backspaceEdgeCasesInOutlineTreeDocument,
         insertTreenodeOnShiftOrCtrlEnter,

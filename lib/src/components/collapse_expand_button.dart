@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/commands/change_collapsed_state.dart';
 import 'package:outline_editor/src/components/component_animations.dart';
 import 'package:outline_editor/src/components/outline_component_base.dart';
 import 'package:outline_editor/src/util/logging.dart';
-import 'package:super_editor/super_editor.dart';
 
 class CollapseExpandButton extends StatelessWidget {
   const CollapseExpandButton({
@@ -23,7 +23,7 @@ class CollapseExpandButton extends StatelessWidget {
         commandLog.fine('tap! setting isCollapsed to ${!viewModel.isCollapsed}');
         editor.execute([
           ChangeCollapsedStateRequest(
-            nodeId: viewModel.nodeId,
+            treenodeId: (editor.document as OutlineTreeDocument).getOutlineTreenodeByDocumentNodeId(viewModel.nodeId).id,
             isCollapsed: !viewModel.isCollapsed,
           ),
         ]);

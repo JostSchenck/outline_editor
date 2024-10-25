@@ -33,17 +33,20 @@ class OutlineTreeDocument
   int get nodeCount => toList().length;
 
   @override
-  bool get isEmpty => _root.documentNodes.isEmpty && _root.children.isEmpty;
+  bool get isEmpty => _root.nodes.isEmpty && _root.children.isEmpty;
 
   @override
   bool get isNotEmpty => !isEmpty;
 
+  /// The iterator for an OutlineTreeDocument does not iterate over the
+  /// 'logical root node' but only over all children; this way, we have a
+  /// single root internally, while users can create more than one root node.
   @override
-  Iterator<DocumentNode> get iterator => _root.iterator;
+  Iterator<DocumentNode> get iterator => _root.nodesChildren.iterator;
 
   @override
   DocumentNode get first {
-    final ret = _root.firstDocumentNodeInSubtree;
+    final ret = _root.firstDocumentNodeInChildren;
     if (ret == null) {
       throw Exception("first called in a document without any DocumentNodes");
     }
@@ -63,7 +66,7 @@ class OutlineTreeDocument
 
   @override
   void add(DocumentNode node) {
-    _root.lastOutlineTreeNodeInSubtree.documentNodes.add(node);
+    _root.lastOutlineTreeNodeInSubtree.contentNodes.add(node);
   }
 
   @override
@@ -88,20 +91,21 @@ class OutlineTreeDocument
       return;
     }
     final node = nodeList[index];
-    final outlineNode = _root.getOutlineTreenodeForDocumentNodeId(node.id);
-    // this can not be null as we actually found the DocumentNode, so there is an OutlineNode
-    outlineNode!.documentNodes.remove(node);
+    _root
+        .getOutlineTreenodeByDocumentNodeId(node.id)
+        ?.contentNodes
+        .remove(node);
   }
 
   @override
   bool deleteNode(DocumentNode node) {
-    final outlineNode = _root.getOutlineTreenodeForDocumentNodeId(node.id);
+    final outlineNode = _root.getOutlineTreenodeByDocumentNodeId(node.id);
     if (outlineNode == null) {
       outlineDocLog
           .warning('deleteNode: node ${node.id} not found in outline tree');
       return false;
     }
-    return outlineNode.documentNodes.remove(node);
+    return outlineNode.contentNodes.remove(node);
   }
 
   @override
@@ -185,22 +189,86 @@ class OutlineTreeDocument
   /// given index position is right between two nodes.
   /// This method prefers to append the given node to an [OutlineTreeNode]
   /// before the position instead of prepending it to the node after it.
-  /// Only in the special case of `index==0` it will prepend to the root node's
-  /// first child.
+  /// Only in the special case of `index==0` it will prepend to the root node
+  /// to a new treenode.
+  // TODO: TEST!!!
   @override
   void insertNodeAt(
-      int index,
-      DocumentNode node,
-      ) {
+    int index,
+    DocumentNode node,
+  ) {
     if (index == 0) {
-      if (_root.children.isEmpty) {
-        _root.addChild(OutlineTreenode(
+      // node is inserted at the start of the document before the first node,
+      // this always means inserting a new OutlineTreenode, because we can't
+      // insert something in the same OutlineTreenode before the TitleNode.
+      _root.children.insert(0,
+          OutlineTreenode(id: uuid.v4(), document: this, contentNodes: [node]));
+    }
+    if (index == length) {
+      // Node is appended at the end of the document. Easy:
+      final lastTreenode = _root.getLastOutlineTreenodeInSubtree();
+      if (node is TitleNode) {
+        // a TitleNode always starts a new OutlineTreenode
+        (lastTreenode.parent!.addChild(OutlineTreenode(
           id: uuid.v4(),
           document: this,
-        ));
+          contentNodes: [node],
+        )));
+      } else {
+        lastTreenode.contentNodes.add(node);
       }
-      final treenode = _root.children.first;
-      treenode.documentNodes.insert(0, node);
+      return;
+    }
+    // it's somewhere inbetween:
+    // first find the DocumentNode at index, to which our new node should be
+    // prepended (sensibly with an eye on outline structure):
+    final existingNode = getNodeAt(index);
+    if (existingNode == null) {
+      outlineDocLog.warning(
+          'Tried inserting at illegal position $index, where no node was found');
+      return;
+    }
+    final path = _root.getPathToDocumentNode(existingNode);
+    final treenode = getOutlineTreenodeByPath(path!.treenodePath);
+    if (existingNode is TitleNode) {
+      // A TitleNode is always the first DocumentNode in an OutlineTreenode.
+      // This means we can not add to treenode, but must prepend to it.
+      if (node is TitleNode) {
+        // Every TitleNode must correspond to an OutlineTreenode, so we have
+        // to insert one now. While new OutlineTreenodes should be inserted as
+        // such programmatically, we try to do something sensible and just
+        // add a sibling.
+        treenode.parent?.addChild(
+            OutlineTreenode(
+              id: uuid.v4(),
+              document: this,
+              contentNodes: [node],
+            ),
+            treenode.childIndex);
+      } else {
+        treenode.outlineTreenodeBefore.contentNodes.add(node);
+      }
+      return;
+    }
+    // okay, index pointed to a simple content node. Now, if inserted node is
+    // a TitleNode, this effectively means splitting our OutlineTreenode, else
+    // it means just inserting.
+    if (node is TitleNode) {
+      final newNode = OutlineTreenode(
+        id: uuid.v4(),
+        document: this,
+        contentNodes: treenode.contentNodes.sublist(
+          // minus 1, as a 0 path always points to the title node
+          path.docNodeIndex-1,
+        ),
+      );
+      treenode.parent!.addChild(newNode, treenode.childIndex + 1);
+      // minus 1, as a 0 path always points to the title node
+      treenode.contentNodes
+          .removeRange(path.docNodeIndex - 1, treenode.contentNodes.length);
+    } else {
+      // minus 1, as a 0 path always points to the title node
+      treenode.contentNodes.insert(path.docNodeIndex-1, node);
     }
   }
 
@@ -218,16 +286,8 @@ class OutlineTreeDocument
   @override
   void insertNodeBefore(
       {required DocumentNode existingNode, required DocumentNode newNode}) {
-    final pathToExistingNode = _root.getPathToDocumentNode(existingNode);
-    if (pathToExistingNode == null || pathToExistingNode.treenodePath.isEmpty) {
-      outlineDocLog.warning(
-          'insertNodeBefore called on non-existing node $existingNode');
-      return;
-    }
-    final treenode =
-    _root.getOutlineTreenodeByPath(pathToExistingNode.treenodePath)!;
-    treenode.documentNodes
-        .insert(treenode.documentNodes.indexOf(existingNode), newNode);
+    // TODO: this is the least efficient way, do this better when problems arise
+    insertNodeAt(getNodeIndexById(existingNode.id), newNode);
   }
 
   /// Inserts a node right after a given existing node. While this is trivial
@@ -237,24 +297,34 @@ class OutlineTreeDocument
   /// This method always assumes to stay in the same [OutlineTreenode]; ie. if
   /// existingNode is the last DocumentNode in a Treenode, newNode will be
   /// appended to this Treenode, not inserted before the following.
+  /// TitleNodes must not be inserted with this method.
   @override
   void insertNodeAfter({
     required DocumentNode existingNode,
     required DocumentNode newNode,
   }) {
-    final pathToExistingNode = _root.getPathToDocumentNode(existingNode);
-    if (pathToExistingNode == null || pathToExistingNode.treenodePath.isEmpty) {
-      outlineDocLog
-          .warning('insertNodeAfter called on non-existing node $existingNode');
-      return;
-    }
-    final treenode =
-        _root.getOutlineTreenodeByPath(pathToExistingNode.treenodePath)!;
-    treenode.documentNodes
-        .insert(treenode.documentNodes.indexOf(existingNode) + 1, newNode);
+    // TODO: this is the least efficient way, do this better when problems arise
+    insertNodeAt(getNodeIndexById(existingNode.id) + 1, newNode);
+    // assert(
+    //     newNode is! TitleNode,
+    //     'program error: Commands must take care '
+    //     'not to insert TitleNodes with MutableDocument-API');
+    // final pathToExistingNode = _root.getPathToDocumentNode(existingNode);
+    // if (pathToExistingNode == null || pathToExistingNode.treenodePath.isEmpty) {
+    //   outlineDocLog
+    //       .warning('insertNodeAfter called on non-existing node $existingNode');
+    //   return;
+    // }
+    // final treenode =
+    //     _root.getOutlineTreenodeByPath(pathToExistingNode.treenodePath)!;
+    // treenode.contentNodes.insert(
+    //     existingNode is TitleNode
+    //         ? 0
+    //         : treenode.contentNodes.indexOf(existingNode) + 1,
+    //     newNode);
   }
 
-      @override
+  @override
   bool isCollapsed(String treeNodeId) =>
       getOutlineTreenodeForDocumentNodeId(treeNodeId).isCollapsed;
 
@@ -279,28 +349,34 @@ class OutlineTreeDocument
       outlineDocLog.warning('moveNode called on non-existing node $nodeId');
       return;
     }
+    assert(node is! TitleNode,
+        'moveNode called on a TitleNode, this is not supported; program error');
     final nodePath = _root.getPathToDocumentNode(node);
     final outlineNode = _root.getOutlineTreenodeByPath(nodePath!.treenodePath)!;
-    outlineNode.documentNodes.remove(node);
+    outlineNode.contentNodes.remove(node);
     insertNodeAt(targetIndex, node);
   }
 
   @override
   void replaceNode(
       {required DocumentNode oldNode, required DocumentNode newNode}) {
-    final nodePath = _root.getPathToDocumentNode(oldNode);
-    if (nodePath == null || nodePath.treenodePath.isEmpty) {
+    final oldNodePath = _root.getPathToDocumentNode(oldNode);
+    if (oldNodePath == null || oldNodePath.treenodePath.isEmpty) {
       outlineDocLog.warning('replaceNode called on non-existing node $oldNode');
       return;
     }
-    final outlineNode = _root.getOutlineTreenodeByPath(nodePath.treenodePath)!;
-    outlineNode.documentNodes.remove(oldNode);
-    outlineNode.documentNodes.insert(nodePath.docNodeIndex, newNode);
+    assert(oldNode is! TitleNode && newNode is! TitleNode,
+        'replaceNode called on a TitleNode, this is not supported; program error');
+    final outlineNode =
+        _root.getOutlineTreenodeByPath(oldNodePath.treenodePath)!;
+    outlineNode.contentNodes.remove(oldNode);
+    outlineNode.contentNodes.insert(oldNodePath.docNodeIndex, newNode);
   }
 
   @override
   void onTransactionEnd(List<EditEvent> edits) {
-    final documentChanges = edits.whereType<DocumentEdit>().map((edit) => edit.change).toList();
+    final documentChanges =
+        edits.whereType<DocumentEdit>().map((edit) => edit.change).toList();
     if (documentChanges.isEmpty && !_didReset) {
       return;
     }
@@ -324,7 +400,7 @@ class OutlineTreeDocument
     // However, reusing certain SuperEditor behaviors (like deleting text)
     // can lead to DocumentNodes being removed without the OutlineTreeDocument
     // knowing, so we check for "stale", empty OutlineTreenodes here.
-    _root.purgeStaleChildren();
+    //_root.purgeStaleChildren();
   }
 
   @override
@@ -334,10 +410,10 @@ class OutlineTreeDocument
 
   @override
   bool operator ==(Object other) =>
-    identical(this, other) ||
-    other is OutlineTreeDocument
-    && runtimeType == other.runtimeType
-    && _root == other.root;
+      identical(this, other) ||
+      other is OutlineTreeDocument &&
+          runtimeType == other.runtimeType &&
+          _root == other.root;
 
   @override
   int get hashCode => _root.hashCode;

@@ -31,8 +31,8 @@ class InsertDocumentNodeInOutlineTreenodeRequest implements EditRequest {
       index.hashCode;
 }
 
-class InsertDocumentNodeInOutlineTreenodeCommand extends EditCommand {
-  InsertDocumentNodeInOutlineTreenodeCommand({
+class InsertDocumentNodeInTreenodeContentCommand extends EditCommand {
+  InsertDocumentNodeInTreenodeContentCommand({
     required this.documentNode,
     required this.outlineTreenode,
     required this.index,
@@ -45,10 +45,10 @@ class InsertDocumentNodeInOutlineTreenodeCommand extends EditCommand {
   @override
   void execute(EditContext context, CommandExecutor executor) {
     commandLog.fine(
-        'executing InsertDocumentNodeInOutlineTreenodeCommand, inserting $documentNode in $outlineTreenode');
+        'executing InsertDocumentNodeInTreenodeContentCommand, inserting $documentNode in $outlineTreenode');
     final outlineDoc = context.document as OutlineDocument;
-    outlineTreenode.documentNodes.insert(
-        index == -1 ? outlineTreenode.documentNodes.length : index,
+    outlineTreenode.contentNodes.insert(
+        index == -1 ? outlineTreenode.contentNodes.length : index,
         documentNode);
     executor.logChanges([
         DocumentEdit(

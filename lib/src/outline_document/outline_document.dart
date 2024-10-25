@@ -9,7 +9,7 @@ abstract mixin class OutlineDocument implements Document {
   OutlineTreenode get root;
 
   OutlineTreenode getOutlineTreenodeForDocumentNodeId(String nodeId) {
-    final ret = root.getOutlineTreenodeForDocumentNodeId(nodeId);
+    final ret = root.getOutlineTreenodeByDocumentNodeId(nodeId);
     if (ret == null) {
       throw Exception('Did not find OutlineTreenode for DocumentNode $nodeId');
     }
@@ -31,10 +31,19 @@ abstract mixin class OutlineDocument implements Document {
   }
 
   // test
-  OutlineTreenode getOutlineTreenodeById(String id) {
-    final ret = root.getOutlineTreenodeById(id);
+  OutlineTreenode getOutlineTreenodeById(String treenodeId) {
+    final ret = root.getOutlineTreenodeById(treenodeId);
     if (ret == null) {
-      throw Exception('Could not find OutlineTreenode for id $id');
+      throw Exception('Could not find OutlineTreenode for id $treenodeId');
+    }
+    return ret;
+  }
+
+  // test
+  OutlineTreenode getOutlineTreenodeByDocumentNodeId(String docNodeId) {
+    final ret = root.getOutlineTreenodeByDocumentNodeId(docNodeId);
+    if (ret == null) {
+      throw Exception('Could not find OutlineTreenode for docNodeId $docNodeId');
     }
     return ret;
   }
@@ -66,8 +75,8 @@ abstract mixin class OutlineDocument implements Document {
   /// it does not find nodeId. The result can be used for component building.
   int getIndexInChildren(String docNodeId) {
     final treeNode = getOutlineTreenodeForDocumentNodeId(docNodeId);
-    for (var i = 0; i < treeNode.documentNodes.length; i++) {
-      if (treeNode.documentNodes[i].id == docNodeId) {
+    for (var i = 0; i < treeNode.nodes.length; i++) {
+      if (treeNode.nodes[i].id == docNodeId) {
         return i;
       }
     }
@@ -93,27 +102,8 @@ abstract mixin class OutlineDocument implements Document {
   /// Return visibility of the [DocumentNode] with the given id, taking
   /// folding state of tree nodes as well as document nodes into account.
   bool isVisible(String documentNodeId) {
-    // if this particular DocumentNode is already hidden, we don't have to
-    // look any further
-    if (isHidden(documentNodeId)) {
-      return false;
-    }
-    // find TreeNode corresponding to the node with id `documentNodeId`
     final myTreeNode = getOutlineTreenodeForDocumentNodeId(documentNodeId);
-    // search all ancestors (not my own tree node) until root and check if one
-    // is collapsed
-    var ancestor = myTreeNode.parent;
-    while (ancestor != null) {
-      if (ancestor.isCollapsed) {
-        // found an ancestor that is folded, so we as a descendent
-        // are, too
-        return false;
-      }
-      ancestor = ancestor.parent;
-    }
-    // root nodes are never hidden. All ancestors until root are visible, so
-    // we are, too
-    return true;
+    return !myTreeNode.hasContentHidden && myTreeNode.isVisible;
   }
 
   /// Returns the last visible [DocumentNode] in the document before `pos`, or the node

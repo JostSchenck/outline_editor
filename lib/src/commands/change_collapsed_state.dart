@@ -4,11 +4,11 @@ import 'package:outline_editor/src/util/logging.dart';
 
 class ChangeCollapsedStateRequest implements EditRequest {
   ChangeCollapsedStateRequest({
-    required this.nodeId,
+    required this.treenodeId,
     required this.isCollapsed,
   });
 
-  final String nodeId;
+  final String treenodeId;
   final bool isCollapsed;
 
   @override
@@ -16,35 +16,33 @@ class ChangeCollapsedStateRequest implements EditRequest {
       identical(this, other) ||
       other is ChangeCollapsedStateRequest &&
           runtimeType == other.runtimeType &&
-          nodeId == other.nodeId &&
+          treenodeId == other.treenodeId &&
           isCollapsed == other.isCollapsed;
 
   @override
-  int get hashCode => super.hashCode ^ nodeId.hashCode ^ isCollapsed.hashCode;
+  int get hashCode => super.hashCode ^ treenodeId.hashCode ^ isCollapsed.hashCode;
 }
 
 class ChangeCollapsedStateCommand extends EditCommand {
   ChangeCollapsedStateCommand({
-    required this.nodeId,
+    required this.treenodeId,
     required this.isCollapsed,
   });
 
-  final String nodeId;
+  final String treenodeId;
   final bool isCollapsed;
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
     commandLog.fine(
-        'executing ChangeCollapsedStateCommand, setting $nodeId to $isCollapsed');
+        'executing ChangeCollapsedStateCommand, setting $treenodeId to $isCollapsed');
     final outlineDoc = context.document as OutlineDocument;
-    final treenode = outlineDoc.getOutlineTreenodeForDocumentNodeId(nodeId);
+    final treenode = outlineDoc.getOutlineTreenodeById(treenodeId);
     treenode.isCollapsed = isCollapsed;
 
     executor.logChanges([
       DocumentEdit(
-        // we can assume that headNodeId can not be null, because if our nodeId
-        // exists, there is at least one documentNodeId.
-        NodeChangeEvent(treenode.headNode!.id),
+        NodeChangeEvent(treenode.titleNode.id),
       ),
       NodeVisibilityChangeEvent(const NodeVisibilityChange()),
     ]);

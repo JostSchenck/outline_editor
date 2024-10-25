@@ -162,27 +162,20 @@ void main() {
     });
 
     test('OutlineTreeNodes can be retrieved by their path', () {
-      expect(document.getOutlineTreenodeByPath([0]).headNode!.id, '1');
-      expect(document.getOutlineTreenodeByPath([0, 1]).headNode!.id, '5');
+      expect(document.getOutlineTreenodeByPath([0]).titleNode.id, '1');
+      expect(document.getOutlineTreenodeByPath([0, 1]).titleNode.id, '5');
       // and a relative path
       expect(
           document
               .getOutlineTreenodeByPath([0, 1])
               .getOutlineTreenodeByPath([0])!
-              .headNode!
+              .titleNode
               .id,
           '6');
     });
 
     test('OutlineTreeNodes can be retrieved by their treeNodeId', () {
-      expect(
-          document.root
-              .getOutlineTreenodeByPath([0, 1, 0])!
-              .documentNodes
-              .first
-              .id,
-          '6');
-      expect(document.root.getOutlineTreenodeForDocumentNodeId('4')!.path,
+      expect(document.root.getOutlineTreenodeByDocumentNodeId('4')!.path,
           [0, 0, 0, 0]);
     });
 
@@ -220,7 +213,7 @@ void main() {
       document.root.children[0].children[0].addChild(OutlineTreenode(id: 'c', document: document));
       // will not be purged, because it has document nodes
       document.root.children[0].addChild(
-          OutlineTreenode(id: 'b2', document: document, documentNodes: [ParagraphNode(id: 'dn1', text: AttributedText('text'))]));
+          OutlineTreenode(id: 'b2', document: document, contentNodes: [ParagraphNode(id: 'dn1', text: AttributedText('text'))]));
       // will be purged, as it has empty documentNodes and no children
       document.root.addChild(OutlineTreenode(id: 'd', document: document));
     });
