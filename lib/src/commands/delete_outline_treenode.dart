@@ -41,8 +41,8 @@ class DeleteOutlineTreenodeCommand extends EditCommand {
                     context.composer.selection!.start.nodeId) ==
                 outlineTreenode ||
         (outlineDoc.getOutlineTreenodeForDocumentNodeId(
-                    context.composer.selection!.extent.nodeId) ==
-                outlineTreenode)) {
+                context.composer.selection!.extent.nodeId) ==
+            outlineTreenode)) {
       executor.executeCommand(const ChangeSelectionCommand(
           null,
           SelectionChangeType.deleteContent,
@@ -58,8 +58,18 @@ class DeleteOutlineTreenodeCommand extends EditCommand {
       }
       outlineTreenode.parent!.removeChild(outlineTreenode);
     } else {
-      // there are children: How do we treat this? For now: stop. TODO
-      return;
+      // there are children: move them up in the hierarchy, becoming siblings
+      // to the siblings of their former parent; this does not change the order
+      // in which they are laid out sequentially.
+      commandLog.fine(
+          'deleting an OutlineTreenode with children, moving them up in the hierarchy');
+      final childIndex = outlineTreenode.childIndex;
+      for (int i = 0;
+          i < outlineTreenode.children.length;
+          [...outlineTreenode.children]) {
+        outlineTreenode.parent!
+            .addChild(outlineTreenode.children.first, childIndex + i);
+      }
     }
     executor.logChanges([
       for (int i = 0; i < outlineTreenode.nodes.length; i++)

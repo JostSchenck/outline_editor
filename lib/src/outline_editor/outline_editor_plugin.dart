@@ -101,6 +101,8 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
   List<DocumentKeyboardAction> get keyboardActions =>
       [
         enterInOutlineTreeDocument,
+        enterEdgeCasesInOutlineTreeDocument,
+        deleteEdgeCasesInOutlineTreeDocument,
         backspaceEdgeCasesInOutlineTreeDocument,
         insertTreenodeOnShiftOrCtrlEnter,
       ];

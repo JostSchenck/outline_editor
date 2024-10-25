@@ -48,14 +48,27 @@ abstract mixin class OutlineDocument implements Document {
     return ret;
   }
 
+  /// Returns the OutlineTreenode directly preceding this OutlineTreenode in
+  /// presentation. This can be a sibling, a parent, or even just some cousin.
   OutlineTreenode? getOutlineTreenodeBeforeTreenode(OutlineTreenode treenode) {
     if (treenode.parent==null) return null;
-    final childIndex = treenode.parent!.children.indexOf(treenode);
+    final childIndex = treenode.childIndex;
     if (childIndex==0) {
       return treenode.parent;
     }
     return (treenode.parent!.children[childIndex-1].lastOutlineTreeNodeInSubtree);
   }
+
+  // OutlineTreenode? getOutlineTreenodeAfterTreenode(OutlineTreenode treenode) {
+  //   if (treenode.parent==null) return null;
+  //   final childIndex = treenode.childIndex;
+  //   if (childIndex==treenode.parent!.children.length) {
+  //     var ret;
+  //     while
+  //     return treenode.parent;
+  //   }
+  //   return (treenode.parent!.children[childIndex+1].);
+  // }
 
   /// At which position in the parent's content a certain [DocumentNode] is
   /// located, ie. 0 for the first child, 1 for the second, etc. Returns -1 if

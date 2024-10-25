@@ -4,6 +4,8 @@ import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/commands/change_collapsed_state.dart';
 import 'package:outline_editor/src/commands/delete_outline_treenode.dart';
 import 'package:outline_editor/src/commands/insert_documentnode_in_outlinetreenode.dart';
+import 'package:outline_editor/src/commands/delete_outline_treenode.dart';
+import 'package:outline_editor/src/commands/insert_documentnode_in_outlinetreenode.dart';
 import 'package:outline_editor/src/commands/insert_outline_treenode.dart';
 import 'package:outline_editor/src/commands/merge_outline_treenodes.dart';
 import 'package:outline_editor/src/infrastructure/platform.dart';
@@ -26,6 +28,7 @@ ExecutionInstruction backspaceEdgeCasesInOutlineTreeDocument({
   if (selection == null) return ExecutionInstruction.continueExecution;
   if (!selection.isCollapsed) return ExecutionInstruction.continueExecution;
 
+  // we only care, if the cursor is at the start of a text node
   final outlineDoc = editContext.document as OutlineTreeDocument;
   final outlineNode =
       outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
