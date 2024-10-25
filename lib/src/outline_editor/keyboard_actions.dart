@@ -4,8 +4,6 @@ import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/commands/change_collapsed_state.dart';
 import 'package:outline_editor/src/commands/delete_outline_treenode.dart';
 import 'package:outline_editor/src/commands/insert_documentnode_in_outlinetreenode.dart';
-import 'package:outline_editor/src/commands/delete_outline_treenode.dart';
-import 'package:outline_editor/src/commands/insert_documentnode_in_outlinetreenode.dart';
 import 'package:outline_editor/src/commands/insert_outline_treenode.dart';
 import 'package:outline_editor/src/commands/merge_outline_treenodes.dart';
 import 'package:outline_editor/src/infrastructure/platform.dart';
@@ -172,6 +170,8 @@ ExecutionInstruction deleteEdgeCasesInOutlineTreeDocument({
   }
   return ExecutionInstruction.continueExecution;
 }
+
+
 
 ExecutionInstruction enterInOutlineTreeDocument({
   required SuperEditorContext editContext,
