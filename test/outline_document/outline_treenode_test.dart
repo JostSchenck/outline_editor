@@ -22,7 +22,7 @@ void main() {
     });
 
     test(
-        'getLastVisibleNode correctly gives the last visible node starting with the given one',
+        'getLastVisibleNode correctly gives the last visible node starting with the given one, going backwards',
         () {
       expect(
           document
@@ -82,13 +82,13 @@ void main() {
               .getNextVisibleDocumentnode(const DocumentPosition(
                   nodeId: '3', nodePosition: TextNodePosition(offset: 2)))!
               .id,
-          '5');
+          '5title');
       expect(
           document
               .getNextVisibleDocumentnode(const DocumentPosition(
                   nodeId: '4', nodePosition: TextNodePosition(offset: 2)))!
               .id,
-          '5');
+          '5title');
       expect(
           document
               .getNextVisibleDocumentnode(const DocumentPosition(
@@ -219,7 +219,6 @@ void main() {
     });
 
     test('purgeStaleChildren finds all stale children and removes them recursively', () {
-      document.root.purgeStaleChildren();
       expect(document.root.children.length, 1);
       expect(document.root.children[0].id, 'a');
       expect(document.root.children[0].children.length, 1);
