@@ -6,6 +6,7 @@ OutlineTreeDocument getVisibilityTestDocument() {
     OutlineTreenode(
       id: 'tn_1',
       document: document,
+      titleNode: TitleNode(id: '1title', text: AttributedText('Title node')),
       contentNodes: [
         ParagraphNode(
           id: '1',
@@ -16,17 +17,19 @@ OutlineTreeDocument getVisibilityTestDocument() {
         OutlineTreenode(
           id: 'tn_2',
           document: document,
+          titleNode: TitleNode(id: '2title', text: AttributedText('Title node')),
           contentNodes: [
             ParagraphNode(
               id: '2',
               text: AttributedText('Two more'),
             ),
           ],
-          collapsed: true,
+          isCollapsed: true,
           children: [
             OutlineTreenode(
               id: 'tn_3',
               document: document,
+              titleNode: TitleNode(id: '3title', text: AttributedText('Title node')),
               contentNodes: [
                 ParagraphNode(
                   id: '3',
@@ -37,6 +40,7 @@ OutlineTreeDocument getVisibilityTestDocument() {
                 OutlineTreenode(
                   id: 'tn_4',
                   document: document,
+                  titleNode: TitleNode(id: '4title', text: AttributedText('Title node')),
                   contentNodes: [
                     ParagraphNode(
                       id: '4',
@@ -52,17 +56,19 @@ OutlineTreeDocument getVisibilityTestDocument() {
         OutlineTreenode(
           id: 'tn_5',
           document: document,
+          titleNode: TitleNode(id: '5title', text: AttributedText('Title node')),
           contentNodes: [
             ParagraphNode(
               id: '5',
               text: AttributedText('Another ...'),
             ),
           ],
-          collapsed: true,
+          isCollapsed: true,
           children: [
             OutlineTreenode(
               id: 'tn_6',
               document: document,
+              titleNode: TitleNode(id: '6title', text: AttributedText('Title node')),
               contentNodes: [
                 ParagraphNode(
                   id: '6',
@@ -76,6 +82,5 @@ OutlineTreeDocument getVisibilityTestDocument() {
       ],
     ),
   );
-  document.rebuildStructure();
   return document;
 }
