@@ -77,7 +77,6 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
             : null,
       ],
     );
-    (editor.document as OutlineDocument).rebuildStructure();
   }
 
   @override

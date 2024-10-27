@@ -9,9 +9,6 @@ class OutlineStructureReaction extends EditReaction {
     assert(editorContext.document is OutlineDocument);
     final outlineDoc = editorContext.document as OutlineDocument;
     for (var editevent in changeList) {
-      if (editevent is DocumentEdit) {
-        outlineDoc.rebuildStructure();
-      }
       super.modifyContent(editorContext, requestDispatcher, changeList);
     }
   }

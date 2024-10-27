@@ -41,7 +41,8 @@ final class OutlineTreenode /*extends ChangeNotifier */
     List<DocumentNode> contentNodes = const [],
     List<OutlineTreenode>? children,
     this.parent,
-    bool collapsed = false,
+    bool isCollapsed = false,
+    bool hasContentHidden = false,
     required this.id,
     required this.document,
   }) {
@@ -53,7 +54,8 @@ final class OutlineTreenode /*extends ChangeNotifier */
         addChild(child);
       }
     }
-    isCollapsed = collapsed;
+    _isCollapsed = isCollapsed;
+    _hasContentHidden = hasContentHidden;
   }
 
   late TitleNode _titleNode;

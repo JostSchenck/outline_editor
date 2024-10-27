@@ -7,13 +7,12 @@ import 'package:outline_editor/src/util/logging.dart';
 class OutlineTreeDocument
     with OutlineDocument, Iterable<DocumentNode>
     implements MutableDocument {
-  OutlineTreeDocument() {
-    _root = OutlineTreenode(
+  OutlineTreeDocument({OutlineTreenode? root}) {
+    _root = root ?? OutlineTreenode(
       id: 'root',
       document: this,
       children: [],
     );
-    rebuildStructure();
   }
 
   @override
@@ -23,6 +22,12 @@ class OutlineTreeDocument
 
   @override
   OutlineTreenode get root => _root;
+  set root(OutlineTreenode value) {
+    _root = value;
+    // _latestNodeSnapshot = value;
+    _didReset = true;
+    // _notifyListeners();
+  }
   late OutlineTreenode _root;
 
   final _listeners = <DocumentChangeListener>[];
@@ -391,16 +396,6 @@ class OutlineTreeDocument
   @override
   void onTransactionStart() {
     // TODO: implement onTransactionStart
-  }
-
-  @override
-  void rebuildStructure() {
-    // in general, our outline is our single source of truth, where
-    // we operate on directly, so here should in theory be nothing to do.
-    // However, reusing certain SuperEditor behaviors (like deleting text)
-    // can lead to DocumentNodes being removed without the OutlineTreeDocument
-    // knowing, so we check for "stale", empty OutlineTreenodes here.
-    //_root.purgeStaleChildren();
   }
 
   @override

@@ -138,6 +138,4 @@ abstract mixin class OutlineDocument implements Document {
   /// this may not correspond to a selectable component later on. Returns
   /// null, if there is no visible node later in the document.
   DocumentNode? getNextVisibleDocumentnode(DocumentPosition pos);
-
-  void rebuildStructure();
 }
