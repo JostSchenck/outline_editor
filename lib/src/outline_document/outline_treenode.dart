@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/util/logging.dart';
@@ -186,6 +188,8 @@ final class OutlineTreenode /*extends ChangeNotifier */
     );
   }
 
+  /// Returns the [OutlineTreenode] corresponding to the given treenode id
+  /// (not DocumentNode id), or null if it isn't found in this node's subtree.
   OutlineTreenode? getOutlineTreenodeById(String id) {
     if (id == this.id) {
       return this;
@@ -265,6 +269,43 @@ final class OutlineTreenode /*extends ChangeNotifier */
     _children.remove(child);
     child.parent = null;
     // notifyListeners();
+  }
+
+  /// Get the `TreenodePath` to the lowest OutlineTreenode (ie. deepest depth)
+  /// that is direct ancestor of both `this` and `other`. This may be this or
+  /// other itself.
+  TreenodePath getLowestCommonAncestorPath(OutlineTreenode other) {
+    final TreenodePath lowestAncestorPath = [];
+    final myPath = [...path];
+    final otherPath = [...other.path];
+    for (int i=0; i<min(myPath.length, otherPath.length); i++) {
+      if (myPath[i]==otherPath[i]) {
+        lowestAncestorPath.add(myPath[i]);
+      } else {
+        break;
+      }
+    }
+    return lowestAncestorPath;
+  }
+
+  /// Whether this OutlineTreenode is a direct descendant of `other`.
+  /// In the case of `other==this`, this method will return `false`.
+  bool isDescendantOf(OutlineTreenode other) {
+    if (parent==null) {
+      return false;
+    }
+    return parent!.isDescendantOf(other);
+  }
+
+  /// Whether this OutlineTreenode is a direct ancestor of `other`.
+  /// In the case of `other==this`, this method will return `false`.
+  bool isAncestorOf(OutlineTreenode other) {
+    for (final child in children) {
+      if (child==other || child.isAncestorOf(other)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// At which position in this treenode's or its children's documentNodes
@@ -416,6 +457,15 @@ final class OutlineTreenode /*extends ChangeNotifier */
     );
   }
 
+  /// Returns a flat list of all OutlineTreenodes in this subtree, in depth-first
+  /// order of appearance in the document
+  List<OutlineTreenode> get subtreeList {
+    return [
+      this,
+      for(final child in children) ...child.subtreeList,
+    ];
+  }
+
   @override
   // we only use child nodes for iterating if this is the root node, as
   // having content in the root would lead to problems eg. when inserting later
@@ -447,6 +497,13 @@ final class OutlineTreenode /*extends ChangeNotifier */
       }
     }
     return true;
+  }
+
+  @override
+  String toString() {
+    final shortenedId = id.length > 6 ? '#${id.substring(0, 6)}' : '#$id';
+    final shortenedTitle = titleNode.text.text.length > 13 ? '"${titleNode.text.text.substring(0, 10)}..."' : '"${titleNode.text.text}"';
+    return '[OutlineTreenode $shortenedId $shortenedTitle ${contentNodes.length} content nodes, ${children.length} children]';
   }
 }
 

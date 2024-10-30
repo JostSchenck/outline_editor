@@ -24,6 +24,7 @@ abstract mixin class OutlineDocument implements Document {
       getOutlineTreenodeForDocumentNodeId(nodeId).path;
 
   OutlineTreenode getOutlineTreenodeByPath(TreenodePath path) {
+    if (path.isEmpty) return root;
     final ret = root.getOutlineTreenodeByPath(path);
     if (ret == null) {
       throw Exception('Could not find OutlineTreenode for path $path');

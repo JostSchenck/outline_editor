@@ -1,9 +1,59 @@
+import 'dart:math';
+
 import 'package:flutter/services.dart';
 import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/infrastructure/uuid.dart';
+import 'package:outline_editor/src/reactions/outline_selection_reaction.dart';
 // parts copied from super_editor LICENSE
 
-ExecutionInstruction backspaceEdgeCasesInOutlineTreeDocument({
+/// delete treenodes, if the selection spans whole treenodes; if not, return
+/// false, so the calling action can decide on passing on or halting.
+bool _deleteSelectedTreenodes(OutlineTreeDocument outlineDoc, DocumentSelection selection, SuperEditorContext editContext) {
+  if (selection.isCollapsed) return false;
+  final tn1 =
+  outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
+  final tn2 =
+  outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.extent.nodeId);
+
+  if ((selection.base.isEquivalentTo(tn1.firstPosition) &&
+      selection.extent.isEquivalentTo(tn2.lastPosition)) ||
+      (selection.extent.isEquivalentTo(tn2.firstPosition) &&
+          selection.base.isEquivalentTo(tn1.lastPosition))) {
+    // whole treenodes are selected; delete a region.
+    final flatList = outlineDoc.root.subtreeList;
+    int index1 = flatList.indexWhere((treenode) => treenode == tn1);
+    int index2 = flatList.indexWhere((treenode) => treenode == tn2);
+    final deleteList =
+        flatList.sublist(min(index1, index2), max(index1, index2)+1).reversed;
+    final parent = deleteList.last.parent!;
+    final childIndex = deleteList.last.childIndex;
+    final newEmptyNode = OutlineTreenode(id: uuid.v4(), document: outlineDoc);
+    editContext.editor.execute([
+      ...deleteList.map((treenode) =>
+          DeleteOutlineTreenodeRequest(outlineTreenode: treenode)),
+      InsertOutlineTreenodeRequest(
+        existingTreenode: parent,
+        newTreenode: newEmptyNode,
+        createChild: true,
+        index: childIndex,
+      ),
+      ChangeSelectionRequest(
+          DocumentSelection.collapsed(
+            position: DocumentPosition(
+              nodeId: newEmptyNode.titleNode.id,
+              nodePosition: const TextNodePosition(offset: 0),
+            ),
+          ),
+          SelectionChangeType.deleteContent,
+          'deleted whole treenodes'),
+    ]);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+ExecutionInstruction backspaceSpecialCasesInOutlineTreeDocument({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
 }) {
@@ -14,13 +64,20 @@ ExecutionInstruction backspaceEdgeCasesInOutlineTreeDocument({
     return ExecutionInstruction.continueExecution;
   }
 
-  // we only care about collapsed selections for now
-  final selection = editContext.composer.selection;
-  if (selection == null) return ExecutionInstruction.continueExecution;
-  if (!selection.isCollapsed) return ExecutionInstruction.continueExecution;
-
-  // we only care, if the cursor is at the start of a text node
   final outlineDoc = editContext.document as OutlineTreeDocument;
+  final selection = editContext.composer.selection;
+
+  if (selection == null) return ExecutionInstruction.continueExecution;
+
+  if (!selection.isCollapsed) {
+    if (_deleteSelectedTreenodes(outlineDoc, selection, editContext)) {
+      return ExecutionInstruction.haltExecution;
+    } else {
+      return ExecutionInstruction.continueExecution;
+    }
+  }
+
+  // selection is collapsed
   final outlineNode =
       outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
   if (selection.base.nodePosition is! TextNodePosition) {
@@ -91,7 +148,7 @@ ExecutionInstruction backspaceEdgeCasesInOutlineTreeDocument({
   }
 }
 
-ExecutionInstruction deleteEdgeCasesInOutlineTreeDocument({
+ExecutionInstruction deleteSpecialCasesInOutlineTreeDocument({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
 }) {
@@ -102,12 +159,18 @@ ExecutionInstruction deleteEdgeCasesInOutlineTreeDocument({
     return ExecutionInstruction.continueExecution;
   }
 
-  // we only care about collapsed selections for now
   final selection = editContext.composer.selection;
   if (selection == null) return ExecutionInstruction.continueExecution;
-  if (!selection.isCollapsed) return ExecutionInstruction.continueExecution;
-
   final outlineDoc = editContext.document as OutlineTreeDocument;
+
+  if (!selection.isCollapsed) {
+    if (_deleteSelectedTreenodes(outlineDoc, selection, editContext)) {
+      return ExecutionInstruction.haltExecution;
+    } else {
+      return ExecutionInstruction.continueExecution;
+    }
+  }
+
   final outlineNode =
       outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
   if (selection.base.nodePosition is! TextNodePosition) {
@@ -163,8 +226,6 @@ ExecutionInstruction deleteEdgeCasesInOutlineTreeDocument({
   }
   return ExecutionInstruction.continueExecution;
 }
-
-
 
 ExecutionInstruction enterInOutlineTreeDocument({
   required SuperEditorContext editContext,
@@ -233,12 +294,13 @@ ExecutionInstruction enterInOutlineTreeDocument({
       // Enter pressed somewhere else in a title node: Jump to start of content,
       // inserting a ParagraphNode if needed
       if (outlineTreenode.contentNodes.isEmpty) {
-        final newParagraphNode = ParagraphNode(id: uuid.v4(), text: AttributedText(''));
+        final newParagraphNode =
+            ParagraphNode(id: uuid.v4(), text: AttributedText(''));
         editContext.editor.execute([
-            InsertDocumentNodeInOutlineTreenodeRequest(
-              documentNode: newParagraphNode,
-              outlineTreenode: outlineTreenode,
-            ),
+          InsertDocumentNodeInOutlineTreenodeRequest(
+            documentNode: newParagraphNode,
+            outlineTreenode: outlineTreenode,
+          ),
           ChangeSelectionRequest(
               DocumentSelection.collapsed(
                 position: DocumentPosition(

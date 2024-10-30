@@ -10,6 +10,7 @@ import 'package:outline_editor/src/outline_editor/keyboard_actions.dart';
 import 'package:outline_editor/src/reactions/node_visibility_reaction.dart';
 import 'package:outline_editor/src/components/outline_paragraph_component.dart';
 import 'package:outline_editor/outline_editor.dart';
+import 'package:outline_editor/src/reactions/outline_selection_reaction.dart';
 
 class OutlineEditorPlugin extends SuperEditorPlugin {
   const OutlineEditorPlugin({
@@ -26,6 +27,7 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
         'expects a Document that implements OutlineDocument');
     editor.reactionPipeline.insert(0, OutlineStructureReaction());
     editor.reactionPipeline.insert(0, NodeVisibilityReaction(editor: editor));
+    editor.reactionPipeline.insert(0, OutlineSelectionReaction());
     editor.requestHandlers.addAll(
       [
         (request) => request is ChangeCollapsedStateRequest
@@ -98,8 +100,8 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
   @override
   List<DocumentKeyboardAction> get keyboardActions => [
         enterInOutlineTreeDocument,
-        deleteEdgeCasesInOutlineTreeDocument,
-        backspaceEdgeCasesInOutlineTreeDocument,
+        deleteSpecialCasesInOutlineTreeDocument,
+        backspaceSpecialCasesInOutlineTreeDocument,
         insertTreenodeOnShiftOrCtrlEnter,
       ];
 }

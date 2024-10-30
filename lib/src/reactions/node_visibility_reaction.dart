@@ -74,8 +74,9 @@ class NodeVisibilityReaction extends EditReaction {
     final outlineDoc = editorContext.document as OutlineDocument;
     final selection = editorContext.composer.selection;
 
+    // First test, whether visibility of nodes has changed, either due to
+    // content hiding or due to collapsing/expanding of children.
     if (changeList.any((event) => event is NodeVisibilityChangeEvent)) {
-      // if (changeList.firstWhereOrNull((element) => element is NodeVisibilityChangeEvent,)) {
       if (selection == null) return;
       if (selection.isCollapsed) {
         // the selection is collapsed. If the cursor is placed in a node that
@@ -144,7 +145,7 @@ class NodeVisibilityReaction extends EditReaction {
           // have happened because of user interaction in form of pushing caret
           // left or right or moving it up and down.
           if (selectionEvent.oldSelection==null) {
-            // apparently, this can happen
+            // apparently, this can happen, although I can not reproduce it
             return;
           }
           if (outlineDoc

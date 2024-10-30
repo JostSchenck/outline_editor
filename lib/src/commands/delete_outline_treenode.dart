@@ -33,16 +33,24 @@ class DeleteOutlineTreenodeCommand extends EditCommand {
         .fine('executing DeleteOutlineTreenodeCommand on $outlineTreenode');
     final outlineDoc = context.document as OutlineDocument;
 
+    /*// if he OutlineTreenode is not in the document, skip it; this can happen
+    // if delete requests for a whole list of OutlineTreenodes is dispatched
+    // and a parent of this node already has been deleted.
+    if (outlineDoc.root.getOutlineTreenodeById(outlineTreenode.id)==null) {
+      commandLog.fine('skipping OutlineTreenode ${outlineTreenode.id}, not found in document. Maybe an ancestor has already been deleted.');
+      return;
+    }*/
+
     // if selection is in the OutlineTreenode to be deleted, remove selection;
     // if this is not wanted, it is the responsibility of the caller to move
     // the selection some other place beforehand.
     if (context.composer.selection != null &&
-            outlineDoc.getOutlineTreenodeForDocumentNodeId(
+            (outlineDoc.getOutlineTreenodeForDocumentNodeId(
                     context.composer.selection!.start.nodeId) ==
                 outlineTreenode ||
         (outlineDoc.getOutlineTreenodeForDocumentNodeId(
                 context.composer.selection!.extent.nodeId) ==
-            outlineTreenode)) {
+            outlineTreenode))) {
       executor.executeCommand(const ChangeSelectionCommand(
           null,
           SelectionChangeType.deleteContent,
@@ -64,9 +72,7 @@ class DeleteOutlineTreenodeCommand extends EditCommand {
       commandLog.fine(
           'deleting an OutlineTreenode with children, moving them up in the hierarchy');
       final childIndex = outlineTreenode.childIndex;
-      for (int i = 0;
-          i < outlineTreenode.children.length;
-          [...outlineTreenode.children]) {
+      for (int i = 0; i < outlineTreenode.children.length; i++) {
         outlineTreenode.parent!
             .addChild(outlineTreenode.children.first, childIndex + i);
       }

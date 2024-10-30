@@ -45,7 +45,8 @@ class OutlineTreeDocument
 
   /// The iterator for an OutlineTreeDocument does not iterate over the
   /// 'logical root node' but only over all children; this way, we have a
-  /// single root internally, while users can create more than one root node.
+  /// single root internally (not visible to end user), while users can create
+  /// more than one root node.
   @override
   Iterator<DocumentNode> get iterator => _root.nodesChildren.iterator;
 
@@ -310,23 +311,6 @@ class OutlineTreeDocument
   }) {
     // TODO: this is the least efficient way, do this better when problems arise
     insertNodeAt(getNodeIndexById(existingNode.id) + 1, newNode);
-    // assert(
-    //     newNode is! TitleNode,
-    //     'program error: Commands must take care '
-    //     'not to insert TitleNodes with MutableDocument-API');
-    // final pathToExistingNode = _root.getPathToDocumentNode(existingNode);
-    // if (pathToExistingNode == null || pathToExistingNode.treenodePath.isEmpty) {
-    //   outlineDocLog
-    //       .warning('insertNodeAfter called on non-existing node $existingNode');
-    //   return;
-    // }
-    // final treenode =
-    //     _root.getOutlineTreenodeByPath(pathToExistingNode.treenodePath)!;
-    // treenode.contentNodes.insert(
-    //     existingNode is TitleNode
-    //         ? 0
-    //         : treenode.contentNodes.indexOf(existingNode) + 1,
-    //     newNode);
   }
 
   @override
