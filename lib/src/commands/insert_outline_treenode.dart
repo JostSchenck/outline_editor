@@ -67,7 +67,7 @@ class InsertOutlineTreenodeCommand extends EditCommand {
       assert(existingNode.parent != null);
       existingNode.parent!.addChild(
         newNode,
-        index,
+        index==-1 ? existingNode.childIndex+1 : index,
       );
     }
 
