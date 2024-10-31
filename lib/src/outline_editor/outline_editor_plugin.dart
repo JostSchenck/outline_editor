@@ -99,6 +99,7 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
 
   @override
   List<DocumentKeyboardAction> get keyboardActions => [
+        upAndDownBehaviorWithModifiers,
         enterInOutlineTreeDocument,
         deleteSpecialCasesInOutlineTreeDocument,
         backspaceSpecialCasesInOutlineTreeDocument,

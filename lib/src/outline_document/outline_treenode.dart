@@ -47,10 +47,12 @@ final class OutlineTreenode /*extends ChangeNotifier */
     bool hasContentHidden = false,
     required this.id,
     required this.document,
+    Map<String, dynamic>? metadata,
   }) {
     _titleNode =
         titleNode ?? TitleNode(id: uuid.v4(), text: AttributedText(''));
     _contentNodes.addAll(contentNodes);
+    _metadata = metadata ?? {};
     if (children != null) {
       for (var child in children) {
         addChild(child);
@@ -68,6 +70,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
   final Document document;
   bool _isCollapsed = false;
   bool _hasContentHidden = false;
+  late Map<String, dynamic> _metadata;
 
 // TODO: test
   void traverseUpDown(void Function(OutlineTreenode) visitor) {
@@ -85,24 +88,26 @@ final class OutlineTreenode /*extends ChangeNotifier */
     visitor(this);
   }
 
-  // void purgeStaleChildren() {
-  //   final staleChildren = [];
-  //   for (final child in children) {
-  //     child.purgeStaleChildren();
-  //     if (child.titleNode.text.text.isEmpty && child.contentNodes.isEmpty && child.children.isEmpty) {
-  //       outlineDocLog.fine('found stale child ...');
-  //       staleChildren.add(child);
-  //     }
-  //   }
-  //   for (final child in staleChildren) {
-  //     outlineDocLog.fine('... purging');
-  //     removeChild(child);
-  //   }
-  // }
-
   bool get isConsideredEmpty =>
       nodes.every((n) => n is TextNode && n.text.text.isEmpty) &&
           _titleNode.text.text.isEmpty;
+
+  bool hasMetadataValue(String key) => _metadata[key] != null;
+
+  dynamic getMetadataValue(String key) => _metadata[key];
+
+  void putMetadataValue(String key, dynamic value) {
+    if (_metadata[key] == value) {
+      return;
+    }
+
+    _metadata[key] = value;
+    // notifyListeners();
+  }
+
+  void removeMetadataValue(String key) {
+    _metadata.remove(key);
+  }
 
   @override
   bool operator ==(Object other) =>

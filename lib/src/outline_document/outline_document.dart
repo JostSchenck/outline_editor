@@ -56,9 +56,32 @@ abstract mixin class OutlineDocument implements Document {
     if (treenode.parent==null) return null;
     final childIndex = treenode.childIndex;
     if (childIndex==0) {
+      // omit logical root node
+      if (treenode.parent?.parent == null) return null;
       return treenode.parent;
     }
     return (treenode.parent!.children[childIndex-1].lastOutlineTreeNodeInSubtree);
+  }
+
+  /// Returns the OutlineTreenode directly following this OutlineTreenode in
+  /// presentation. This can be a sibling, an uncle, or even just some cousin.
+  OutlineTreenode? getOutlineTreenodeAfterTreenode(OutlineTreenode treenode) {
+    // if we have children, move to the first child
+    if (treenode.children.isNotEmpty) {
+      return treenode.children.first;
+    }
+    // So we don't. If we are the root node, there's nothing to move to
+    if (treenode.parent==null) return null;
+    // if we happen to have a directly following sibling, go there, if not,
+    // return our next ancestor's sibling
+    OutlineTreenode currentTreenode = treenode;
+    while (currentTreenode.parent != null) {
+      if (currentTreenode.parent!.children.length > currentTreenode.childIndex + 1) {
+        return currentTreenode.parent!.children[currentTreenode.childIndex + 1];
+      }
+      currentTreenode = currentTreenode.parent!;
+    }
+    return null;
   }
 
   // OutlineTreenode? getOutlineTreenodeAfterTreenode(OutlineTreenode treenode) {

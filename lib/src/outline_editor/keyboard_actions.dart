@@ -8,15 +8,16 @@ import 'package:outline_editor/src/reactions/outline_selection_reaction.dart';
 
 /// delete treenodes, if the selection spans whole treenodes; if not, return
 /// false, so the calling action can decide on passing on or halting.
-bool _deleteSelectedTreenodes(OutlineTreeDocument outlineDoc, DocumentSelection selection, SuperEditorContext editContext) {
+bool _deleteSelectedTreenodes(OutlineTreeDocument outlineDoc,
+    DocumentSelection selection, SuperEditorContext editContext) {
   if (selection.isCollapsed) return false;
   final tn1 =
-  outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
+      outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
   final tn2 =
-  outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.extent.nodeId);
+      outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.extent.nodeId);
 
   if ((selection.base.isEquivalentTo(tn1.firstPosition) &&
-      selection.extent.isEquivalentTo(tn2.lastPosition)) ||
+          selection.extent.isEquivalentTo(tn2.lastPosition)) ||
       (selection.extent.isEquivalentTo(tn2.firstPosition) &&
           selection.base.isEquivalentTo(tn1.lastPosition))) {
     // whole treenodes are selected; delete a region.
@@ -24,7 +25,7 @@ bool _deleteSelectedTreenodes(OutlineTreeDocument outlineDoc, DocumentSelection 
     int index1 = flatList.indexWhere((treenode) => treenode == tn1);
     int index2 = flatList.indexWhere((treenode) => treenode == tn2);
     final deleteList =
-        flatList.sublist(min(index1, index2), max(index1, index2)+1).reversed;
+        flatList.sublist(min(index1, index2), max(index1, index2) + 1).reversed;
     final parent = deleteList.last.parent!;
     final childIndex = deleteList.last.childIndex;
     final newEmptyNode = OutlineTreenode(id: uuid.v4(), document: outlineDoc);
@@ -421,6 +422,52 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
       return ExecutionInstruction.haltExecution;
     }
     return ExecutionInstruction.continueExecution;
+  }
+  return ExecutionInstruction.continueExecution;
+}
+
+ExecutionInstruction upAndDownBehaviorWithModifiers({
+  required SuperEditorContext editContext,
+  required KeyEvent keyEvent,
+}) {
+  if (keyEvent is! KeyDownEvent && keyEvent is! KeyRepeatEvent) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  if (keyEvent.logicalKey != LogicalKeyboardKey.arrowUp &&
+      keyEvent.logicalKey != LogicalKeyboardKey.arrowDown) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final moveUp = keyEvent.logicalKey == LogicalKeyboardKey.arrowUp;
+  final selection = editContext.composer.selection;
+  if (selection == null) return ExecutionInstruction.continueExecution;
+  final outlineDoc = editContext.document as OutlineTreeDocument;
+
+  if (HardwareKeyboard.instance.isControlPressed &&
+      !HardwareKeyboard.instance.isShiftPressed) {
+    // Ctrl-Up and Ctrl-Down move the caret to the beginning of the treenode
+    // before or after base, collapsing it, if it isn't collapsed yet.
+    late OutlineTreenode newTreenode;
+    final curTreenode =
+        outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
+    if (moveUp) {
+      newTreenode = outlineDoc.getOutlineTreenodeBeforeTreenode(curTreenode) ??
+          curTreenode;
+    } else {
+      newTreenode = outlineDoc.getOutlineTreenodeAfterTreenode(curTreenode) ??
+          curTreenode;
+    }
+    editContext.editor.execute([
+      ChangeSelectionRequest(
+          DocumentSelection.collapsed(
+              position: DocumentPosition(
+                  nodeId: newTreenode.titleNode.id,
+                  nodePosition: const TextNodePosition(offset: 0))),
+          SelectionChangeType.insertContent,
+          'jumping outlinetreenode ${moveUp ? 'up' : 'down'}'),
+    ]);
+    return ExecutionInstruction.haltExecution;
   }
   return ExecutionInstruction.continueExecution;
 }
