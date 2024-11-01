@@ -55,21 +55,5 @@ class ReparentOutlineTreenodeCommand extends EditCommand {
         newNode: childTreenode,
         createChild: true,
         index: index));
-    // final outlineDoc = context.document as OutlineDocument;
-    // final movedSubtree = childTreenode.subtreeDocumentNodes;
-    // final oldDocIndex = outlineDoc.getNodeIndexById(movedSubtree.first.id);
-    // childTreenode.parent!.removeChild(childTreenode);
-    // newParentTreenode.addChild(childTreenode, index);
-    // final newDocIndex = outlineDoc.getNodeIndexById(movedSubtree.first.id);
-    // executor.logChanges([
-    //   for (int i=0; i<movedSubtree.length; i++)
-    //   DocumentEdit(
-    //     NodeMovedEvent(
-    //       nodeId: movedSubtree[i].id,
-    //       from: oldDocIndex + i,
-    //       to: newDocIndex + i,
-    //     ),
-    //   ),
-    // ]);
   }
 }

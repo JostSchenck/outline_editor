@@ -48,7 +48,7 @@ abstract class OutlineComponent extends StatefulWidget {
 /// Base class for state classes for classes derived from
 /// OutlineComponent. This provides its own build method which must not
 /// be overridden; instead, extending components override at least
-/// `buildWrappedComponent` and possibly `buildControls`.
+/// `buildWrappedComponent` and optionally `buildControls`.
 abstract class OutlineComponentState<T extends OutlineComponent>
     extends State<T> with TickerProviderStateMixin {
 

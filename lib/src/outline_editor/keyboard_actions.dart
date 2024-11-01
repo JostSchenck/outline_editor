@@ -444,30 +444,53 @@ ExecutionInstruction upAndDownBehaviorWithModifiers({
   if (selection == null) return ExecutionInstruction.continueExecution;
   final outlineDoc = editContext.document as OutlineTreeDocument;
 
-  if (HardwareKeyboard.instance.isControlPressed &&
-      !HardwareKeyboard.instance.isShiftPressed) {
-    // Ctrl-Up and Ctrl-Down move the caret to the beginning of the treenode
-    // before or after base, collapsing it, if it isn't collapsed yet.
-    late OutlineTreenode newTreenode;
-    final curTreenode =
-        outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
-    if (moveUp) {
-      newTreenode = outlineDoc.getOutlineTreenodeBeforeTreenode(curTreenode) ??
-          curTreenode;
+  if (HardwareKeyboard.instance.isControlPressed) {
+    if (HardwareKeyboard.instance.isShiftPressed) {
+      // Ctrl-Shift-Up and Ctrl-Shift-Down switch siblings up or down, but only
+      // direct siblings
+      return ExecutionInstruction.continueExecution;
     } else {
-      newTreenode = outlineDoc.getOutlineTreenodeAfterTreenode(curTreenode) ??
-          curTreenode;
+      // Ctrl-Up and Ctrl-Down move the caret to the beginning of the treenode
+      // before or after base, collapsing it, if it isn't collapsed yet.
+      late OutlineTreenode newTreenode;
+      final curTreenode =
+          outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
+      final curDocNode = outlineDoc.getNodeById(selection.base.nodeId);
+      if (moveUp) {
+        if (curDocNode is! TitleNode ||
+            (selection.base.nodePosition as TextNodePosition).offset != 0) {
+          newTreenode = curTreenode;
+        } else {
+          newTreenode =
+              outlineDoc.getOutlineTreenodeBeforeTreenode(curTreenode) ??
+                  curTreenode;
+        }
+      } else {
+        // FIXME: Move to end of node, if we are already somewhere in last
+        newTreenode = outlineDoc.getOutlineTreenodeAfterTreenode(curTreenode) ??
+            curTreenode;
+      }
+      if (moveUp || newTreenode != curTreenode) {
+        editContext.editor.execute([
+          ChangeSelectionRequest(
+              DocumentSelection.collapsed(
+                  position: DocumentPosition(
+                      nodeId: newTreenode.titleNode.id,
+                      nodePosition: const TextNodePosition(offset: 0))),
+              SelectionChangeType.insertContent,
+              'jumping outlinetreenode ${moveUp ? 'up' : 'down'}'),
+        ]);
+      } else {
+        // moving downstream, but already in the last treenode, jump to end of it
+        editContext.editor.execute([
+          ChangeSelectionRequest(
+              DocumentSelection.collapsed(position: newTreenode.lastPosition),
+              SelectionChangeType.insertContent,
+              'jumping outlinetreenode ${moveUp ? 'up' : 'down'}'),
+        ]);
+      }
+      return ExecutionInstruction.haltExecution;
     }
-    editContext.editor.execute([
-      ChangeSelectionRequest(
-          DocumentSelection.collapsed(
-              position: DocumentPosition(
-                  nodeId: newTreenode.titleNode.id,
-                  nodePosition: const TextNodePosition(offset: 0))),
-          SelectionChangeType.insertContent,
-          'jumping outlinetreenode ${moveUp ? 'up' : 'down'}'),
-    ]);
-    return ExecutionInstruction.haltExecution;
   }
   return ExecutionInstruction.continueExecution;
 }

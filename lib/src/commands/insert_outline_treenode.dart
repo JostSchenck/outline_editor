@@ -81,12 +81,5 @@ class InsertOutlineTreenodeCommand extends EditCommand {
           ),
         ),
     ]);
-    // executor.executeCommand(ChangeSelectionCommand(
-    //     DocumentSelection.collapsed(
-    //         position: DocumentPosition(
-    //             nodeId: firstDocNode.id,
-    //             nodePosition: const TextNodePosition(offset: 0))),
-    //     SelectionChangeType.insertContent,
-    //     'outlinetreenode insertion'));
   }
 }
