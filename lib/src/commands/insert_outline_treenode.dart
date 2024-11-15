@@ -39,11 +39,11 @@ class InsertOutlineTreenodeRequest implements EditRequest {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is InsertOutlineTreenodeRequest &&
-          runtimeType == other.runtimeType &&
-          existingTreenode == other.existingTreenode &&
-          newTreenode == other.newTreenode &&
-          splitAtDocumentPosition == other.splitAtDocumentPosition;
+          other is InsertOutlineTreenodeRequest &&
+              runtimeType == other.runtimeType &&
+              existingTreenode == other.existingTreenode &&
+              newTreenode == other.newTreenode &&
+              splitAtDocumentPosition == other.splitAtDocumentPosition;
 
   @override
   int get hashCode =>
@@ -73,32 +73,10 @@ class InsertOutlineTreenodeCommand extends EditCommand {
     commandLog.fine(
         'executing InsertOutlineTreenodeCommand, appending $newNode behind $existingNode');
     final outlineDoc = context.document as OutlineDocument;
-    if (splitAtDocumentPosition != null) {
-      final splitContentNodeIndex = existingNode.contentNodes.indexWhere(
-        (e) => e.id == splitAtDocumentPosition!.nodeId,
-      );
-      if (splitContentNodeIndex == -1) {
-        throw Exception("splitAtDocumentPosition lies not in this "
-            "OutlineTreenode's content nodes. Might be a TitleNode or a whole "
-            "different treenode.");
-      }
-      if (existingNode.contentNodes[splitContentNodeIndex] is! ParagraphNode) {
-        throw Exception("Tried splitting a contentNode element that is "
-            "not a ParagraphNode. Only ParagraphNodes can be split at the "
-            "moment.");
-      }
-      executor.executeCommand(SplitParagraphCommand(
-        nodeId: splitAtDocumentPosition!.nodeId,
-        splitPosition:
-            splitAtDocumentPosition!.nodePosition as TextNodePosition,
-        newNodeId: uuid.v4(),
-        replicateExistingMetadata: true,
-      ));
-      while(existingNode.contentNodes.length > splitContentNodeIndex+1) {
-        newNode.contentNodes.add(existingNode.contentNodes[splitContentNodeIndex+1]);
-        existingNode.contentNodes.removeAt(splitContentNodeIndex+1);
-      }
-    }
+
+    final changes = <DocumentEdit>[];
+
+    // First add the given new OutlineTreenode at the right position
     if (createChild) {
       if (treenodeIndex == -1) {
         existingNode.addChild(newNode, 0);
@@ -113,15 +91,80 @@ class InsertOutlineTreenodeCommand extends EditCommand {
       );
     }
 
-    final titleNodeIndex = outlineDoc.getNodeIndexById(newNode.titleNode.id);
-    executor.logChanges([
+    // Start collecting the document edits we have to log later. Start with
+    // the nodes in our new outlinetreenode, which we count as newly inserted
+    // nodes.
+    final newTitleNodeIndex = outlineDoc.getNodeIndexById(newNode.titleNode.id);
+    changes.addAll([
       for (int i = 0; i < newNode.nodes.length; i++)
         DocumentEdit(
           NodeInsertedEvent(
             newNode.nodes[i].id,
-            titleNodeIndex + i,
+            newTitleNodeIndex + i,
           ),
-        ),
+        )
     ]);
+
+    // Now see if we have to split our existing node, which would mean
+    // moving some nodes between our two OutlineTreenodes, possibly creating
+    // one new DocumentNode, if a Paragraph is split somewhere in the middle.
+    // Splitting only is allowed in an OutlineTreenode's *contentNodes*, not
+    // in a title node. If the split occurs somewhere in the middle of a
+    // DocumentNode, this currently is only allowed for a ParagraphNode.
+    if (splitAtDocumentPosition != null) {
+      // the index of the node where the split happens in the list of
+      // contentNodes
+      final splitContentNodeIndex = existingNode.contentNodes.indexWhere(
+            (e) => e.id == splitAtDocumentPosition!.nodeId,
+      );
+      // index of the first contentNode that will be moved to the new treenode.
+      // This may change if we have to split a ParagraphNode.
+      var splitStartIndex = splitContentNodeIndex;
+      final splitContentNode = existingNode.contentNodes[splitContentNodeIndex];
+
+      if (splitContentNodeIndex == -1) {
+        throw Exception("splitAtDocumentPosition lies not in this "
+            "OutlineTreenode's content nodes. Might be a TitleNode or a whole "
+            "different treenode.");
+      }
+      if (splitAtDocumentPosition!.nodePosition is TextNodePosition &&
+          (splitAtDocumentPosition!.nodePosition as TextNodePosition).offset >
+              0 &&
+          (splitAtDocumentPosition!.nodePosition as TextNodePosition).offset <
+              (splitContentNode as TextNode).text.length) {
+        // We have to split a node in the middle; this can right now only
+        // be done in a ParagraphNode.
+        if (existingNode.contentNodes[splitContentNodeIndex]
+        is! ParagraphNode) {
+          throw Exception("Tried splitting a contentNode element that is "
+              "not a ParagraphNode. Only ParagraphNodes can be split at the "
+              "moment.");
+        }
+        executor.executeCommand(SplitParagraphCommand(
+          nodeId: splitAtDocumentPosition!.nodeId,
+          splitPosition:
+          splitAtDocumentPosition!.nodePosition as TextNodePosition,
+          newNodeId: uuid.v4(),
+          replicateExistingMetadata: true,
+        ));
+        splitStartIndex++;
+      }
+      // Now move the latter part of the contentNodes to the new treenode
+      final existingTitleNodeIndex = outlineDoc.getNodeIndexById(
+          existingNode.titleNode.id);
+      while (existingNode.contentNodes.length > splitStartIndex) {
+        final nodeId = existingNode.contentNodes[splitStartIndex].id;
+        newNode.contentNodes
+            .add(existingNode.contentNodes[splitStartIndex]);
+        existingNode.contentNodes.removeAt(splitStartIndex);
+        changes.add(DocumentEdit(NodeMovedEvent(
+          from: existingTitleNodeIndex + splitStartIndex + 1,
+          to: newTitleNodeIndex + 1 + newNode.contentNodes.length,
+          nodeId: nodeId,
+        )));
+      }
+    }
+
+    executor.logChanges(changes);
   }
 }
