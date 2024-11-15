@@ -51,9 +51,11 @@ class ReparentOutlineTreenodeCommand extends EditCommand {
     executor.executeCommand(
         DeleteOutlineTreenodeCommand(outlineTreenode: childTreenode));
     executor.executeCommand(InsertOutlineTreenodeCommand(
-        existingNode: newParentTreenode,
-        newNode: childTreenode,
-        createChild: true,
-        index: index));
+      existingNode: newParentTreenode,
+      newNode: childTreenode,
+      createChild: true,
+      treenodeIndex: index,
+      splitAtDocumentPosition: null,
+    ));
   }
 }

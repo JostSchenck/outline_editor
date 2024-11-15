@@ -41,7 +41,8 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
                 existingNode: request.existingTreenode,
                 newNode: request.newTreenode,
                 createChild: request.createChild,
-                index: request.index,
+                treenodeIndex: request.treenodeIndex,
+                splitAtDocumentPosition: request.splitAtDocumentPosition,
               )
             : null,
         (request) => request is DeleteOutlineTreenodeRequest

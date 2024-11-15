@@ -18,8 +18,10 @@ typedef TreenodePath = List<int>;
 /// the [OutlineTreenode] that contains this DocumentNode] and then the
 /// index of the [DocumentNode] in the treenode's `documentNodes` list.
 class DocumentNodePath {
-  DocumentNodePath(this.treenodePath,
-      this.docNodeIndex,);
+  DocumentNodePath(
+    this.treenodePath,
+    this.docNodeIndex,
+  );
 
   TreenodePath treenodePath;
   int docNodeIndex;
@@ -90,7 +92,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
 
   bool get isConsideredEmpty =>
       nodes.every((n) => n is TextNode && n.text.text.isEmpty) &&
-          _titleNode.text.text.isEmpty;
+      _titleNode.text.text.isEmpty;
 
   bool hasMetadataValue(String key) => _metadata[key] != null;
 
@@ -112,14 +114,14 @@ final class OutlineTreenode /*extends ChangeNotifier */
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is OutlineTreenode &&
-              id == other.id &&
-              parent == other.parent &&
-              document == other.document &&
-              titleNode == other.titleNode &&
-              const DeepCollectionEquality()
-                  .equals(_contentNodes, other._contentNodes) &&
-              const DeepCollectionEquality().equals(_children, other._children);
+      other is OutlineTreenode &&
+          id == other.id &&
+          parent == other.parent &&
+          document == other.document &&
+          titleNode == other.titleNode &&
+          const DeepCollectionEquality()
+              .equals(_contentNodes, other._contentNodes) &&
+          const DeepCollectionEquality().equals(_children, other._children);
 
   @override
   int get hashCode =>
@@ -229,8 +231,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
   }
 
   /// Whether this Treenode is considered collapsed.
-  bool get isCollapsed =>
-      _isCollapsed;
+  bool get isCollapsed => _isCollapsed;
 
   /// Sets whether this Treenode is considered collapsed.
   set isCollapsed(bool isCollapsed) {
@@ -243,7 +244,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
   /// Whether this OutlineTreenode is actually supposed to be visible. This
   /// returns false if a collapsed ancestor exists.
   bool get isVisible {
-    if (parent==null) return true;
+    if (parent == null) return true;
     if (parent!.isCollapsed) {
       return false;
     }
@@ -255,7 +256,6 @@ final class OutlineTreenode /*extends ChangeNotifier */
 
   /// Sets whether this Treenode's content is hidden
   set hasContentHidden(bool value) => _hasContentHidden = value;
-
 
   /// Returns a list of the Treenodes representing children of this Treenode.
   List<OutlineTreenode> get children => UnmodifiableListView(_children);
@@ -283,8 +283,8 @@ final class OutlineTreenode /*extends ChangeNotifier */
     final TreenodePath lowestAncestorPath = [];
     final myPath = [...path];
     final otherPath = [...other.path];
-    for (int i=0; i<min(myPath.length, otherPath.length); i++) {
-      if (myPath[i]==otherPath[i]) {
+    for (int i = 0; i < min(myPath.length, otherPath.length); i++) {
+      if (myPath[i] == otherPath[i]) {
         lowestAncestorPath.add(myPath[i]);
       } else {
         break;
@@ -296,7 +296,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
   /// Whether this OutlineTreenode is a direct descendant of `other`.
   /// In the case of `other==this`, this method will return `false`.
   bool isDescendantOf(OutlineTreenode other) {
-    if (parent==null) {
+    if (parent == null) {
       return false;
     }
     return parent!.isDescendantOf(other);
@@ -306,7 +306,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
   /// In the case of `other==this`, this method will return `false`.
   bool isAncestorOf(OutlineTreenode other) {
     for (final child in children) {
-      if (child==other || child.isAncestorOf(other)) {
+      if (child == other || child.isAncestorOf(other)) {
         return true;
       }
     }
@@ -398,9 +398,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
   /// the [OutlineTreenode] that holds the given id to a
   /// [DocumentNode].
   OutlineTreenode? getOutlineTreenodeByDocumentNodeId(String docNodeId) {
-    if (nodes
-        .where((e) => e.id == docNodeId)
-        .isNotEmpty) return this;
+    if (nodes.where((e) => e.id == docNodeId).isNotEmpty) return this;
 
     for (var treeNode in children) {
       final childRet = treeNode.getOutlineTreenodeByDocumentNodeId(docNodeId);
@@ -467,7 +465,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
   List<OutlineTreenode> get subtreeList {
     return [
       this,
-      for(final child in children) ...child.subtreeList,
+      for (final child in children) ...child.subtreeList,
     ];
   }
 
@@ -507,8 +505,9 @@ final class OutlineTreenode /*extends ChangeNotifier */
   @override
   String toString() {
     final shortenedId = id.length > 6 ? '#${id.substring(0, 6)}' : '#$id';
-    final shortenedTitle = titleNode.text.text.length > 13 ? '"${titleNode.text.text.substring(0, 10)}..."' : '"${titleNode.text.text}"';
+    final shortenedTitle = titleNode.text.text.length > 13
+        ? '"${titleNode.text.text.substring(0, 10)}..."'
+        : '"${titleNode.text.text}"';
     return '[OutlineTreenode $shortenedId $shortenedTitle ${contentNodes.length} content nodes, ${children.length} children]';
   }
 }
-
