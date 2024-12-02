@@ -17,16 +17,16 @@ dependencies:
       url: https://github.com/superlistapp/super_editor.git
       path: super_editor
       ref: main
-  super_editor_markdown:
-    git:
-      url: https://github.com/superlistapp/super_editor
-      path: super_editor_markdown
-      ref: main
-  super_text_layout:
-    git:
-      url: https://github.com/superlistapp/super_editor.git
-      path: super_text_layout
-      ref: main
+#  super_editor_markdown:
+#    git:
+#      url: https://github.com/superlistapp/super_editor
+#      path: super_editor_markdown
+#      ref: main
+#  super_text_layout:
+#    git:
+#      url: https://github.com/superlistapp/super_editor.git
+#      path: super_text_layout
+#      ref: main
   attributed_text:
     git:
       url: https://github.com/superlistapp/super_editor
@@ -36,15 +36,37 @@ dependencies:
   uuid: ^4.5.1
   collection: ^1.19.0
 
+
 dependency_overrides:
   super_editor:
-    path: ../super_editor/super_editor
+    git:
+      url: https://github.com/superlistapp/super_editor
+      path: super_editor
+      ref: main # or "main"
   super_editor_markdown:
-    path: ../super_editor/super_editor_markdown
+    git:
+      url: https://github.com/superlistapp/super_editor
+      path: super_editor_markdown
+      ref: main
   super_text_layout:
-    path: ../super_editor/super_text_layout
+    git:
+      url: https://github.com/superlistapp/super_editor
+      path: super_text_layout
+      ref: main
   attributed_text:
-    path: ../super_editor/attributed_text
+    git:
+      url: https://github.com/superlistapp/super_editor
+      path: attributed_text
+      ref: main
+#dependency_overrides:
+#  super_editor:
+#    path: ../super_editor/super_editor
+#  super_editor_markdown:
+#    path: ../super_editor/super_editor_markdown
+#  super_text_layout:
+#    path: ../super_editor/super_text_layout
+#  attributed_text:
+#    path: ../super_editor/attributed_text
 
 dev_dependencies:
   flutter_test:

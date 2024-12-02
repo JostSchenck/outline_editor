@@ -5,6 +5,7 @@ import 'package:outline_editor/src/commands/insert_documentnode_in_outlinetreeno
 import 'package:outline_editor/src/commands/insert_outline_treenode.dart';
 import 'package:outline_editor/src/commands/merge_outline_treenodes.dart';
 import 'package:outline_editor/src/commands/move_documentnode_into_treenode.dart';
+import 'package:outline_editor/src/commands/move_outline_treenode.dart';
 import 'package:outline_editor/src/commands/reparent_outlinetreenode.dart';
 import 'package:outline_editor/src/outline_editor/keyboard_actions.dart';
 import 'package:outline_editor/src/reactions/node_visibility_reaction.dart';
@@ -77,6 +78,10 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
             ? HideShowContentNodesCommand(
                 treeNodeId: request.treeNodeId,
                 hideContent: request.hideContent)
+            : null,
+        (request) => request is MoveOutlineTreenodeRequest
+            ? MoveOutlineTreenodeCommand(
+                treenode: request.treenode, path: request.path)
             : null,
       ],
     );

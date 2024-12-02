@@ -67,8 +67,18 @@ final class OutlineTreenode /*extends ChangeNotifier */
   late TitleNode _titleNode;
   final List<DocumentNode> _contentNodes = [];
   final List<OutlineTreenode> _children = [];
+
+  /// This [OutlineTreenode]'s parent; passing this in the constructor does
+  /// not automatically add this node to the parent's `children` list.
   OutlineTreenode? parent;
+
+  /// A unique identifier for this OutlineTreenode. Addressing OutlineTreenodes
+  /// by path will usually be faster.
   final String id;
+
+  /// The OutlineTreeDocument containing this node; this is needed to be able
+  /// to eg. calculate ranges and similar, which needs knowledge only the
+  /// document (or rather, SuperEditor's MutableDocument) has.
   final Document document;
   bool _isCollapsed = false;
   bool _hasContentHidden = false;
@@ -332,8 +342,8 @@ final class OutlineTreenode /*extends ChangeNotifier */
     return -1;
   }
 
-  /// Convenience method to retrieve the index this OutlineTreenode holds
-  /// in its parents list of children, or -1 if root.
+  /// The index this OutlineTreenode holds in its parent's list of children,
+  /// or -1 if root.
   int get childIndex => parent == null ? -1 : parent!.children.indexOf(this);
 
   /// Returns the depth of this TreeNode, 0 meaning a root node.

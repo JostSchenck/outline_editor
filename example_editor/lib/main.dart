@@ -10,6 +10,7 @@ void main() async {
   Logger.root.level = Level.OFF; // defaults to Level.INFO
   Logger('outline_editor.commands').level = Level.ALL;
   Logger('outline_editor.outline_document').level = Level.ALL;
+  Logger('outline_editor.keyboard_actions').level = Level.ALL;
   Logger.root.onRecord.listen((record) {
     debugPrint('${record.level.name}: ${record.time}: ${record.message}');
   });

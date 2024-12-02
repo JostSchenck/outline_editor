@@ -2,8 +2,10 @@ import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:outline_editor/outline_editor.dart';
+import 'package:outline_editor/src/commands/move_outline_treenode.dart';
 import 'package:outline_editor/src/infrastructure/uuid.dart';
 import 'package:outline_editor/src/reactions/outline_selection_reaction.dart';
+import 'package:outline_editor/src/util/logging.dart';
 // parts copied from super_editor LICENSE
 
 /// delete treenodes, if the selection spans whole treenodes; if not, return
@@ -12,12 +14,12 @@ bool _deleteSelectedTreenodes(OutlineTreeDocument outlineDoc,
     DocumentSelection selection, SuperEditorContext editContext) {
   if (selection.isCollapsed) return false;
   final tn1 =
-  outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
+      outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
   final tn2 =
-  outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.extent.nodeId);
+      outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.extent.nodeId);
 
   if ((selection.base.isEquivalentTo(tn1.firstPosition) &&
-      selection.extent.isEquivalentTo(tn2.lastPosition)) ||
+          selection.extent.isEquivalentTo(tn2.lastPosition)) ||
       (selection.extent.isEquivalentTo(tn2.firstPosition) &&
           selection.base.isEquivalentTo(tn1.lastPosition))) {
     // whole treenodes are selected; delete a region.
@@ -25,9 +27,7 @@ bool _deleteSelectedTreenodes(OutlineTreeDocument outlineDoc,
     int index1 = flatList.indexWhere((treenode) => treenode == tn1);
     int index2 = flatList.indexWhere((treenode) => treenode == tn2);
     final deleteList =
-        flatList
-            .sublist(min(index1, index2), max(index1, index2) + 1)
-            .reversed;
+        flatList.sublist(min(index1, index2), max(index1, index2) + 1).reversed;
     final parent = deleteList.last.parent!;
     final childIndex = deleteList.last.childIndex;
     final newEmptyNode = OutlineTreenode(id: uuid.v4(), document: outlineDoc);
@@ -82,7 +82,7 @@ ExecutionInstruction backspaceSpecialCasesInOutlineTreeDocument({
 
   // selection is collapsed
   final outlineNode =
-  outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
+      outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
   if (selection.base.nodePosition is! TextNodePosition) {
     return ExecutionInstruction.continueExecution;
   }
@@ -114,10 +114,9 @@ ExecutionInstruction backspaceSpecialCasesInOutlineTreeDocument({
       ChangeSelectionRequest(
         DocumentSelection.collapsed(
             position: DocumentPosition(
-              nodeId: nodeBefore.id,
-              nodePosition: TextNodePosition(
-                  offset: nodeBefore.text.text.length),
-            )),
+          nodeId: nodeBefore.id,
+          nodePosition: TextNodePosition(offset: nodeBefore.text.text.length),
+        )),
         SelectionChangeType.placeCaret,
         'moved caret on backspace without deleting anything',
       ),
@@ -137,7 +136,7 @@ ExecutionInstruction backspaceSpecialCasesInOutlineTreeDocument({
               position: DocumentPosition(
                   nodeId: nodeBefore.id,
                   nodePosition:
-                  TextNodePosition(offset: nodeBefore.text.text.length))),
+                      TextNodePosition(offset: nodeBefore.text.text.length))),
           SelectionChangeType.deleteContent,
           'Backspace pressed',
         ),
@@ -176,7 +175,7 @@ ExecutionInstruction deleteSpecialCasesInOutlineTreeDocument({
   }
 
   final outlineNode =
-  outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
+      outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
   if (selection.base.nodePosition is! TextNodePosition) {
     return ExecutionInstruction.continueExecution;
   }
@@ -199,9 +198,9 @@ ExecutionInstruction deleteSpecialCasesInOutlineTreeDocument({
       ChangeSelectionRequest(
         DocumentSelection.collapsed(
             position: DocumentPosition(
-              nodeId: nodeAfter.id,
-              nodePosition: const TextNodePosition(offset: 0),
-            )),
+          nodeId: nodeAfter.id,
+          nodePosition: const TextNodePosition(offset: 0),
+        )),
         SelectionChangeType.placeCaret,
         'moved caret on delete without deleting anything',
       ),
@@ -257,7 +256,7 @@ ExecutionInstruction enterInOutlineTreeDocument({
   }
   final selection = editContext.composer.selection!;
   final outlineTreenode =
-  outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
+      outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
   // we're not ready with non-text nodes yet
   if (selection.base.nodePosition is! TextNodePosition) {
     return ExecutionInstruction.continueExecution;
@@ -299,7 +298,7 @@ ExecutionInstruction enterInOutlineTreeDocument({
       // inserting a ParagraphNode if needed
       if (outlineTreenode.contentNodes.isEmpty) {
         final newParagraphNode =
-        ParagraphNode(id: uuid.v4(), text: AttributedText(''));
+            ParagraphNode(id: uuid.v4(), text: AttributedText(''));
         editContext.editor.execute([
           InsertDocumentNodeInOutlineTreenodeRequest(
             documentNode: newParagraphNode,
@@ -383,7 +382,7 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
   if (HardwareKeyboard.instance.isControlPressed) {
     if (selection.isCollapsed) {
       final parentTreenode =
-      outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
+          outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
       final newTreenode = OutlineTreenode(
         id: uuid.v4(),
         document: outlineDoc,
@@ -394,10 +393,10 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
           ChangeCollapsedStateRequest(
               treenodeId: parentTreenode.id, isCollapsed: false),
         InsertOutlineTreenodeRequest(
-            existingTreenode: parentTreenode,
-            newTreenode: newTreenode,
-            createChild: true,
-            splitAtDocumentPosition: doSplitParagraph ? selection.base : null,
+          existingTreenode: parentTreenode,
+          newTreenode: newTreenode,
+          createChild: true,
+          splitAtDocumentPosition: doSplitParagraph ? selection.base : null,
         ),
         ChangeSelectionRequest(
             DocumentSelection.collapsed(
@@ -458,6 +457,46 @@ ExecutionInstruction upAndDownBehaviorWithModifiers({
   if (selection == null) return ExecutionInstruction.continueExecution;
   final outlineDoc = editContext.document as OutlineTreeDocument;
 
+  if (HardwareKeyboard.instance.isAltPressed &&
+      HardwareKeyboard.instance.isShiftPressed &&
+      !HardwareKeyboard.instance.isControlPressed) {
+    if (selection.isCollapsed) {
+      final treenode =
+          outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
+      if (keyEvent.logicalKey == LogicalKeyboardKey.arrowUp) {
+        // swap treenode with sibling before, if we aren't already the first
+        // sibling.
+        if (treenode.childIndex > 0) {
+          final newPath = [
+            ...treenode.path.sublist(0, treenode.path.length - 1),
+            treenode.path.last - 1,
+          ];
+          editContext.editor.execute([
+            MoveOutlineTreenodeRequest(treenode: treenode, path: newPath),
+          ]);
+        } else {
+          keyboardActionsLog.fine("Can't move a sibling further up than pos 0");
+          return ExecutionInstruction.haltExecution;
+        }
+      } else {
+        // swap treenode with sibling after, if we aren't already the last
+        // sibling.
+        if (treenode.childIndex < treenode.parent!.children.length-1) {
+          final newPath = [
+            ...treenode.path.sublist(0, treenode.path.length - 1),
+            treenode.path.last + 1,
+          ];
+          editContext.editor.execute([
+            MoveOutlineTreenodeRequest(treenode: treenode, path: newPath),
+          ]);
+        } else {
+          keyboardActionsLog.fine("Can't move a sibling further down than end");
+          return ExecutionInstruction.haltExecution;
+        }
+      }
+    }
+  }
+
   if (HardwareKeyboard.instance.isControlPressed) {
     if (HardwareKeyboard.instance.isShiftPressed) {
       // Ctrl-Shift-Up and Ctrl-Shift-Down switch siblings up or down, but only
@@ -468,7 +507,7 @@ ExecutionInstruction upAndDownBehaviorWithModifiers({
       // before or after base, collapsing it, if it isn't collapsed yet.
       late OutlineTreenode newTreenode;
       final curTreenode =
-      outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
+          outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
       final curDocNode = outlineDoc.getNodeById(selection.base.nodeId);
       if (moveUp) {
         if (curDocNode is! TitleNode ||
