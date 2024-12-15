@@ -96,10 +96,10 @@ class InsertOutlineTreenodeCommand extends EditCommand {
     // nodes.
     final newTitleNodeIndex = outlineDoc.getNodeIndexById(newNode.titleNode.id);
     changes.addAll([
-      for (int i = 0; i < newNode.nodes.length; i++)
+      for (int i = 0; i < newNode.nodesSubtree.length; i++)
         DocumentEdit(
           NodeInsertedEvent(
-            newNode.nodes[i].id,
+            newNode.nodesSubtree[i].id,
             newTitleNodeIndex + i,
           ),
         )

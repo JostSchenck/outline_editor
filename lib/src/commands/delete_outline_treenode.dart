@@ -57,6 +57,15 @@ class DeleteOutlineTreenodeCommand extends EditCommand {
           'OutlineTreenode containing selection '));
     }
 
+    final List<EditEvent> changes = [
+      for (int i = 0; i < outlineTreenode.nodesSubtree.length; i++)
+        DocumentEdit(
+          NodeRemovedEvent(
+            outlineTreenode.nodesSubtree[i].id,
+            outlineTreenode.nodesSubtree[i],
+          ),
+        ),
+    ];
     // if this OutlineTreenode has no children, things are trivial, delete it
     if (outlineTreenode.children.isEmpty) {
       if (outlineTreenode.parent == null) {
@@ -77,14 +86,6 @@ class DeleteOutlineTreenodeCommand extends EditCommand {
             .addChild(outlineTreenode.children.first, childIndex + i);
       }
     }
-    executor.logChanges([
-      for (int i = 0; i < outlineTreenode.nodes.length; i++)
-        DocumentEdit(
-          NodeRemovedEvent(
-            outlineTreenode.nodes[i].id,
-            outlineTreenode.nodes[i],
-          ),
-        ),
-    ]);
+    executor.logChanges(changes);
   }
 }

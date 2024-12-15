@@ -83,6 +83,11 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
             ? MoveOutlineTreenodeCommand(
                 treenode: request.treenode, path: request.path)
             : null,
+        (request) => request is ChangeTreenodeIndentationRequest
+            ? ChangeTreenodeIndentationCommand(
+                treenode: request.treenode,
+                moveUpInHierarchy: request.moveUpInHierarchy)
+            : null,
       ],
     );
   }
@@ -110,5 +115,6 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
         deleteSpecialCasesInOutlineTreeDocument,
         backspaceSpecialCasesInOutlineTreeDocument,
         insertTreenodeOnShiftOrCtrlEnter,
+        reparentTreenodesOnTabAndShiftTab,
       ];
 }

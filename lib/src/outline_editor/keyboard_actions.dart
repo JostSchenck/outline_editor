@@ -439,6 +439,41 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
   return ExecutionInstruction.continueExecution;
 }
 
+ExecutionInstruction reparentTreenodesOnTabAndShiftTab({
+  required SuperEditorContext editContext,
+  required KeyEvent keyEvent,
+}) {
+  if (keyEvent is! KeyDownEvent && keyEvent is! KeyRepeatEvent) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  if (keyEvent.logicalKey != LogicalKeyboardKey.tab) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final selection = editContext.composer.selection;
+  if (selection == null) return ExecutionInstruction.continueExecution;
+  if (!selection.isCollapsed) {
+    keyboardActionsLog.warning('Indenting and unindenting non-collapsed selections not yet implemented');
+    return ExecutionInstruction.haltExecution;
+  }
+  final outlineDoc = editContext.document as OutlineTreeDocument;
+
+  // prepare splitting the treenode when the cursor is in the middle of
+  // a ParagraphNode
+  final treenode = outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
+
+  final moveUpInHierarchy = HardwareKeyboard.instance.isShiftPressed;
+
+  editContext.editor.execute([
+    ChangeTreenodeIndentationRequest(
+      treenode: treenode,
+      moveUpInHierarchy: moveUpInHierarchy,
+    ),
+  ]);
+  return ExecutionInstruction.haltExecution;
+}
+
 ExecutionInstruction upAndDownBehaviorWithModifiers({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
@@ -481,7 +516,7 @@ ExecutionInstruction upAndDownBehaviorWithModifiers({
       } else {
         // swap treenode with sibling after, if we aren't already the last
         // sibling.
-        if (treenode.childIndex < treenode.parent!.children.length-1) {
+        if (treenode.childIndex < treenode.parent!.children.length - 1) {
           final newPath = [
             ...treenode.path.sublist(0, treenode.path.length - 1),
             treenode.path.last + 1,
