@@ -1,6 +1,4 @@
 import 'package:outline_editor/outline_editor.dart';
-import 'package:outline_editor/src/outline_document/outline_treenode.dart';
-import 'package:super_editor/super_editor.dart';
 
 const isHiddenKey = 'isHidden';
 
@@ -45,7 +43,8 @@ abstract mixin class OutlineDocument implements Document {
   OutlineTreenode getOutlineTreenodeByDocumentNodeId(String docNodeId) {
     final ret = root.getOutlineTreenodeByDocumentNodeId(docNodeId);
     if (ret == null) {
-      throw Exception('Could not find OutlineTreenode for docNodeId $docNodeId');
+      throw Exception(
+          'Could not find OutlineTreenode for docNodeId $docNodeId');
     }
     return ret;
   }
@@ -53,14 +52,15 @@ abstract mixin class OutlineDocument implements Document {
   /// Returns the OutlineTreenode directly preceding this OutlineTreenode in
   /// presentation. This can be a sibling, a parent, or even just some cousin.
   OutlineTreenode? getOutlineTreenodeBeforeTreenode(OutlineTreenode treenode) {
-    if (treenode.parent==null) return null;
+    if (treenode.parent == null) return null;
     final childIndex = treenode.childIndex;
-    if (childIndex==0) {
+    if (childIndex == 0) {
       // omit logical root node
       if (treenode.parent?.parent == null) return null;
       return treenode.parent;
     }
-    return (treenode.parent!.children[childIndex-1].lastOutlineTreeNodeInSubtree);
+    return (treenode
+        .parent!.children[childIndex - 1].lastOutlineTreeNodeInSubtree);
   }
 
   /// Returns the OutlineTreenode directly following this OutlineTreenode in
@@ -71,12 +71,13 @@ abstract mixin class OutlineDocument implements Document {
       return treenode.children.first;
     }
     // So we don't. If we are the root node, there's nothing to move to
-    if (treenode.parent==null) return null;
+    if (treenode.parent == null) return null;
     // if we happen to have a directly following sibling, go there, if not,
     // return our next ancestor's sibling
     OutlineTreenode currentTreenode = treenode;
     while (currentTreenode.parent != null) {
-      if (currentTreenode.parent!.children.length > currentTreenode.childIndex + 1) {
+      if (currentTreenode.parent!.children.length >
+          currentTreenode.childIndex + 1) {
         return currentTreenode.parent!.children[currentTreenode.childIndex + 1];
       }
       currentTreenode = currentTreenode.parent!;

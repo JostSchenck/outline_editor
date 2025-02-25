@@ -1,4 +1,4 @@
-library outline_editor;
+library;
 
 export 'src/commands/hide_show_content_nodes.dart';
 export 'src/commands/insert_documentnode_in_outlinetreenode.dart';

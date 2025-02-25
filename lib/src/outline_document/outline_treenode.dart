@@ -46,11 +46,12 @@ final class OutlineTreenode /*extends ChangeNotifier */
     List<OutlineTreenode>? children,
     this.parent,
     bool isCollapsed = false,
-    bool hasContentHidden = false,
+    this.hasContentHidden = false,
     required this.id,
     required this.document,
     Map<String, dynamic>? metadata,
-  }) : _titleNode = titleNode ?? TitleNode(id: uuid.v4(), text: AttributedText('')) {
+  }) : titleNode =
+            titleNode ?? TitleNode(id: uuid.v4(), text: AttributedText('')) {
     // _titleNode =
     //     titleNode ?? TitleNode(id: uuid.v4(), text: AttributedText(''));
     _contentNodes.addAll(contentNodes);
@@ -61,10 +62,9 @@ final class OutlineTreenode /*extends ChangeNotifier */
       }
     }
     _isCollapsed = isCollapsed;
-    _hasContentHidden = hasContentHidden;
   }
 
-  TitleNode _titleNode;
+  TitleNode titleNode;
   final List<DocumentNode> _contentNodes = [];
   final List<OutlineTreenode> _children = [];
 
@@ -81,7 +81,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
   /// document (or rather, SuperEditor's MutableDocument) has.
   final Document document;
   bool _isCollapsed = false;
-  bool _hasContentHidden = false;
+  bool hasContentHidden = false;
   late Map<String, dynamic> _metadata;
 
 // TODO: test
@@ -101,8 +101,8 @@ final class OutlineTreenode /*extends ChangeNotifier */
   }
 
   bool get isConsideredEmpty =>
-      nodes.every((n) => n is TextNode && n.text.text.isEmpty) &&
-      _titleNode.text.text.isEmpty;
+      nodes.every((n) => n is TextNode && n.text.toPlainText().isEmpty) &&
+      titleNode.text.toPlainText().isEmpty;
 
   bool hasMetadataValue(String key) => _metadata[key] != null;
 
@@ -136,18 +136,18 @@ final class OutlineTreenode /*extends ChangeNotifier */
   @override
   int get hashCode =>
       _contentNodes.hashCode ^
-      _titleNode.hashCode ^
+      titleNode.hashCode ^
       _children.hashCode ^
       id.hashCode ^
       parent.hashCode ^
       document.hashCode;
 
-  TitleNode get titleNode => _titleNode;
-  set titleNode(TitleNode node) => _titleNode = node;
+  // TitleNode get titleNode => _titleNode;
+  // set titleNode(TitleNode node) => _titleNode = node;
 
   List<DocumentNode> get contentNodes => _contentNodes;
 
-  List<DocumentNode> get nodes => [_titleNode, ..._contentNodes];
+  List<DocumentNode> get nodes => [titleNode, ..._contentNodes];
 
   List<DocumentNode> get nodesSubtree {
     return [
@@ -160,7 +160,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
   List<DocumentNode> get nodesChildren =>
       [for (var child in _children) ...child.nodesSubtree];
 
-  /// Returns the [TreenodePath] to this treenode, which is a List<int> with
+  /// Returns the [TreenodePath] to this treenode, which is a List of int with
   /// the first element being the index of my first ancestor in the root node's
   /// children.
   TreenodePath get path {
@@ -261,12 +261,6 @@ final class OutlineTreenode /*extends ChangeNotifier */
     }
     return parent!.isVisible;
   }
-
-  /// Whether this Treenode's content is hidden
-  bool get hasContentHidden => _hasContentHidden;
-
-  /// Sets whether this Treenode's content is hidden
-  set hasContentHidden(bool value) => _hasContentHidden = value;
 
   /// Returns a list of the Treenodes representing children of this Treenode.
   List<OutlineTreenode> get children => UnmodifiableListView(_children);
@@ -516,9 +510,9 @@ final class OutlineTreenode /*extends ChangeNotifier */
   @override
   String toString() {
     final shortenedId = id.length > 6 ? '#${id.substring(0, 6)}' : '#$id';
-    final shortenedTitle = titleNode.text.text.length > 13
-        ? '"${titleNode.text.text.substring(0, 10)}..."'
-        : '"${titleNode.text.text}"';
+    final shortenedTitle = titleNode.text.toPlainText().length > 13
+        ? '"${titleNode.text.toPlainText().substring(0, 10)}..."'
+        : '"${titleNode.text.toPlainText()}"';
     return '[OutlineTreenode $shortenedId $shortenedTitle ${contentNodes.length} content nodes, ${children.length} children]';
   }
 }

@@ -1,7 +1,4 @@
 import 'package:outline_editor/outline_editor.dart';
-import 'package:outline_editor/src/commands/delete_outline_treenode.dart';
-import 'package:outline_editor/src/commands/move_documentnode_into_treenode.dart';
-import 'package:outline_editor/src/commands/reparent_outlinetreenode.dart';
 import 'package:outline_editor/src/util/logging.dart';
 
 class MergeOutlineTreenodesRequest implements EditRequest {

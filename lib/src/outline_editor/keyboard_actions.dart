@@ -558,7 +558,6 @@ ExecutionInstruction upAndDownBehaviorWithModifiers({
                   curTreenode;
         }
       } else {
-        // FIXME: Move to end of node, if we are already somewhere in last
         newTreenode = outlineDoc.getOutlineTreenodeAfterTreenode(curTreenode) ??
             curTreenode;
       }

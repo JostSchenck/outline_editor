@@ -81,7 +81,7 @@ OutlineTreeDocument deserializeTestInput(String str) {
       } else {
         // this is a continuation to the last ParagraphNode
         final textNode = (treenodeStack.last.contentNodes.last as TextNode);
-        textNode.text = AttributedText('${textNode.text.text}$trline');
+        textNode.text = AttributedText('${textNode.text.toPlainText()}$trline');
       }
     }
   }
@@ -126,14 +126,25 @@ main() {
           '3-0');
     });
     test('Node text is correctly set', () {
-      expect(document.getOutlineTreenodeByPath([0, 0]).titleNode.text.text,
+      expect(
+          document
+              .getOutlineTreenodeByPath([0, 0])
+              .titleNode
+              .text
+              .toPlainText(),
           'Dies ist noch ein TitleNode');
-      expect(document.getOutlineTreenodeByPath([0, 0, 0]).titleNode.text.text,
+      expect(
+          document
+              .getOutlineTreenodeByPath([0, 0, 0])
+              .titleNode
+              .text
+              .toPlainText(),
           'Dies ist ein Enkelkind');
       expect(
           (document.getOutlineTreenodeByPath([0, 2]).contentNodes[0]
                   as TextNode)
-              .text.text,
+              .text
+              .toPlainText(),
           'mit Content mit Abstand am Ende ');
     });
   });

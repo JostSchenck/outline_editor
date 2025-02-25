@@ -1,6 +1,5 @@
 import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/reactions/node_visibility_reaction.dart';
-import 'package:super_editor/super_editor.dart';
 
 import '../util/logging.dart';
 
@@ -49,8 +48,7 @@ class HideShowContentNodesCommand extends EditCommand {
     }
     commandLog.fine(
         'executing HideShowContentNodesCommand, setting $treeNodeId to $hideContent');
-    final outlineTreenode =
-        outlineDoc.getOutlineTreenodeById(treeNodeId!);
+    final outlineTreenode = outlineDoc.getOutlineTreenodeById(treeNodeId!);
     if (outlineTreenode.hasContentHidden == hideContent) {
       return;
     }

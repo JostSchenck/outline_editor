@@ -21,7 +21,7 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
         editor.document is OutlineDocument,
         'OutlineEditorPlugin '
         'expects a Document that implements OutlineDocument');
-    editor.reactionPipeline.insert(0, OutlineStructureReaction());
+    // editor.reactionPipeline.insert(0, OutlineStructureReaction());
     editor.reactionPipeline.insert(
         0,
         NodeVisibilityReaction(
@@ -96,8 +96,8 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
 
   @override
   void detach(Editor editor) {
-    editor.reactionPipeline
-        .removeWhere((element) => element is OutlineStructureReaction);
+    // editor.reactionPipeline
+    //     .removeWhere((element) => element is OutlineStructureReaction);
     editor.reactionPipeline
         .removeWhere((element) => element is NodeVisibilityReaction);
 

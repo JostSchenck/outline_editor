@@ -2,8 +2,6 @@ import 'package:collection/collection.dart';
 import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/util/logging.dart';
 
-import '../util/logging.dart';
-
 class NodeVisibilityReaction extends EditReaction {
   NodeVisibilityReaction({
     required this.editor,
@@ -229,13 +227,7 @@ class NodeVisibilityReaction extends EditReaction {
             // apparently, this can happen, although I can not reliably reproduce it
             return;
           }
-          // if (outlineDoc.getNodeIndexById(
-          //       selectionEvent.oldSelection!.extent.nodeId,
-          //     ) <
-          //     outlineDoc.getNodeIndexById(
-          //       selectionEvent.newSelection!.extent.nodeId,
-          //     )) {
-          //   // we moved downstream into a hidden node, continue in next visible.
+
           switch (selectionEvent.changeType) {
             case SelectionChangeType.pushCaretDownstream:
               _collapseAtNextVisibleTextNodePosition(
@@ -297,30 +289,6 @@ class NodeVisibilityReaction extends EditReaction {
                 'Unhandled SelectionChangeType ${selectionEvent.changeType}',
               );
           }
-          // } else {
-          //   // we moved upstream into a hidden node, continue in visible before.
-          //   if (selectionEvent.changeType ==
-          //       SelectionChangeType.pushCaretUpstream) {
-          //     // the caret has been moved one upstream
-          //     // TODO: follow SuperEditor issue #2367 whether semantics of
-          //     // SelectionChangeType are going to be revised
-          //     _collapseAtNextVisibleTextNodePosition(
-          //       requestDispatcher,
-          //       outlineDoc,
-          //       selectionEvent.newSelection!,
-          //     );
-          //   } else {
-          //     // no pushCaret, this probably means up or down movement ...
-          //     // TODO: follow SuperEditor issue #2367 whether semantics of
-          //     // SelectionChangeType are going to be revised
-
-          //     _collapseAtNextVisibleTextNodePosition(
-          //       requestDispatcher,
-          //       outlineDoc,
-          //       selectionEvent.newSelection!,
-          //     );
-          //   }
-          // }
         }
       }
     }

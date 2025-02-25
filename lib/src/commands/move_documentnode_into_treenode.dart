@@ -1,5 +1,4 @@
 import 'package:outline_editor/outline_editor.dart';
-import 'package:outline_editor/src/commands/insert_documentnode_in_outlinetreenode.dart';
 import 'package:outline_editor/src/util/logging.dart';
 
 class MoveDocumentNodeIntoTreenodeRequest implements EditRequest {
