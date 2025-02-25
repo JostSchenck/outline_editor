@@ -102,7 +102,7 @@ ExecutionInstruction backspaceSpecialCasesInOutlineTreeDocument({
       return ExecutionInstruction.haltExecution;
     }
     final mergeNodes = outlineNode.isConsideredEmpty ||
-        outlineNode.titleNode.text.text.isEmpty;
+        outlineNode.titleNode.text.toPlainText().isEmpty;
     final treenodeBefore = mergeNodes
         ? outlineDoc.getOutlineTreenodeBeforeTreenode(outlineNode)
         : null;
@@ -115,7 +115,8 @@ ExecutionInstruction backspaceSpecialCasesInOutlineTreeDocument({
         DocumentSelection.collapsed(
             position: DocumentPosition(
           nodeId: nodeBefore.id,
-          nodePosition: TextNodePosition(offset: nodeBefore.text.text.length),
+          nodePosition:
+              TextNodePosition(offset: nodeBefore.text.toPlainText().length),
         )),
         SelectionChangeType.placeCaret,
         'moved caret on backspace without deleting anything',
@@ -135,13 +136,13 @@ ExecutionInstruction backspaceSpecialCasesInOutlineTreeDocument({
           DocumentSelection.collapsed(
               position: DocumentPosition(
                   nodeId: nodeBefore.id,
-                  nodePosition:
-                      TextNodePosition(offset: nodeBefore.text.text.length))),
+                  nodePosition: TextNodePosition(
+                      offset: nodeBefore.text.toPlainText().length))),
           SelectionChangeType.deleteContent,
           'Backspace pressed',
         ),
         // delete empty paragraph on backspace
-        if ((textNode as TextNode).text.text.isEmpty)
+        if ((textNode as TextNode).text.toPlainText().isEmpty)
           DeleteNodeRequest(nodeId: textNode.id),
       ]);
       return ExecutionInstruction.haltExecution;
@@ -182,7 +183,7 @@ ExecutionInstruction deleteSpecialCasesInOutlineTreeDocument({
   final textNodePosition = selection.base.nodePosition as TextNodePosition;
   final textNode = outlineDoc.getNode(selection.base) as TextNode;
   // we only care, if the cursor is at the end of a text node
-  if (textNodePosition.offset != textNode.text.text.length) {
+  if (textNodePosition.offset != textNode.text.toPlainText().length) {
     return ExecutionInstruction.continueExecution;
   }
 
@@ -222,7 +223,8 @@ ExecutionInstruction deleteSpecialCasesInOutlineTreeDocument({
           'Backspace pressed',
         ),
         // delete empty paragraph on backspace
-        if (textNode.text.text.isEmpty) DeleteNodeRequest(nodeId: textNode.id),
+        if (textNode.text.toPlainText().isEmpty)
+          DeleteNodeRequest(nodeId: textNode.id),
       ]);
       return ExecutionInstruction.haltExecution;
     }
@@ -293,7 +295,7 @@ ExecutionInstruction enterInOutlineTreeDocument({
       ]);
       return ExecutionInstruction.haltExecution;
     }
-    if (textNodePosition.offset <= textNode.text.text.length) {
+    if (textNodePosition.offset <= textNode.text.toPlainText().length) {
       // Enter pressed somewhere else in a title node: Jump to start of content,
       // inserting a ParagraphNode if needed
       if (outlineTreenode.contentNodes.isEmpty) {
@@ -454,14 +456,16 @@ ExecutionInstruction reparentTreenodesOnTabAndShiftTab({
   final selection = editContext.composer.selection;
   if (selection == null) return ExecutionInstruction.continueExecution;
   if (!selection.isCollapsed) {
-    keyboardActionsLog.warning('Indenting and unindenting non-collapsed selections not yet implemented');
+    keyboardActionsLog.warning(
+        'Indenting and unindenting non-collapsed selections not yet implemented');
     return ExecutionInstruction.haltExecution;
   }
   final outlineDoc = editContext.document as OutlineTreeDocument;
 
   // prepare splitting the treenode when the cursor is in the middle of
   // a ParagraphNode
-  final treenode = outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
+  final treenode =
+      outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
 
   final moveUpInHierarchy = HardwareKeyboard.instance.isShiftPressed;
 

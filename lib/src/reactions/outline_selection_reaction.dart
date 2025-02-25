@@ -12,9 +12,9 @@ class OutlineSelectionReaction extends EditReaction {
     assert(editorContext.document is OutlineTreeDocument);
     final outlineDoc = editorContext.document as OutlineTreeDocument;
 
-    final event =
-        changeList.lastWhereOrNull((editevent) => editevent is SelectionChangeEvent);
-    if (event==null) return;
+    final event = changeList
+        .lastWhereOrNull((editevent) => editevent is SelectionChangeEvent);
+    if (event == null) return;
     if ((event as SelectionChangeEvent).newSelection == null) return;
     final selection = event.newSelection!;
     if (selection.isCollapsed) {
@@ -34,15 +34,15 @@ class OutlineSelectionReaction extends EditReaction {
     if (baseTreenode.id == extentTreenode.id) {
       // we're in the same treenode. If we span content as well as title, span
       // whole treenode.
-      final contentAndTitleSelected = (baseDocNode is TitleNode
-    && extentDocNode is! TitleNode) || (baseDocNode is! TitleNode &&
-          extentDocNode is TitleNode);
+      final contentAndTitleSelected =
+          (baseDocNode is TitleNode && extentDocNode is! TitleNode) ||
+              (baseDocNode is! TitleNode && extentDocNode is TitleNode);
       if (contentAndTitleSelected) {
-          stretchSelection(
-              requestDispatcher: requestDispatcher,
-              document: outlineDoc,
-              affinity: selectionAffinity,
-              baseTreenode: baseTreenode);
+        stretchSelection(
+            requestDispatcher: requestDispatcher,
+            document: outlineDoc,
+            affinity: selectionAffinity,
+            baseTreenode: baseTreenode);
       }
     } else {
       stretchSelection(
@@ -85,7 +85,9 @@ class OutlineSelectionReaction extends EditReaction {
 
     final lowestCommonAncestor =
         document.getOutlineTreenodeByPath(tn1.getLowestCommonAncestorPath(tn2));
-    tn1 = lowestCommonAncestor==tn1 ? lowestCommonAncestor : lowestCommonAncestor.children.first;
+    tn1 = lowestCommonAncestor == tn1
+        ? lowestCommonAncestor
+        : lowestCommonAncestor.children.first;
     tn2 = lowestCommonAncestor.lastOutlineTreeNodeInSubtree;
     requestDispatcher.execute([
       ChangeSelectionRequest(
@@ -105,22 +107,24 @@ extension TextNodePositionExtension on TextNode {
       nodeId: id, nodePosition: const TextNodePosition(offset: 0));
 
   DocumentPosition get lastPosition => DocumentPosition(
-      nodeId: id, nodePosition: TextNodePosition(offset: text.text.length));
+      nodeId: id,
+      nodePosition: TextNodePosition(offset: text.toPlainText().length));
 }
 
 // FIXME: prepare for NON-TextNodes in Content!
 extension OutlineTreenodePositionExtension on OutlineTreenode {
   DocumentPosition get firstPosition => DocumentPosition(
-      nodeId: titleNode.id,
-      nodePosition: const TextNodePosition(offset: 0));
+      nodeId: titleNode.id, nodePosition: const TextNodePosition(offset: 0));
 
   DocumentPosition get lastPosition => contentNodes.isEmpty
       ? DocumentPosition(
           nodeId: titleNode.id,
-          nodePosition: TextNodePosition(offset: titleNode.text.text.length))
+          nodePosition:
+              TextNodePosition(offset: titleNode.text.toPlainText().length))
       : DocumentPosition(
           nodeId: contentNodes.last.id,
           nodePosition: TextNodePosition(
-              offset: (contentNodes.last as TextNode).text.text.length),
+              offset:
+                  (contentNodes.last as TextNode).text.toPlainText().length),
         );
 }

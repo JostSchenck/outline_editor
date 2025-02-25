@@ -1,12 +1,5 @@
-import 'package:outline_editor/src/commands/change_collapsed_state.dart';
-import 'package:outline_editor/src/commands/delete_outline_treenode.dart';
-import 'package:outline_editor/src/commands/hide_show_content_nodes.dart';
-import 'package:outline_editor/src/commands/insert_documentnode_in_outlinetreenode.dart';
-import 'package:outline_editor/src/commands/insert_outline_treenode.dart';
-import 'package:outline_editor/src/commands/merge_outline_treenodes.dart';
-import 'package:outline_editor/src/commands/move_documentnode_into_treenode.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:outline_editor/src/commands/move_outline_treenode.dart';
-import 'package:outline_editor/src/commands/reparent_outlinetreenode.dart';
 import 'package:outline_editor/src/outline_editor/keyboard_actions.dart';
 import 'package:outline_editor/src/reactions/node_visibility_reaction.dart';
 import 'package:outline_editor/src/components/outline_paragraph_component.dart';
@@ -16,9 +9,11 @@ import 'package:outline_editor/src/reactions/outline_selection_reaction.dart';
 class OutlineEditorPlugin extends SuperEditorPlugin {
   const OutlineEditorPlugin({
     required this.editor,
+    required this.documentLayoutKey,
   });
 
   final Editor editor;
+  final GlobalKey documentLayoutKey;
 
   @override
   void attach(Editor editor) {
@@ -27,17 +22,23 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
         'OutlineEditorPlugin '
         'expects a Document that implements OutlineDocument');
     editor.reactionPipeline.insert(0, OutlineStructureReaction());
-    editor.reactionPipeline.insert(0, NodeVisibilityReaction(editor: editor));
+    editor.reactionPipeline.insert(
+        0,
+        NodeVisibilityReaction(
+          editor: editor,
+          documentLayoutResolver: () =>
+              documentLayoutKey.currentState as DocumentLayout,
+        ));
     editor.reactionPipeline.insert(0, OutlineSelectionReaction());
     editor.requestHandlers.addAll(
-      [
-        (request) => request is ChangeCollapsedStateRequest
+      <EditRequestHandler>[
+        (editor, EditRequest request) => request is ChangeCollapsedStateRequest
             ? ChangeCollapsedStateCommand(
                 treenodeId: request.treenodeId,
                 isCollapsed: request.isCollapsed,
               )
             : null,
-        (request) => request is InsertOutlineTreenodeRequest
+        (editor, request) => request is InsertOutlineTreenodeRequest
             ? InsertOutlineTreenodeCommand(
                 existingNode: request.existingTreenode,
                 newNode: request.newTreenode,
@@ -46,44 +47,45 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
                 splitAtDocumentPosition: request.splitAtDocumentPosition,
               )
             : null,
-        (request) => request is DeleteOutlineTreenodeRequest
+        (editor, request) => request is DeleteOutlineTreenodeRequest
             ? DeleteOutlineTreenodeCommand(
                 outlineTreenode: request.outlineTreenode)
             : null,
-        (request) => request is MergeOutlineTreenodesRequest
+        (editor, request) => request is MergeOutlineTreenodesRequest
             ? MergeOutlineTreenodesCommand(
                 treenodeMergedInto: request.treenodeMergedInto,
                 mergedTreenode: request.mergedTreenode,
               )
             : null,
-        (request) => request is InsertDocumentNodeInOutlineTreenodeRequest
-            ? InsertDocumentNodeInTreenodeContentCommand(
-                documentNode: request.documentNode,
-                outlineTreenode: request.outlineTreenode,
-                index: request.index)
-            : null,
-        (request) => request is MoveDocumentNodeIntoTreenodeRequest
+        (editor, request) =>
+            request is InsertDocumentNodeInOutlineTreenodeRequest
+                ? InsertDocumentNodeInTreenodeContentCommand(
+                    documentNode: request.documentNode,
+                    outlineTreenode: request.outlineTreenode,
+                    index: request.index)
+                : null,
+        (editor, request) => request is MoveDocumentNodeIntoTreenodeRequest
             ? MoveDocumentNodeIntoTreenodeCommand(
                 documentNode: request.documentNode,
                 outlineTreenode: request.outlineTreenode,
                 index: request.index)
             : null,
-        (request) => request is ReparentOutlineTreenodeRequest
+        (editor, request) => request is ReparentOutlineTreenodeRequest
             ? ReparentOutlineTreenodeCommand(
                 childTreenode: request.childTreenode,
                 newParentTreenode: request.newParentTreenode,
                 index: request.index)
             : null,
-        (request) => request is HideShowContentNodesRequest
+        (editor, request) => request is HideShowContentNodesRequest
             ? HideShowContentNodesCommand(
                 treeNodeId: request.treeNodeId,
                 hideContent: request.hideContent)
             : null,
-        (request) => request is MoveOutlineTreenodeRequest
+        (editor, request) => request is MoveOutlineTreenodeRequest
             ? MoveOutlineTreenodeCommand(
                 treenode: request.treenode, path: request.path)
             : null,
-        (request) => request is ChangeTreenodeIndentationRequest
+        (editor, request) => request is ChangeTreenodeIndentationRequest
             ? ChangeTreenodeIndentationCommand(
                 treenode: request.treenode,
                 moveUpInHierarchy: request.moveUpInHierarchy)

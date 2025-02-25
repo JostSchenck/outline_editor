@@ -9,17 +9,33 @@ class TitleNode extends TextNode {
   TitleNode({
     required super.id,
     required super.text,
-    super.metadata,
-  })  {
-    if (getMetadataValue("blockType") == null) {
-      putMetadataValue("blockType", titleAttribution);
-    }
+    Map<String, dynamic>? metadata,
+  }) : super(metadata: {
+          ...metadata ?? {},
+          "blockType": titleAttribution,
+        }) {
+    // if (getMetadataValue("blockType") == null) {
+    //   putMetadataValue("blockType", titleAttribution);
+    // }
   }
 
   @override
   TextNode copy() {
     return TitleNode(
         id: id, text: text.copyText(0), metadata: Map.from(metadata));
+  }
+
+  @override
+  TextNode copyTextNodeWith({
+    String? id,
+    AttributedText? text,
+    Map<String, dynamic>? metadata,
+  }) {
+    return TitleNode(
+      id: id ?? this.id,
+      text: text ?? this.text,
+      metadata: metadata ?? this.metadata,
+    );
   }
 
   @override
@@ -45,6 +61,7 @@ class OutlineTitleComponentViewModel extends OutlineComponentViewModel
     this.hasChildren = false,
     this.highlightWhenEmpty = false,
     this.selection,
+    this.inlineWidgetBuilders = const [],
     required this.selectionColor,
     required this.text,
     required this.textAlignment,
@@ -62,6 +79,8 @@ class OutlineTitleComponentViewModel extends OutlineComponentViewModel
   bool hasChildren;
   @override
   bool isCollapsed;
+  @override
+  InlineWidgetBuilderChain inlineWidgetBuilders;
 
   @override
   bool highlightWhenEmpty;
@@ -153,14 +172,16 @@ class OutlineTitleComponentBuilder implements ComponentBuilder {
         'StructuredDocument, but ${document.runtimeType} was given');
 
     final outlineDoc = document as OutlineDocument;
-    final textDirection = getParagraphDirection(node.text.text);
+    final textDirection = getParagraphDirection(node.text.toPlainText());
 
     return OutlineTitleComponentViewModel(
       nodeId: node.id,
       outlineIndentLevel: outlineDoc.getTreenodeDepth(node.id),
       indexInChildren: outlineDoc.getIndexInChildren(node.id),
-      hasChildren:
-          outlineDoc.getOutlineTreenodeForDocumentNodeId(node.id).children.isNotEmpty,
+      hasChildren: outlineDoc
+          .getOutlineTreenodeForDocumentNodeId(node.id)
+          .children
+          .isNotEmpty,
       isCollapsed: outlineDoc.isCollapsed(node.id),
       isVisible: outlineDoc.isVisible(node.id),
       selectionColor: const Color(0x00000000),
@@ -216,14 +237,12 @@ class _OutlineParagraphComponentState
     return TextComponent(
       key: _textKey,
       text: widget.viewModel.text,
-      textStyleBuilder:
-          widget.viewModel.textStyleBuilder,
+      textStyleBuilder: widget.viewModel.textStyleBuilder,
       textAlign: widget.viewModel.textAlignment,
       metadata: const {},
       textSelection: widget.viewModel.selection,
       selectionColor: widget.viewModel.selectionColor,
-      highlightWhenEmpty:
-          widget.viewModel.highlightWhenEmpty,
+      highlightWhenEmpty: widget.viewModel.highlightWhenEmpty,
       underlines: widget.viewModel.createUnderlines(),
       textDirection: widget.viewModel.textDirection,
       showDebugPaint: false,
@@ -232,7 +251,7 @@ class _OutlineParagraphComponentState
 
   @override
   Widget? buildControls(BuildContext context, int indexInChildren) {
-    if (indexInChildren==0) {
+    if (indexInChildren == 0) {
       return CollapseExpandButton(
         editor: widget.editor,
         viewModel: widget.viewModel,
@@ -241,4 +260,3 @@ class _OutlineParagraphComponentState
     return null;
   }
 }
-

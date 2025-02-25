@@ -50,9 +50,9 @@ final class OutlineTreenode /*extends ChangeNotifier */
     required this.id,
     required this.document,
     Map<String, dynamic>? metadata,
-  }) {
-    _titleNode =
-        titleNode ?? TitleNode(id: uuid.v4(), text: AttributedText(''));
+  }) : _titleNode = titleNode ?? TitleNode(id: uuid.v4(), text: AttributedText('')) {
+    // _titleNode =
+    //     titleNode ?? TitleNode(id: uuid.v4(), text: AttributedText(''));
     _contentNodes.addAll(contentNodes);
     _metadata = metadata ?? {};
     if (children != null) {
@@ -64,7 +64,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
     _hasContentHidden = hasContentHidden;
   }
 
-  late TitleNode _titleNode;
+  TitleNode _titleNode;
   final List<DocumentNode> _contentNodes = [];
   final List<OutlineTreenode> _children = [];
 
@@ -143,6 +143,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
       document.hashCode;
 
   TitleNode get titleNode => _titleNode;
+  set titleNode(TitleNode node) => _titleNode = node;
 
   List<DocumentNode> get contentNodes => _contentNodes;
 

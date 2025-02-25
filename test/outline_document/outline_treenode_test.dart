@@ -181,13 +181,19 @@ void main() {
 
     test('DocumentNodes in the document can be retrieved by their id', () {
       expect(
-          (document.root.getDocumentNodeById('1')! as ParagraphNode).text.text,
+          (document.root.getDocumentNodeById('1')! as ParagraphNode)
+              .text
+              .toPlainText(),
           'One more');
       expect(
-          (document.root.getDocumentNodeById('2')! as ParagraphNode).text.text,
+          (document.root.getDocumentNodeById('2')! as ParagraphNode)
+              .text
+              .toPlainText(),
           'Two more');
       expect(
-          (document.root.getDocumentNodeById('5')! as ParagraphNode).text.text,
+          (document.root.getDocumentNodeById('5')! as ParagraphNode)
+              .text
+              .toPlainText(),
           'Another ...');
     });
 
@@ -208,17 +214,25 @@ void main() {
       // be purged, so it has one child
       document.root.addChild(OutlineTreenode(id: 'a', document: document));
       // will be purged, as it has  empty documentNodes and its only child is purged
-      document.root.children[0].addChild(OutlineTreenode(id: 'b', document: document));
+      document.root.children[0]
+          .addChild(OutlineTreenode(id: 'b', document: document));
       // will be purged as empty documentNodes and no children
-      document.root.children[0].children[0].addChild(OutlineTreenode(id: 'c', document: document));
+      document.root.children[0].children[0]
+          .addChild(OutlineTreenode(id: 'c', document: document));
       // will not be purged, because it has document nodes
-      document.root.children[0].addChild(
-          OutlineTreenode(id: 'b2', document: document, contentNodes: [ParagraphNode(id: 'dn1', text: AttributedText('text'))]));
+      document.root.children[0].addChild(OutlineTreenode(
+          id: 'b2',
+          document: document,
+          contentNodes: [
+            ParagraphNode(id: 'dn1', text: AttributedText('text'))
+          ]));
       // will be purged, as it has empty documentNodes and no children
       document.root.addChild(OutlineTreenode(id: 'd', document: document));
     });
 
-    test('purgeStaleChildren finds all stale children and removes them recursively', () {
+    test(
+        'purgeStaleChildren finds all stale children and removes them recursively',
+        () {
       expect(document.root.children.length, 1);
       expect(document.root.children[0].id, 'a');
       expect(document.root.children[0].children.length, 1);
@@ -226,6 +240,4 @@ void main() {
       expect(document.root.children[0].children[0].children.length, 0);
     });
   });
-
-
 }

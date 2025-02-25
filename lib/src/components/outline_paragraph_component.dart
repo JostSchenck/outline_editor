@@ -10,6 +10,7 @@ class OutlineParagraphComponentViewModel extends OutlineComponentViewModel
     required this.paragraphComponentViewModel,
     required this.outlineIndentLevel,
     required this.indexInChildren,
+    this.inlineWidgetBuilders = const[],
     this.isCollapsed = false, // FIXME: sollte nur in Title implementiert werden
     this.isVisible = true,
     this.hasChildren = false,
@@ -26,6 +27,8 @@ class OutlineParagraphComponentViewModel extends OutlineComponentViewModel
   bool hasChildren;
   @override
   bool isCollapsed;
+  @override
+  InlineWidgetBuilderChain inlineWidgetBuilders;
 
   @override
   bool get highlightWhenEmpty => paragraphComponentViewModel.highlightWhenEmpty;

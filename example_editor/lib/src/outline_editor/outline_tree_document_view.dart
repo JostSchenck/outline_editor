@@ -18,6 +18,7 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
   late Editor _editor;
   late MutableDocumentComposer _composer;
   late FocusNode _editorFocusNode;
+  late GlobalKey _docLayoutKey;
 
   @override
   void initState() {
@@ -120,6 +121,7 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
     _editor =
         createDefaultDocumentEditor(document: _document, composer: _composer);
     _editorFocusNode = FocusNode();
+    _docLayoutKey = GlobalKey();
   }
 
   @override
@@ -136,8 +138,14 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
       appBar: AppBar(
         title: const Text('OutlineTreeDocument'),
         actions: [
-          IconButton(onPressed: () => _editor.execute([HideShowContentNodesRequest(hideContent: true)]), icon: const Icon(Icons.arrow_drop_up) ),
-          IconButton(onPressed: () => _editor.execute([HideShowContentNodesRequest(hideContent: false)]), icon: const Icon(Icons.arrow_drop_down)),
+          IconButton(
+              onPressed: () => _editor
+                  .execute([HideShowContentNodesRequest(hideContent: true)]),
+              icon: const Icon(Icons.arrow_drop_up)),
+          IconButton(
+              onPressed: () => _editor
+                  .execute([HideShowContentNodesRequest(hideContent: false)]),
+              icon: const Icon(Icons.arrow_drop_down)),
         ],
       ),
       drawer: const OutlineExampleNavigationDrawer(),
@@ -146,8 +154,10 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
         scrollController: _scrollController,
         editor: _editor,
         focusNode: _editorFocusNode,
+        documentLayoutKey: _docLayoutKey,
         plugins: {
-          OutlineEditorPlugin(editor: _editor),
+          OutlineEditorPlugin(
+              editor: _editor, documentLayoutKey: _docLayoutKey),
         },
         stylesheet: defaultOutlineEditorStylesheet,
       ),

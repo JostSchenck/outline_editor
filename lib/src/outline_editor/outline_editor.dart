@@ -67,7 +67,8 @@ class _OutlineEditorState extends State<OutlineEditor> {
       documentOverlayBuilders: widget.documentOverlayBuilders,
       documentUnderlayBuilders: widget.documentUnderlayBuilders,
       plugins: {
-        OutlineEditorPlugin(editor: widget.editor),
+        OutlineEditorPlugin(
+            editor: widget.editor, documentLayoutKey: _docLayoutKey),
       },
     );
   }

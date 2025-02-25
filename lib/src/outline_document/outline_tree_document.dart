@@ -8,11 +8,12 @@ class OutlineTreeDocument
     with OutlineDocument, Iterable<DocumentNode>
     implements MutableDocument {
   OutlineTreeDocument({OutlineTreenode? root}) {
-    _root = root ?? OutlineTreenode(
-      id: 'root',
-      document: this,
-      children: [],
-    );
+    _root = root ??
+        OutlineTreenode(
+          id: 'root',
+          document: this,
+          children: [],
+        );
   }
 
   @override
@@ -22,12 +23,14 @@ class OutlineTreeDocument
 
   @override
   OutlineTreenode get root => _root;
+
   set root(OutlineTreenode value) {
     _root = value;
     // _latestNodeSnapshot = value;
     _didReset = true;
     // _notifyListeners();
   }
+
   late OutlineTreenode _root;
 
   final _listeners = <DocumentChangeListener>[];
@@ -104,14 +107,15 @@ class OutlineTreeDocument
   }
 
   @override
-  bool deleteNode(DocumentNode node) {
-    final outlineNode = _root.getOutlineTreenodeByDocumentNodeId(node.id);
+  bool deleteNode(String nodeId) {
+    final outlineNode = _root.getOutlineTreenodeByDocumentNodeId(nodeId);
     if (outlineNode == null) {
       outlineDocLog
-          .warning('deleteNode: node ${node.id} not found in outline tree');
+          .warning('deleteNode: node $nodeId not found in outline tree');
       return false;
     }
-    return outlineNode.contentNodes.remove(node);
+    final docNode = outlineNode.getDocumentNodeById(nodeId);
+    return outlineNode.contentNodes.remove(docNode);
   }
 
   @override
@@ -265,7 +269,7 @@ class OutlineTreeDocument
         document: this,
         contentNodes: treenode.contentNodes.sublist(
           // minus 1, as a 0 path always points to the title node
-          path.docNodeIndex-1,
+          path.docNodeIndex - 1,
         ),
       );
       treenode.parent!.addChild(newNode, treenode.childIndex + 1);
@@ -274,7 +278,7 @@ class OutlineTreeDocument
           .removeRange(path.docNodeIndex - 1, treenode.contentNodes.length);
     } else {
       // minus 1, as a 0 path always points to the title node
-      treenode.contentNodes.insert(path.docNodeIndex-1, node);
+      treenode.contentNodes.insert(path.docNodeIndex - 1, node);
     }
   }
 
@@ -291,9 +295,9 @@ class OutlineTreeDocument
   /// semantics, which we don't want.
   @override
   void insertNodeBefore(
-      {required DocumentNode existingNode, required DocumentNode newNode}) {
+      {required String existingNodeId, required DocumentNode newNode}) {
     // TODO: this is the least efficient way, do this better when problems arise
-    insertNodeAt(getNodeIndexById(existingNode.id), newNode);
+    insertNodeAt(getNodeIndexById(existingNodeId), newNode);
   }
 
   /// Inserts a node right after a given existing node. While this is trivial
@@ -306,11 +310,11 @@ class OutlineTreeDocument
   /// TitleNodes must not be inserted with this method.
   @override
   void insertNodeAfter({
-    required DocumentNode existingNode,
+    required String existingNodeId,
     required DocumentNode newNode,
   }) {
     // TODO: this is the least efficient way, do this better when problems arise
-    insertNodeAt(getNodeIndexById(existingNode.id) + 1, newNode);
+    insertNodeAt(getNodeIndexById(existingNodeId) + 1, newNode);
   }
 
   @override
@@ -328,7 +332,9 @@ class OutlineTreeDocument
 
   @override
   void setHidden(String documentNodeId, bool isHidden) {
-    getNodeById(documentNodeId)!.putMetadataValue(isHiddenKey, isHidden);
+    final node = getNodeById(documentNodeId)!;
+    replaceNodeById(
+        documentNodeId, node.copyWithAddedMetadata({isHiddenKey: isHidden}));
   }
 
   @override
@@ -354,12 +360,18 @@ class OutlineTreeDocument
       outlineDocLog.warning('replaceNode called on non-existing node $oldNode');
       return;
     }
-    assert(oldNode is! TitleNode && newNode is! TitleNode,
-        'replaceNode called on a TitleNode, this is not supported; program error');
-    final outlineNode =
+    // assert(oldNode is! TitleNode && newNode is! TitleNode,
+    //     'replaceNode called on a TitleNode, this is not supported; program error');
+    final treenode =
         _root.getOutlineTreenodeByPath(oldNodePath.treenodePath)!;
-    outlineNode.contentNodes.remove(oldNode);
-    outlineNode.contentNodes.insert(oldNodePath.docNodeIndex, newNode);
+    if (oldNode is TitleNode) {
+      assert(newNode is TitleNode, 'Tried to replace a TitleNode with a non-TitleNode');
+      treenode.titleNode = newNode as TitleNode;
+    } else {
+      assert(newNode is! TitleNode, 'Tried inserting a TitleNode in contentNodes');
+      treenode.contentNodes.remove(oldNode);
+      treenode.contentNodes.insert(oldNodePath.docNodeIndex-1, newNode);
+    }
   }
 
   @override
@@ -396,4 +408,30 @@ class OutlineTreeDocument
 
   @override
   int get hashCode => _root.hashCode;
+
+  @override
+  void clear() {
+    // TODO: implement clear
+  }
+
+  @override
+  DocumentNode? getNodeAfterById(String nodeId) {
+    final node = getNodeById(nodeId);
+    return node == null ? null : getNodeAfter(node);
+  }
+
+  @override
+  DocumentNode? getNodeBeforeById(String nodeId) {
+    final node = getNodeById(nodeId);
+    return node == null ? null : getNodeBefore(node);
+  }
+
+  @override
+  void replaceNodeById(String nodeId, DocumentNode newNode) {
+    final node = getNodeById(nodeId);
+    if (node==null) {
+      throw Exception('Could not find node with ID: $nodeId');
+    }
+    replaceNode(oldNode: node, newNode: newNode);
+  }
 }
