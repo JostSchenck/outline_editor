@@ -92,7 +92,6 @@ class OutlineTreeDocument<T extends OutlineTreenode>
   // this is not efficient in a tree structure document
   @override
   void deleteNodeAt(int index) {
-    // TODO: If we introduce some sort of map to optimize this class, this may be done efficiently
     outlineDocLog.warning('calling deleteNodeAt is not efficient in an '
         'outline document');
     final nodeList = toList();
@@ -296,7 +295,7 @@ class OutlineTreeDocument<T extends OutlineTreenode>
   @override
   void insertNodeBefore(
       {required String existingNodeId, required DocumentNode newNode}) {
-    // TODO: this is the least efficient way, do this better when problems arise
+    // this is the least efficient way, do this better when problems arise
     insertNodeAt(getNodeIndexById(existingNodeId), newNode);
   }
 
@@ -313,7 +312,7 @@ class OutlineTreeDocument<T extends OutlineTreenode>
     required String existingNodeId,
     required DocumentNode newNode,
   }) {
-    // TODO: this is the least efficient way, do this better when problems arise
+    // this is the least efficient way, do this better when problems arise
     insertNodeAt(getNodeIndexById(existingNodeId) + 1, newNode);
   }
 
