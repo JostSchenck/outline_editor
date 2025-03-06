@@ -30,7 +30,7 @@ bool _deleteSelectedTreenodes(OutlineTreeDocument outlineDoc,
         flatList.sublist(min(index1, index2), max(index1, index2) + 1).reversed;
     final parent = deleteList.last.parent!;
     final childIndex = deleteList.last.childIndex;
-    final newEmptyNode = OutlineTreenode(id: uuid.v4(), document: outlineDoc);
+    final newEmptyNode = OutlineTreenode(id: uuid.v4());
     editContext.editor.execute([
       ...deleteList.map((treenode) =>
           DeleteOutlineTreenodeRequest(outlineTreenode: treenode)),
@@ -269,13 +269,7 @@ ExecutionInstruction enterInOutlineTreeDocument({
   if (textNode is TitleNode) {
     if (textNodePosition.offset == 0) {
       // enter pressed at the start of a title node -- prepend a sibling Treenode
-      final newOutlineTreenode = OutlineTreenode(
-        id: uuid.v4(),
-        document: outlineDoc,
-        // contentNodes: [
-        //   ParagraphNode(id: uuid.v4(), text: AttributedText('')),
-        // ],
-      );
+      final newOutlineTreenode = OutlineTreenode(id: uuid.v4());
       editContext.editor.execute([
         InsertOutlineTreenodeRequest(
           existingTreenode: outlineTreenode.parent!,
@@ -385,10 +379,7 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
     if (selection.isCollapsed) {
       final parentTreenode =
           outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
-      final newTreenode = OutlineTreenode(
-        id: uuid.v4(),
-        document: outlineDoc,
-      );
+      final newTreenode = OutlineTreenode(id: uuid.v4());
 
       editContext.editor.execute([
         if (parentTreenode.isCollapsed)
@@ -414,10 +405,7 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
   }
   if (HardwareKeyboard.instance.isShiftPressed) {
     if (selection.isCollapsed) {
-      final newTreenode = OutlineTreenode(
-        id: uuid.v4(),
-        document: outlineDoc,
-      );
+      final newTreenode = OutlineTreenode(id: uuid.v4());
       editContext.editor.execute([
         InsertOutlineTreenodeRequest(
           existingTreenode: outlineDoc

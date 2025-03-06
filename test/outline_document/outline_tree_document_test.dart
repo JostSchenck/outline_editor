@@ -2,11 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:outline_editor/outline_editor.dart';
 
 OutlineTreeDocument prepareDocument({changeIds = false}) {
-  final outlineTreeDocument = OutlineTreeDocument();
+  final outlineTreeDocument =
+      OutlineTreeDocument(root: OutlineTreenode(id: 'root'));
   outlineTreeDocument.root.addChild(
     OutlineTreenode(
       id: changeIds ? 'asdf1' : '1',
-      document: outlineTreeDocument,
       contentNodes: [
         ParagraphNode(
             id: changeIds ? 'asdf1a' : '1a',
@@ -18,7 +18,6 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
       children: [
         OutlineTreenode(
           id: changeIds ? 'asdf2' : '2',
-          document: outlineTreeDocument,
           contentNodes: [
             ParagraphNode(
                 id: changeIds ? 'asdf2a' : '2a',
@@ -30,7 +29,6 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
           children: [
             OutlineTreenode(
               id: changeIds ? 'asdf2-1' : '2-1',
-              document: outlineTreeDocument,
               contentNodes: [
                 ParagraphNode(
                     id: changeIds ? 'asdf2-1a' : '2-1a',
@@ -39,15 +37,12 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
                     id: changeIds ? 'asdf2-1b' : '2-1b',
                     text: AttributedText('still a grand child')),
               ],
-              children: [
-
-              ],
+              children: [],
             )
           ],
         ),
         OutlineTreenode(
           id: changeIds ? 'asdf3' : '3',
-          document: outlineTreeDocument,
           contentNodes: [
             ParagraphNode(
                 id: changeIds ? 'asdf3a' : '3a',
@@ -56,9 +51,7 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
                 id: changeIds ? 'asdf3b' : '3b',
                 text: AttributedText('with a second paragraph')),
           ],
-          children: [
-
-          ],
+          children: [],
         )
       ],
     ),
@@ -66,7 +59,6 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
   outlineTreeDocument.root.addChild(
     OutlineTreenode(
       id: changeIds ? 'asdf4' : '4',
-      document: outlineTreeDocument,
       contentNodes: [
         ParagraphNode(
             id: changeIds ? 'asdf4a' : '4a',
@@ -78,7 +70,6 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
       children: [
         OutlineTreenode(
           id: changeIds ? 'asdf5' : '5',
-          document: outlineTreeDocument,
           contentNodes: [
             ParagraphNode(
                 id: changeIds ? 'asdf5a' : '5a',
@@ -90,7 +81,6 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
           children: [
             OutlineTreenode(
               id: changeIds ? 'asdf6' : '6',
-              document: outlineTreeDocument,
               contentNodes: [
                 ParagraphNode(
                     id: changeIds ? 'asdf6a' : '6a',
@@ -99,9 +89,7 @@ OutlineTreeDocument prepareDocument({changeIds = false}) {
                     id: changeIds ? 'asdf6b' : '6b',
                     text: AttributedText('still a grand child')),
               ],
-              children: [
-
-              ],
+              children: [],
             )
           ],
         ),
@@ -120,13 +108,14 @@ main() {
     });
 
     test('nodeCount returns correct node cound', () {
-      expect(outlineTreeDocument.nodeCount, 14);
+      expect(outlineTreeDocument.nodeCount, 21);
     });
 
     test('hasEquivalent content ignores IDs', () {
-      OutlineTreeDocument outlineTreeDocument2 = prepareDocument(
-          changeIds: true);
-      expect(outlineTreeDocument.hasEquivalentContent(outlineTreeDocument2), true);
+      OutlineTreeDocument outlineTreeDocument2 =
+          prepareDocument(changeIds: true);
+      expect(
+          outlineTreeDocument.hasEquivalentContent(outlineTreeDocument2), true);
     });
 
     test('', () {
@@ -148,13 +137,15 @@ main() {
       outlineTreeDocument = prepareDocument();
     });
 
-    test('when nodes are collapse, child nodes and their document nodes are hidden', () {
-      outlineTreeDocument.getOutlineTreenodeByPath([0,0]).isCollapsed = true;
-      expect(outlineTreeDocument.getOutlineTreenodeByPath([0, 0]).isCollapsed, true);
+    test(
+        'when nodes are collapse, child nodes and their document nodes are hidden',
+        () {
+      outlineTreeDocument.getOutlineTreenodeByPath([0, 0]).isCollapsed = true;
+      expect(outlineTreeDocument.getOutlineTreenodeByPath([0, 0]).isCollapsed,
+          true);
       expect(outlineTreeDocument.isVisible('2-1b'), false);
       expect(outlineTreeDocument.isVisible('2b'), true);
       expect(outlineTreeDocument.isVisible('1a'), true);
-
     });
 
     test('', () {

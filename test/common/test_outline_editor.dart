@@ -18,6 +18,7 @@ class _TestOutlineEditorState extends State<TestOutlineEditor> {
   late Editor _editor;
   late MutableDocumentComposer _composer;
   late FocusNode _editorFocusNode;
+  late GlobalKey _docLayoutKey;
 
   @override
   void initState() {
@@ -25,8 +26,10 @@ class _TestOutlineEditorState extends State<TestOutlineEditor> {
     _document = getVisibilityTestDocument();
     _scrollController = ScrollController();
     _composer = MutableDocumentComposer();
-    _editor = createDefaultDocumentEditor(document: _document, composer: _composer);
+    _editor =
+        createDefaultDocumentEditor(document: _document, composer: _composer);
     _editorFocusNode = FocusNode();
+    _docLayoutKey = GlobalKey();
   }
 
   @override
@@ -47,8 +50,12 @@ class _TestOutlineEditorState extends State<TestOutlineEditor> {
           scrollController: _scrollController,
           editor: _editor,
           focusNode: _editorFocusNode,
+          documentLayoutKey: _docLayoutKey,
           plugins: {
-            OutlineEditorPlugin(editor: _editor),
+            OutlineEditorPlugin(
+              editor: _editor,
+              documentLayoutKey: _docLayoutKey,
+            ),
           },
         ),
       ),

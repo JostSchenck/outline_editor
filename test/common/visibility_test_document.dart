@@ -1,11 +1,12 @@
 import 'package:outline_editor/outline_editor.dart';
+import 'package:outline_editor/src/infrastructure/uuid.dart';
 
 OutlineTreeDocument getVisibilityTestDocument() {
-  OutlineTreeDocument document = OutlineTreeDocument();
+  OutlineTreeDocument document =
+      OutlineTreeDocument(root: OutlineTreenode(id: uuid.v4()));
   document.root.addChild(
     OutlineTreenode(
       id: 'tn_1',
-      document: document,
       titleNode: TitleNode(id: '1title', text: AttributedText('Title node')),
       contentNodes: [
         ParagraphNode(
@@ -16,8 +17,8 @@ OutlineTreeDocument getVisibilityTestDocument() {
       children: [
         OutlineTreenode(
           id: 'tn_2',
-          document: document,
-          titleNode: TitleNode(id: '2title', text: AttributedText('Title node')),
+          titleNode:
+              TitleNode(id: '2title', text: AttributedText('Title node')),
           contentNodes: [
             ParagraphNode(
               id: '2',
@@ -28,8 +29,8 @@ OutlineTreeDocument getVisibilityTestDocument() {
           children: [
             OutlineTreenode(
               id: 'tn_3',
-              document: document,
-              titleNode: TitleNode(id: '3title', text: AttributedText('Title node')),
+              titleNode:
+                  TitleNode(id: '3title', text: AttributedText('Title node')),
               contentNodes: [
                 ParagraphNode(
                   id: '3',
@@ -39,8 +40,8 @@ OutlineTreeDocument getVisibilityTestDocument() {
               children: [
                 OutlineTreenode(
                   id: 'tn_4',
-                  document: document,
-                  titleNode: TitleNode(id: '4title', text: AttributedText('Title node')),
+                  titleNode: TitleNode(
+                      id: '4title', text: AttributedText('Title node')),
                   contentNodes: [
                     ParagraphNode(
                       id: '4',
@@ -55,8 +56,8 @@ OutlineTreeDocument getVisibilityTestDocument() {
         ),
         OutlineTreenode(
           id: 'tn_5',
-          document: document,
-          titleNode: TitleNode(id: '5title', text: AttributedText('Title node')),
+          titleNode:
+              TitleNode(id: '5title', text: AttributedText('Title node')),
           contentNodes: [
             ParagraphNode(
               id: '5',
@@ -67,8 +68,8 @@ OutlineTreeDocument getVisibilityTestDocument() {
           children: [
             OutlineTreenode(
               id: 'tn_6',
-              document: document,
-              titleNode: TitleNode(id: '6title', text: AttributedText('Title node')),
+              titleNode:
+                  TitleNode(id: '6title', text: AttributedText('Title node')),
               contentNodes: [
                 ParagraphNode(
                   id: '6',

@@ -4,17 +4,18 @@ import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/infrastructure/uuid.dart';
 import 'package:outline_editor/src/util/logging.dart';
 
-class OutlineTreeDocument
-    with OutlineDocument, Iterable<DocumentNode>
+class OutlineTreeDocument<T extends OutlineTreenode>
+    with OutlineDocument<T>, Iterable<DocumentNode>
     implements MutableDocument {
-  OutlineTreeDocument({OutlineTreenode? root}) {
-    _root = root ??
-        OutlineTreenode(
-          id: 'root',
-          document: this,
-          children: [],
-        );
-  }
+  OutlineTreeDocument({required T root}) : _root = root;
+  // {
+  //   _root = root ??
+  //       T(
+  //         id: 'root',
+  //         document: this,
+  //         children: [],
+  //       );
+  // }
 
   @override
   void dispose() {
@@ -22,19 +23,19 @@ class OutlineTreeDocument
   }
 
   @override
-  OutlineTreenode get root => _root;
+  T get root => _root;
 
-  set root(OutlineTreenode value) {
+  set root(T value) {
     _root = value;
     // _latestNodeSnapshot = value;
     _didReset = true;
     // _notifyListeners();
   }
 
-  late OutlineTreenode _root;
+  late T _root;
 
   final _listeners = <DocumentChangeListener>[];
-  late final OutlineTreenode _latestNodeSnapshot;
+  late final T _latestNodeSnapshot;
   bool _didReset = false;
 
   @override
@@ -187,7 +188,7 @@ class OutlineTreeDocument
 
   @override
   bool hasEquivalentContent(Document other) {
-    if (other is OutlineDocument) {
+    if (other is OutlineTreeDocument<T>) {
       return root.hasEquivalentContent(other.root);
     }
     return other.hasEquivalentContent(this);
@@ -208,11 +209,13 @@ class OutlineTreeDocument
     DocumentNode node,
   ) {
     if (index == 0) {
-      // node is inserted at the start of the document before the first node,
-      // this always means inserting a new OutlineTreenode, because we can't
+      // The node is to be inserted at the start of the document before the
+      // first node. This is illegal in an OutlineTreeDocument, because we can't
       // insert something in the same OutlineTreenode before the TitleNode.
-      _root.children.insert(0,
-          OutlineTreenode(id: uuid.v4(), document: this, contentNodes: [node]));
+      throw Exception('insertNodeAt tried to insert a DocumentNode before '
+          'the first OutlineTreenode');
+      // _root.children.insert(0,
+      //     OutlineTreenode(id: uuid.v4(), document: this, contentNodes: [node]));
     }
     if (index == length) {
       // Node is appended at the end of the document. Easy:
@@ -221,7 +224,6 @@ class OutlineTreeDocument
         // a TitleNode always starts a new OutlineTreenode
         (lastTreenode.parent!.addChild(OutlineTreenode(
           id: uuid.v4(),
-          document: this,
           contentNodes: [node],
         )));
       } else {
@@ -251,7 +253,6 @@ class OutlineTreeDocument
         treenode.parent?.addChild(
             OutlineTreenode(
               id: uuid.v4(),
-              document: this,
               contentNodes: [node],
             ),
             treenode.childIndex);
@@ -266,7 +267,6 @@ class OutlineTreeDocument
     if (node is TitleNode) {
       final newNode = OutlineTreenode(
         id: uuid.v4(),
-        document: this,
         contentNodes: treenode.contentNodes.sublist(
           // minus 1, as a 0 path always points to the title node
           path.docNodeIndex - 1,
@@ -362,15 +362,16 @@ class OutlineTreeDocument
     }
     // assert(oldNode is! TitleNode && newNode is! TitleNode,
     //     'replaceNode called on a TitleNode, this is not supported; program error');
-    final treenode =
-        _root.getOutlineTreenodeByPath(oldNodePath.treenodePath)!;
+    final treenode = _root.getOutlineTreenodeByPath(oldNodePath.treenodePath)!;
     if (oldNode is TitleNode) {
-      assert(newNode is TitleNode, 'Tried to replace a TitleNode with a non-TitleNode');
+      assert(newNode is TitleNode,
+          'Tried to replace a TitleNode with a non-TitleNode');
       treenode.titleNode = newNode as TitleNode;
     } else {
-      assert(newNode is! TitleNode, 'Tried inserting a TitleNode in contentNodes');
+      assert(
+          newNode is! TitleNode, 'Tried inserting a TitleNode in contentNodes');
       treenode.contentNodes.remove(oldNode);
-      treenode.contentNodes.insert(oldNodePath.docNodeIndex-1, newNode);
+      treenode.contentNodes.insert(oldNodePath.docNodeIndex - 1, newNode);
     }
   }
 
@@ -390,9 +391,7 @@ class OutlineTreeDocument
   }
 
   @override
-  void onTransactionStart() {
-    // TODO: implement onTransactionStart
-  }
+  void onTransactionStart() {}
 
   @override
   void reset() {
@@ -429,7 +428,7 @@ class OutlineTreeDocument
   @override
   void replaceNodeById(String nodeId, DocumentNode newNode) {
     final node = getNodeById(nodeId);
-    if (node==null) {
+    if (node == null) {
       throw Exception('Could not find node with ID: $nodeId');
     }
     replaceNode(oldNode: node, newNode: newNode);

@@ -48,7 +48,6 @@ final class OutlineTreenode /*extends ChangeNotifier */
     bool isCollapsed = false,
     this.hasContentHidden = false,
     required this.id,
-    required this.document,
     Map<String, dynamic>? metadata,
   }) : titleNode =
             titleNode ?? TitleNode(id: uuid.v4(), text: AttributedText('')) {
@@ -76,10 +75,6 @@ final class OutlineTreenode /*extends ChangeNotifier */
   /// by path will usually be faster.
   final String id;
 
-  /// The OutlineTreeDocument containing this node; this is needed to be able
-  /// to eg. calculate ranges and similar, which needs knowledge only the
-  /// document (or rather, SuperEditor's MutableDocument) has.
-  final Document document;
   bool _isCollapsed = false;
   bool hasContentHidden = false;
   late Map<String, dynamic> _metadata;
@@ -127,7 +122,6 @@ final class OutlineTreenode /*extends ChangeNotifier */
       other is OutlineTreenode &&
           id == other.id &&
           parent == other.parent &&
-          document == other.document &&
           titleNode == other.titleNode &&
           const DeepCollectionEquality()
               .equals(_contentNodes, other._contentNodes) &&
@@ -139,8 +133,7 @@ final class OutlineTreenode /*extends ChangeNotifier */
       titleNode.hashCode ^
       _children.hashCode ^
       id.hashCode ^
-      parent.hashCode ^
-      document.hashCode;
+      parent.hashCode;
 
   // TitleNode get titleNode => _titleNode;
   // set titleNode(TitleNode node) => _titleNode = node;
@@ -318,25 +311,6 @@ final class OutlineTreenode /*extends ChangeNotifier */
     return false;
   }
 
-  /// At which position in this treenode's or its children's documentNodes
-  /// the DocumentNode with nodeId is located, ie. 0 for first position, 1 for the
-  /// second, etc. Returns -1 if it does not find nodeId.
-  /// This is mainly used for component building: For example, the first
-  /// node in a treenodes content might be decorated with a button or similar.
-  int getIndexInSubtree(String nodeId) {
-    int index = nodes.indexOf(document.getNodeById(nodeId)!);
-    if (index != -1) {
-      return index;
-    }
-    for (var child in _children) {
-      index = child.getIndexInSubtree(nodeId);
-      if (index != -1) {
-        return index;
-      }
-    }
-    return -1;
-  }
-
   /// The index this OutlineTreenode holds in its parent's list of children,
   /// or -1 if root.
   int get childIndex => parent == null ? -1 : parent!.children.indexOf(this);
@@ -421,48 +395,6 @@ final class OutlineTreenode /*extends ChangeNotifier */
       return parent!;
     }
     return parent!.children[childIndex - 1].getLastOutlineTreenodeInSubtree();
-  }
-
-  /// Returns a [DocumentRange] that spans the entire subtree of this
-  /// [OutlineTreenode], ie. from the first node of this treeNode to the last
-  /// node of the last ancestor.
-  DocumentRange get documentRangeForSubtree {
-    final start = firstDocumentNodeInSubtree;
-    if (start == null) {
-      throw Exception('not a single document node found in subtree');
-    }
-    final end = lastDocumentNodeInSubtree!;
-    return document.getRangeBetween(
-      DocumentPosition(
-        nodeId: start.id,
-        nodePosition: start.beginningPosition,
-      ),
-      DocumentPosition(
-        nodeId: end.id,
-        nodePosition: end.endPosition,
-      ),
-    );
-  }
-
-  /// Returns a [DocumentRange] that spans the subtree of all children of this
-  /// [OutlineTreenode], ie. from the first node of this treeNodes
-  /// first child node to the last node of the last ancestor.
-  DocumentRange get documentRangeForChildren {
-    final start = firstDocumentNodeInChildren;
-    if (start == null) {
-      throw Exception('not a single document node found in subtree');
-    }
-    final end = lastDocumentNodeInChildren!;
-    return document.getRangeBetween(
-      DocumentPosition(
-        nodeId: start.id,
-        nodePosition: start.beginningPosition,
-      ),
-      DocumentPosition(
-        nodeId: end.id,
-        nodePosition: end.endPosition,
-      ),
-    );
   }
 
   /// Returns a flat list of all OutlineTreenodes in this subtree, in depth-first

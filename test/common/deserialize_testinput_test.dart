@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:outline_editor/outline_editor.dart';
+import 'package:outline_editor/src/infrastructure/uuid.dart';
 
 const testInputTestString = '''
 # 1:Dies ist ein TitleNode
@@ -41,7 +42,7 @@ bool isTitleNode(String line) => line.startsWith(titleNodeCharacter);
 }
 
 OutlineTreeDocument deserializeTestInput(String str) {
-  final doc = OutlineTreeDocument();
+  final doc = OutlineTreeDocument(root: OutlineTreenode(id: uuid.v4()));
   final lines = const LineSplitter().convert(str);
   int contentNodeCounter = 0;
   final List<OutlineTreenode> treenodeStack = [doc.root];
@@ -56,7 +57,6 @@ OutlineTreeDocument deserializeTestInput(String str) {
         titleNode: TitleNode(
             id: '${titleNodeData.id}title',
             text: AttributedText(titleNodeData.text)),
-        document: doc,
       );
       if (titleNodeData.depth > treenodeStack.length) {
         throw Exception(
@@ -80,8 +80,9 @@ OutlineTreeDocument deserializeTestInput(String str) {
         contentNodeCounter++;
       } else {
         // this is a continuation to the last ParagraphNode
-        final textNode = (treenodeStack.last.contentNodes.last as TextNode);
-        textNode.text = AttributedText('${textNode.text.toPlainText()}$trline');
+        var textNode = (treenodeStack.last.contentNodes.last as TextNode);
+        textNode = textNode.copyTextNodeWith(
+            text: AttributedText('${textNode.text.toPlainText()}$trline'));
       }
     }
   }

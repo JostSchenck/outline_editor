@@ -26,11 +26,10 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
 
     _scrollController = ScrollController();
 
-    _document = OutlineTreeDocument();
+    _document = OutlineTreeDocument(root: OutlineTreenode(id: 'root'));
     _document.root.addChild(
       OutlineTreenode(
         id: '1',
-        document: _document,
         titleNode: TitleNode(
             id: '1a', text: AttributedText('First Paragraph of a root node')),
         contentNodes: [
@@ -43,7 +42,6 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
         children: [
           OutlineTreenode(
             id: '2',
-            document: _document,
             titleNode: TitleNode(
                 id: '2a', text: AttributedText('This is a child tree node')),
             contentNodes: [
@@ -55,7 +53,6 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
             children: [
               OutlineTreenode(
                 id: '2-1',
-                document: _document,
                 titleNode: TitleNode(
                     id: '2-1a', text: AttributedText('grand child yay')),
                 contentNodes: [
@@ -68,7 +65,6 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
           ),
           OutlineTreenode(
             id: '3',
-            document: _document,
             titleNode:
                 TitleNode(id: '3a', text: AttributedText('And another child')),
             contentNodes: [
@@ -82,7 +78,6 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
     _document.root.addChild(
       OutlineTreenode(
         id: '4',
-        document: _document,
         titleNode: TitleNode(
             id: '4a',
             text: AttributedText('There can be more than one root node')),
@@ -94,7 +89,6 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
         children: [
           OutlineTreenode(
             id: '5',
-            document: _document,
             titleNode: TitleNode(
                 id: '5a', text: AttributedText('This is a child tree node')),
             contentNodes: [
@@ -103,7 +97,6 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
             children: [
               OutlineTreenode(
                 id: '6',
-                document: _document,
                 titleNode: TitleNode(
                     id: '6a', text: AttributedText('grand child yay')),
                 contentNodes: [
