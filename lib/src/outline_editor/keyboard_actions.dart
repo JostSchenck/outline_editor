@@ -269,23 +269,12 @@ ExecutionInstruction enterInOutlineTreeDocument({
   if (textNode is TitleNode) {
     if (textNodePosition.offset == 0) {
       // enter pressed at the start of a title node -- prepend a sibling Treenode
-      final newOutlineTreenode = OutlineTreenode(id: uuid.v4());
       editContext.editor.execute([
         InsertOutlineTreenodeRequest(
           existingTreenode: outlineTreenode.parent!,
-          newTreenode: newOutlineTreenode,
           createChild: true,
           treenodeIndex: outlineTreenode.childIndex,
         ),
-        ChangeSelectionRequest(
-            DocumentSelection.collapsed(
-              position: DocumentPosition(
-                nodeId: newOutlineTreenode.titleNode.id,
-                nodePosition: const TextNodePosition(offset: 0),
-              ),
-            ),
-            SelectionChangeType.insertContent,
-            'inserted new treenode'),
       ]);
       return ExecutionInstruction.haltExecution;
     }
@@ -300,15 +289,6 @@ ExecutionInstruction enterInOutlineTreeDocument({
             documentNode: newParagraphNode,
             outlineTreenode: outlineTreenode,
           ),
-          ChangeSelectionRequest(
-              DocumentSelection.collapsed(
-                position: DocumentPosition(
-                  nodeId: newParagraphNode.id,
-                  nodePosition: const TextNodePosition(offset: 0),
-                ),
-              ),
-              SelectionChangeType.insertContent,
-              'inserted content paragraph'),
         ]);
       } else {
         editContext.editor.execute([
@@ -379,7 +359,6 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
     if (selection.isCollapsed) {
       final parentTreenode =
           outlineDoc.getOutlineTreenodeForDocumentNodeId(selection.base.nodeId);
-      final newTreenode = OutlineTreenode(id: uuid.v4());
 
       editContext.editor.execute([
         if (parentTreenode.isCollapsed)
@@ -387,17 +366,10 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
               treenodeId: parentTreenode.id, isCollapsed: false),
         InsertOutlineTreenodeRequest(
           existingTreenode: parentTreenode,
-          newTreenode: newTreenode,
           createChild: true,
           splitAtDocumentPosition: doSplitParagraph ? selection.base : null,
+          moveCollapsedSelectionToInsertedNode: true,
         ),
-        ChangeSelectionRequest(
-            DocumentSelection.collapsed(
-                position: DocumentPosition(
-                    nodeId: newTreenode.titleNode.id,
-                    nodePosition: const TextNodePosition(offset: 0))),
-            SelectionChangeType.insertContent,
-            'outlinetreenode insertion'),
       ]);
       return ExecutionInstruction.haltExecution;
     }
@@ -405,22 +377,13 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
   }
   if (HardwareKeyboard.instance.isShiftPressed) {
     if (selection.isCollapsed) {
-      final newTreenode = OutlineTreenode(id: uuid.v4());
       editContext.editor.execute([
         InsertOutlineTreenodeRequest(
           existingTreenode: outlineDoc
               .getOutlineTreenodeForDocumentNodeId(selection.base.nodeId),
-          newTreenode: newTreenode,
           createChild: false,
           splitAtDocumentPosition: doSplitParagraph ? selection.base : null,
         ),
-        ChangeSelectionRequest(
-            DocumentSelection.collapsed(
-                position: DocumentPosition(
-                    nodeId: newTreenode.titleNode.id,
-                    nodePosition: const TextNodePosition(offset: 0))),
-            SelectionChangeType.insertContent,
-            'outlinetreenode insertion'),
       ]);
       return ExecutionInstruction.haltExecution;
     }

@@ -47,19 +47,21 @@ class ReparentOutlineTreenodeCommand extends EditCommand {
       return;
     }
     final outlineDoc = context.document as OutlineDocument;
-    final docNodeStartIndexBefore = outlineDoc.getNodeIndexById(childTreenode.titleNode.id);
+    final docNodeStartIndexBefore =
+        outlineDoc.getNodeIndexById(childTreenode.titleNode.id);
 
     childTreenode.parent!.removeChild(childTreenode);
     newParentTreenode.addChild(childTreenode, index);
-    final docNodeStartIndexAfter = outlineDoc.getNodeIndexById(childTreenode.titleNode.id);
+    final docNodeStartIndexAfter =
+        outlineDoc.getNodeIndexById(childTreenode.titleNode.id);
 
     final movedNodes = childTreenode.nodesSubtree;
     executor.logChanges([
-      for (int i=0; i<movedNodes.length; i++)
+      for (int i = 0; i < movedNodes.length; i++)
         DocumentEdit(NodeMovedEvent(
           nodeId: movedNodes[i].id,
-          from: docNodeStartIndexBefore+i,
-          to: docNodeStartIndexAfter+i,
+          from: docNodeStartIndexBefore + i,
+          to: docNodeStartIndexAfter + i,
         )),
     ]);
   }
@@ -111,7 +113,7 @@ class ChangeTreenodeIndentationCommand extends EditCommand {
       executor.executeCommand(ReparentOutlineTreenodeCommand(
         childTreenode: treenode,
         newParentTreenode: parent.parent!,
-        index: parent.childIndex+1,
+        index: parent.childIndex + 1,
       ));
       // context.composer.setSelectionWithReason(selection, 'reset selection after reparenting');
     } else {
@@ -124,14 +126,15 @@ class ChangeTreenodeIndentationCommand extends EditCommand {
         commandLog.info('No moving down in hierarchy, no older sibling');
         return;
       }
-      final newParent = treenode.parent!.children[treenode.childIndex-1];
+      final newParent = treenode.parent!.children[treenode.childIndex - 1];
       final selection = context.composer.selection;
       executor.executeCommand(ReparentOutlineTreenodeCommand(
         childTreenode: treenode,
         newParentTreenode: newParent,
         index: newParent.children.length,
       ));
-      context.composer.setSelectionWithReason(selection, 'reset selection after reparenting');
+      context.composer.setSelectionWithReason(
+          selection, 'reset selection after reparenting');
     }
   }
 }

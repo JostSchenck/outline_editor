@@ -6,10 +6,11 @@ import '../infrastructure/uuid.dart';
 class InsertOutlineTreenodeRequest implements EditRequest {
   InsertOutlineTreenodeRequest({
     required this.existingTreenode,
-    required this.newTreenode,
+    this.newTreenode,
     required this.createChild,
     this.splitAtDocumentPosition,
     this.treenodeIndex = -1,
+    this.moveCollapsedSelectionToInsertedNode = true,
   });
 
   /// The existing node which serves as a reference for the new node, either
@@ -17,7 +18,7 @@ class InsertOutlineTreenodeRequest implements EditRequest {
   final OutlineTreenode existingTreenode;
 
   /// The new node to be inserted.
-  final OutlineTreenode newTreenode;
+  final OutlineTreenode? newTreenode;
 
   /// true, if the new node should be a child of the existing node, false if it
   /// should be a sibling.
@@ -36,14 +37,18 @@ class InsertOutlineTreenodeRequest implements EditRequest {
   /// an illegal document node (like the title document node).
   final DocumentPosition? splitAtDocumentPosition;
 
+  /// Whether after insertion the caret should be moved to position 0 of the
+  /// newly inserted Treenode.
+  final bool moveCollapsedSelectionToInsertedNode;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is InsertOutlineTreenodeRequest &&
-              runtimeType == other.runtimeType &&
-              existingTreenode == other.existingTreenode &&
-              newTreenode == other.newTreenode &&
-              splitAtDocumentPosition == other.splitAtDocumentPosition;
+      other is InsertOutlineTreenodeRequest &&
+          runtimeType == other.runtimeType &&
+          existingTreenode == other.existingTreenode &&
+          newTreenode == other.newTreenode &&
+          splitAtDocumentPosition == other.splitAtDocumentPosition;
 
   @override
   int get hashCode =>
@@ -60,6 +65,7 @@ class InsertOutlineTreenodeCommand extends EditCommand {
     required this.createChild,
     required this.treenodeIndex,
     required this.splitAtDocumentPosition,
+    required this.moveCollapsedSelectionToInsertedNode,
   });
 
   final OutlineTreenode existingNode;
@@ -67,6 +73,7 @@ class InsertOutlineTreenodeCommand extends EditCommand {
   final bool createChild;
   final int treenodeIndex;
   final DocumentPosition? splitAtDocumentPosition;
+  final bool moveCollapsedSelectionToInsertedNode;
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
@@ -115,7 +122,7 @@ class InsertOutlineTreenodeCommand extends EditCommand {
       // the index of the node where the split happens in the list of
       // contentNodes
       final splitContentNodeIndex = existingNode.contentNodes.indexWhere(
-            (e) => e.id == splitAtDocumentPosition!.nodeId,
+        (e) => e.id == splitAtDocumentPosition!.nodeId,
       );
       // index of the first contentNode that will be moved to the new treenode.
       // This may change if we have to split a ParagraphNode.
@@ -135,7 +142,7 @@ class InsertOutlineTreenodeCommand extends EditCommand {
         // We have to split a node in the middle; this can right now only
         // be done in a ParagraphNode.
         if (existingNode.contentNodes[splitContentNodeIndex]
-        is! ParagraphNode) {
+            is! ParagraphNode) {
           throw Exception("Tried splitting a contentNode element that is "
               "not a ParagraphNode. Only ParagraphNodes can be split at the "
               "moment.");
@@ -143,19 +150,18 @@ class InsertOutlineTreenodeCommand extends EditCommand {
         executor.executeCommand(SplitParagraphCommand(
           nodeId: splitAtDocumentPosition!.nodeId,
           splitPosition:
-          splitAtDocumentPosition!.nodePosition as TextNodePosition,
+              splitAtDocumentPosition!.nodePosition as TextNodePosition,
           newNodeId: uuid.v4(),
           replicateExistingMetadata: true,
         ));
         splitStartIndex++;
       }
       // Now move the latter part of the contentNodes to the new treenode
-      final existingTitleNodeIndex = outlineDoc.getNodeIndexById(
-          existingNode.titleNode.id);
+      final existingTitleNodeIndex =
+          outlineDoc.getNodeIndexById(existingNode.titleNode.id);
       while (existingNode.contentNodes.length > splitStartIndex) {
         final nodeId = existingNode.contentNodes[splitStartIndex].id;
-        newNode.contentNodes
-            .add(existingNode.contentNodes[splitStartIndex]);
+        newNode.contentNodes.add(existingNode.contentNodes[splitStartIndex]);
         existingNode.contentNodes.removeAt(splitStartIndex);
         changes.add(DocumentEdit(NodeMovedEvent(
           from: existingTitleNodeIndex + splitStartIndex + 1,
@@ -164,6 +170,19 @@ class InsertOutlineTreenodeCommand extends EditCommand {
         )));
       }
     }
+
+    executor.executeCommand(
+      ChangeSelectionCommand(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: newNode.titleNode.id,
+            nodePosition: const TextNodePosition(offset: 0),
+          ),
+        ),
+        SelectionChangeType.insertContent,
+        'inserted new treenode',
+      ),
+    );
 
     executor.logChanges(changes);
   }

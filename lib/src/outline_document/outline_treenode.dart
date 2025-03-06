@@ -31,13 +31,7 @@ class DocumentNodePath {
 /// a `titleNode` and a list of `contentNodes` that point to [DocumentNodes]
 /// that represent this one Treenode, and a list of other [OutlineTreenode]s
 /// as children.
-///
-/// [OutlineTreenode]s will not persist as objects, but are
-/// broken up into their [DocumentNode]s and added to the underlying
-/// [MutableDocument]. This means that an [OutlineTreenode] should not
-/// contain information apart from its contained documentNodeIds or references
-/// to other tree nodes. To enforce this, this class is `final`.
-final class OutlineTreenode /*extends ChangeNotifier */
+class OutlineTreenode /*extends ChangeNotifier */
     with
         Iterable<DocumentNode> {
   OutlineTreenode({

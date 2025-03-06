@@ -27,6 +27,7 @@ class OutlineEditor extends StatefulWidget {
     this.documentOverlayBuilders = defaultSuperEditorDocumentOverlayBuilders,
     this.documentUnderlayBuilders = const [],
     this.keyboardActions,
+    this.defaultTreenodeBuilder = defaultOutlineTreenodeBuilder,
   });
 
   final ScrollController scrollController;
@@ -39,6 +40,7 @@ class OutlineEditor extends StatefulWidget {
   final List<SuperEditorLayerBuilder> documentOverlayBuilders;
   final List<SuperEditorLayerBuilder> documentUnderlayBuilders;
   final List<DocumentKeyboardAction>? keyboardActions;
+  final TreenodeBuilder defaultTreenodeBuilder;
 
   @override
   State<OutlineEditor> createState() => _OutlineEditorState();
@@ -68,7 +70,10 @@ class _OutlineEditorState extends State<OutlineEditor> {
       documentUnderlayBuilders: widget.documentUnderlayBuilders,
       plugins: {
         OutlineEditorPlugin(
-            editor: widget.editor, documentLayoutKey: _docLayoutKey),
+          editor: widget.editor,
+          documentLayoutKey: _docLayoutKey,
+          defaultTreenodeBuilder: widget.defaultTreenodeBuilder,
+        ),
       },
     );
   }
