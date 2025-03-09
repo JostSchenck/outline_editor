@@ -17,11 +17,13 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
     required this.editor,
     required this.documentLayoutKey,
     this.defaultTreenodeBuilder = defaultOutlineTreenodeBuilder,
-  });
+    List<ComponentBuilder>? componentBuilders,
+  }) : _componentBuilders = componentBuilders;
 
   final Editor editor;
   final GlobalKey documentLayoutKey;
   final TreenodeBuilder defaultTreenodeBuilder;
+  final List<ComponentBuilder>? _componentBuilders;
 
   @override
   void attach(Editor editor) {
@@ -115,8 +117,12 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
   }
 
   @override
-  List<ComponentBuilder> get componentBuilders => [
-        OutlineTitleComponentBuilder(editor: editor),
+  List<ComponentBuilder> get componentBuilders =>
+      _componentBuilders ??
+      [
+        OutlineTitleComponentBuilder(
+          editor: editor,
+        ),
         OutlineParagraphComponentBuilder(editor: editor),
       ];
 

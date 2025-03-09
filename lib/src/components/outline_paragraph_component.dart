@@ -10,7 +10,7 @@ class OutlineParagraphComponentViewModel extends OutlineComponentViewModel
     required this.paragraphComponentViewModel,
     required this.outlineIndentLevel,
     required this.indexInChildren,
-    this.inlineWidgetBuilders = const[],
+    this.inlineWidgetBuilders = const [],
     this.isCollapsed = false, // FIXME: sollte nur in Title implementiert werden
     this.isVisible = true,
     this.hasChildren = false,
@@ -121,9 +121,13 @@ class OutlineParagraphComponentViewModel extends OutlineComponentViewModel
 class OutlineParagraphComponentBuilder implements ComponentBuilder {
   const OutlineParagraphComponentBuilder({
     required this.editor,
+    this.leadingControlsBuilder,
+    this.topControlsBuilder,
   });
 
   final Editor editor;
+  final SideControlsBuilder? leadingControlsBuilder;
+  final TopControlsBuilder? topControlsBuilder;
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
@@ -145,8 +149,10 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
       paragraphComponentViewModel: paragraphViewModel,
       outlineIndentLevel: outlineDoc.getTreenodeDepth(node.id),
       indexInChildren: outlineDoc.getIndexInChildren(node.id),
-      hasChildren:
-          outlineDoc.getOutlineTreenodeForDocumentNodeId(node.id).children.isNotEmpty,
+      hasChildren: outlineDoc
+          .getOutlineTreenodeForDocumentNodeId(node.id)
+          .children
+          .isNotEmpty,
       isCollapsed: outlineDoc.isCollapsed(node.id),
       isVisible: outlineDoc.isVisible(node.id),
     );
@@ -161,6 +167,17 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
       key: componentContext.componentKey,
       viewModel: componentViewModel as OutlineParagraphComponentViewModel,
       editor: editor,
+      leadingControlsBuilder: leadingControlsBuilder ??
+          (BuildContext context, int indexInChildren) {
+            if (indexInChildren == 0) {
+              return CollapseExpandButton(
+                editor: editor,
+                docNodeId: componentViewModel.nodeId,
+              );
+            }
+            return null;
+          },
+      topControlsBuilder: topControlsBuilder,
     );
   }
 }
@@ -170,6 +187,10 @@ class OutlineParagraphComponent extends OutlineComponent {
     super.key,
     required this.viewModel,
     required this.editor,
+    super.leadingControlsBuilder,
+    super.topControlsBuilder,
+    super.indentPerLevel,
+    super.minimumIndent,
   }) : super(outlineComponentViewModel: viewModel);
 
   final OutlineParagraphComponentViewModel viewModel;
@@ -218,16 +239,5 @@ class _OutlineParagraphComponentState
       textDirection: widget.viewModel.paragraphComponentViewModel.textDirection,
       showDebugPaint: false,
     );
-  }
-
-  @override
-  Widget? buildControls(BuildContext context, int indexInChildren) {
-    if (indexInChildren==0) {
-      return CollapseExpandButton(
-        editor: widget.editor,
-        viewModel: widget.viewModel,
-      );
-    }
-    return null;
   }
 }

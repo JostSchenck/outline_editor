@@ -156,9 +156,13 @@ class OutlineTitleComponentViewModel extends OutlineComponentViewModel
 class OutlineTitleComponentBuilder implements ComponentBuilder {
   const OutlineTitleComponentBuilder({
     required this.editor,
+    this.leadingControlsBuilder,
+    this.topControlsBuilder,
   });
 
   final Editor editor;
+  final SideControlsBuilder? leadingControlsBuilder;
+  final TopControlsBuilder? topControlsBuilder;
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
@@ -202,6 +206,17 @@ class OutlineTitleComponentBuilder implements ComponentBuilder {
       key: componentContext.componentKey,
       viewModel: componentViewModel,
       editor: editor,
+      leadingControlsBuilder: leadingControlsBuilder ??
+          (BuildContext context, int indexInChildren) {
+            if (indexInChildren == 0) {
+              return CollapseExpandButton(
+                editor: editor,
+                docNodeId: componentViewModel.nodeId,
+              );
+            }
+            return null;
+          },
+      topControlsBuilder: topControlsBuilder,
     );
   }
 }
@@ -211,16 +226,22 @@ class OutlineTitleComponent extends OutlineComponent {
     super.key,
     required this.viewModel,
     required this.editor,
-  }) : super(outlineComponentViewModel: viewModel);
+    super.leadingControlsBuilder,
+    super.topControlsBuilder,
+    super.indentPerLevel,
+    super.minimumIndent,
+  }) : super(
+          outlineComponentViewModel: viewModel,
+        );
 
   final OutlineTitleComponentViewModel viewModel;
   final Editor editor;
 
   @override
-  State createState() => _OutlineParagraphComponentState();
+  State createState() => _OutlineTitleComponentState();
 }
 
-class _OutlineParagraphComponentState
+class _OutlineTitleComponentState
     extends OutlineComponentState<OutlineTitleComponent>
     with ProxyDocumentComponent<OutlineTitleComponent>, ProxyTextComposable {
   final _textKey = GlobalKey();
@@ -239,7 +260,9 @@ class _OutlineParagraphComponentState
       text: widget.viewModel.text,
       textStyleBuilder: widget.viewModel.textStyleBuilder,
       textAlign: widget.viewModel.textAlignment,
-      metadata: const {},
+      metadata: {
+        'blockType': NamedAttribution('title'),
+      },
       textSelection: widget.viewModel.selection,
       selectionColor: widget.viewModel.selectionColor,
       highlightWhenEmpty: widget.viewModel.highlightWhenEmpty,
@@ -249,14 +272,25 @@ class _OutlineParagraphComponentState
     );
   }
 
-  @override
-  Widget? buildControls(BuildContext context, int indexInChildren) {
-    if (indexInChildren == 0) {
-      return CollapseExpandButton(
-        editor: widget.editor,
-        viewModel: widget.viewModel,
-      );
-    }
-    return null;
-  }
+  // @override
+  // Widget? buildTopControls(BuildContext context) {
+  //   if (widget.topControlsBuilder == null) {
+  //     return null;
+  //   } else {
+  //     return widget.topControlsBuilder!(
+  //       context,
+  //     );
+  //   }
+  // }
+
+  // @override
+  // Widget? buildLeadingControls(BuildContext context, int indexInChildren) {
+  //   if (indexInChildren == 0) {
+  //     return CollapseExpandButton(
+  //       editor: widget.editor,
+  //       docNodeId: widget.viewModel.nodeId,
+  //     );
+  //   }
+  //   return null;
+  // }
 }

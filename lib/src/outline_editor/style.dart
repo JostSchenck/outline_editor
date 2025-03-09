@@ -6,10 +6,11 @@ var defaultOutlineEditorStylesheet = defaultStylesheet.copyWith(
   rules: [
     StyleRule(
       BlockSelector.all,
-          (doc, docNode) {
+      (doc, docNode) {
         return {
           Styles.maxWidth: 640.0,
-          Styles.padding: const CascadingPadding.symmetric(vertical:8, horizontal: 0),
+          Styles.padding:
+              const CascadingPadding.symmetric(vertical: 8, horizontal: 0),
           Styles.textStyle: const TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -22,7 +23,7 @@ var defaultOutlineEditorStylesheet = defaultStylesheet.copyWith(
     StyleRule(const BlockSelector('title'), (doc, docNode) {
       return {
         Styles.maxWidth: 640.0,
-        Styles.padding: const CascadingPadding.only(top: 16, bottom: 8),
+        Styles.padding: const CascadingPadding.only(top: 20, bottom: 8),
         Styles.textStyle: const TextStyle(
           fontStyle: FontStyle.italic,
           color: Colors.black26,

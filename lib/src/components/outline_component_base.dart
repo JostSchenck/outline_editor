@@ -1,8 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/components/component_animations.dart';
-
-const double indentPerLevel = 30;
 
 abstract class OutlineComponentViewModel
     extends SingleColumnLayoutComponentViewModel {
@@ -33,6 +32,10 @@ abstract class OutlineComponentViewModel
   set isCollapsed(bool isFolded);
 }
 
+typedef SideControlsBuilder = Widget? Function(
+    BuildContext context, int indexInChildren);
+typedef TopControlsBuilder = Widget? Function(BuildContext context);
+
 /// Components to be used in an outline editor extend this class that is
 /// passed an OutlineComponentViewModel (usually their own view model) that
 /// gives information on folding state and indent.
@@ -40,9 +43,17 @@ abstract class OutlineComponent extends StatefulWidget {
   const OutlineComponent({
     super.key,
     required this.outlineComponentViewModel,
+    this.leadingControlsBuilder,
+    this.topControlsBuilder,
+    this.indentPerLevel = 30,
+    this.minimumIndent = 0,
   });
 
   final OutlineComponentViewModel outlineComponentViewModel;
+  final SideControlsBuilder? leadingControlsBuilder;
+  final TopControlsBuilder? topControlsBuilder;
+  final double indentPerLevel;
+  final double minimumIndent;
 }
 
 /// Base class for state classes for classes derived from
@@ -51,7 +62,6 @@ abstract class OutlineComponent extends StatefulWidget {
 /// `buildWrappedComponent` and optionally `buildControls`.
 abstract class OutlineComponentState<T extends OutlineComponent>
     extends State<T> with TickerProviderStateMixin {
-
   @override
   void initState() {
     super.initState();
@@ -62,41 +72,67 @@ abstract class OutlineComponentState<T extends OutlineComponent>
   /// instead of overriding `build`.
   Widget buildWrappedComponent(BuildContext context);
 
-  /// Builds control widgets that are to be shown to the left of the component.
-  /// If this is not overridden or null returned, no controls will be shown.
-  Widget? buildControls(BuildContext context, int indexInChildren) => null;
+  double _indentWidth() =>
+      widget.minimumIndent +
+      widget.indentPerLevel *
+          (widget.outlineComponentViewModel.outlineIndentLevel.toDouble() + 1);
 
   // this must not be overridden by components using this mixin
   @override
   Widget build(BuildContext context) {
-    final controls = buildControls(context, widget.outlineComponentViewModel.indexInChildren);
+    final leadingControls = widget.leadingControlsBuilder != null
+        ? widget.leadingControlsBuilder!(
+            context, widget.outlineComponentViewModel.indexInChildren)
+        : null;
+    final topControls = widget.topControlsBuilder != null
+        ? widget.topControlsBuilder!(context)
+        : null;
+    // final trailingControls = buildTrailingControls(
+    //     context, widget.outlineComponentViewModel.indexInChildren);
     return AnimatedVisibility(
       visible: widget.outlineComponentViewModel.isVisible,
       axis: Axis.vertical,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        // mainAxisSize: MainAxisSize.min,
+      child: Column(
         children: [
-          // Indent on start side
-          SizedBox(
-            width: indentPerLevel *
-                (widget.outlineComponentViewModel.outlineIndentLevel
-                        .toDouble() +
-                    1),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+          if (topControls != null)
+            Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (controls != null) controls,
+                SizedBox(
+                  width: _indentWidth(),
+                ),
+                Expanded(child: topControls),
               ],
             ),
-          ),
-          Expanded(
-            child: buildWrappedComponent(context),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            // mainAxisSize: MainAxisSize.min,
+            children: [
+              // Indent on start side
+              SizedBox(
+                width: _indentWidth(),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (leadingControls != null) leadingControls,
+                  ],
+                ),
+              ),
+              Expanded(
+                child: buildWrappedComponent(context),
+              ),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.start,
+              //   crossAxisAlignment: CrossAxisAlignment.center,
+              //   children: [
+              //     if (trailingControls != null) trailingControls,
+              //   ],
+              // ),
+            ],
           ),
         ],
       ),
     );
   }
 }
-

@@ -9,7 +9,10 @@ export 'src/commands/reparent_outlinetreenode.dart';
 export 'src/commands/change_collapsed_state.dart';
 export 'src/commands/delete_outline_treenode.dart';
 
+export 'src/components/collapse_expand_button.dart';
+export 'src/components/outline_component_base.dart';
 export 'src/components/outline_title_component.dart';
+export 'src/components/outline_paragraph_component.dart';
 export 'src/outline_document/outline_document.dart';
 export 'src/outline_document/outline_tree_document.dart';
 export 'src/outline_document/outline_treenode.dart';
