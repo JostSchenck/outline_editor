@@ -207,11 +207,11 @@ class OutlineTitleComponentBuilder implements ComponentBuilder {
       viewModel: componentViewModel,
       editor: editor,
       leadingControlsBuilder: leadingControlsBuilder ??
-          (BuildContext context, int indexInChildren) {
+          (context, editor, nodeId, indexInChildren) {
             if (indexInChildren == 0) {
               return CollapseExpandButton(
                 editor: editor,
-                docNodeId: componentViewModel.nodeId,
+                docNodeId: nodeId,
               );
             }
             return null;
@@ -225,7 +225,7 @@ class OutlineTitleComponent extends OutlineComponent {
   const OutlineTitleComponent({
     super.key,
     required this.viewModel,
-    required this.editor,
+    required super.editor,
     super.leadingControlsBuilder,
     super.topControlsBuilder,
     super.indentPerLevel,
@@ -235,7 +235,6 @@ class OutlineTitleComponent extends OutlineComponent {
         );
 
   final OutlineTitleComponentViewModel viewModel;
-  final Editor editor;
 
   @override
   State createState() => _OutlineTitleComponentState();

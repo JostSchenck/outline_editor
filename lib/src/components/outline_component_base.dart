@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:outline_editor/outline_editor.dart';
-import 'package:outline_editor/src/components/component_animations.dart';
 
 abstract class OutlineComponentViewModel
     extends SingleColumnLayoutComponentViewModel {
@@ -33,8 +32,9 @@ abstract class OutlineComponentViewModel
 }
 
 typedef SideControlsBuilder = Widget? Function(
-    BuildContext context, int indexInChildren);
-typedef TopControlsBuilder = Widget? Function(BuildContext context);
+    BuildContext context, Editor editor, String nodeId, int indexInChildren);
+typedef TopControlsBuilder = Widget? Function(
+    BuildContext context, Editor editor, String nodeId);
 
 /// Components to be used in an outline editor extend this class that is
 /// passed an OutlineComponentViewModel (usually their own view model) that
@@ -43,6 +43,7 @@ abstract class OutlineComponent extends StatefulWidget {
   const OutlineComponent({
     super.key,
     required this.outlineComponentViewModel,
+    required this.editor,
     this.leadingControlsBuilder,
     this.topControlsBuilder,
     this.indentPerLevel = 30,
@@ -50,6 +51,7 @@ abstract class OutlineComponent extends StatefulWidget {
   });
 
   final OutlineComponentViewModel outlineComponentViewModel;
+  final Editor editor;
   final SideControlsBuilder? leadingControlsBuilder;
   final TopControlsBuilder? topControlsBuilder;
   final double indentPerLevel;
@@ -82,10 +84,14 @@ abstract class OutlineComponentState<T extends OutlineComponent>
   Widget build(BuildContext context) {
     final leadingControls = widget.leadingControlsBuilder != null
         ? widget.leadingControlsBuilder!(
-            context, widget.outlineComponentViewModel.indexInChildren)
+            context,
+            widget.editor,
+            widget.outlineComponentViewModel.nodeId,
+            widget.outlineComponentViewModel.indexInChildren)
         : null;
     final topControls = widget.topControlsBuilder != null
-        ? widget.topControlsBuilder!(context)
+        ? widget.topControlsBuilder!(
+            context, widget.editor, widget.outlineComponentViewModel.nodeId)
         : null;
     // final trailingControls = buildTrailingControls(
     //     context, widget.outlineComponentViewModel.indexInChildren);

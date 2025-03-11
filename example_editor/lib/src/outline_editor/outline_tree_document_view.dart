@@ -111,8 +111,8 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
       ),
     );
     _composer = MutableDocumentComposer();
-    _editor =
-        createDefaultDocumentEditor(document: _document, composer: _composer);
+    _editor = createDefaultOutlineDocumentEditor(
+        document: _document, composer: _composer);
     _editorFocusNode = FocusNode();
     _docLayoutKey = GlobalKey();
   }

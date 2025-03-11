@@ -1,10 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/commands/move_outline_treenode.dart';
 import 'package:outline_editor/src/infrastructure/uuid.dart';
 import 'package:outline_editor/src/outline_editor/keyboard_actions.dart';
 import 'package:outline_editor/src/reactions/node_visibility_reaction.dart';
-import 'package:outline_editor/src/components/outline_paragraph_component.dart';
-import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/reactions/outline_selection_reaction.dart';
 
 typedef TreenodeBuilder = OutlineTreenode Function({String? id});
@@ -18,12 +17,14 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
     required this.documentLayoutKey,
     this.defaultTreenodeBuilder = defaultOutlineTreenodeBuilder,
     List<ComponentBuilder>? componentBuilders,
+    this.addRequestHandlers = const [],
   }) : _componentBuilders = componentBuilders;
 
   final Editor editor;
   final GlobalKey documentLayoutKey;
   final TreenodeBuilder defaultTreenodeBuilder;
   final List<ComponentBuilder>? _componentBuilders;
+  final List<EditRequestHandler> addRequestHandlers;
 
   @override
   void attach(Editor editor) {
@@ -102,6 +103,7 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
                 treenode: request.treenode,
                 moveUpInHierarchy: request.moveUpInHierarchy)
             : null,
+        ...addRequestHandlers,
       ],
     );
   }

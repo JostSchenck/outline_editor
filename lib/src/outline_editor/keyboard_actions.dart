@@ -289,6 +289,15 @@ ExecutionInstruction enterInOutlineTreeDocument({
             documentNode: newParagraphNode,
             outlineTreenode: outlineTreenode,
           ),
+          ChangeSelectionRequest(
+              DocumentSelection.collapsed(
+                position: DocumentPosition(
+                  nodeId: newParagraphNode.id,
+                  nodePosition: const TextNodePosition(offset: 0),
+                ),
+              ),
+              SelectionChangeType.insertContent,
+              'jumped to content')
         ]);
       } else {
         editContext.editor.execute([

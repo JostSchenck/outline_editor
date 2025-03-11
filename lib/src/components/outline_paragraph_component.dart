@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:outline_editor/src/components/collapse_expand_button.dart';
-import 'package:outline_editor/src/components/outline_component_base.dart';
 import 'package:outline_editor/outline_editor.dart';
 
 class OutlineParagraphComponentViewModel extends OutlineComponentViewModel
@@ -168,11 +166,11 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
       viewModel: componentViewModel as OutlineParagraphComponentViewModel,
       editor: editor,
       leadingControlsBuilder: leadingControlsBuilder ??
-          (BuildContext context, int indexInChildren) {
+          (context, editor, nodeId, indexInChildren) {
             if (indexInChildren == 0) {
               return CollapseExpandButton(
                 editor: editor,
-                docNodeId: componentViewModel.nodeId,
+                docNodeId: nodeId,
               );
             }
             return null;
@@ -186,7 +184,7 @@ class OutlineParagraphComponent extends OutlineComponent {
   const OutlineParagraphComponent({
     super.key,
     required this.viewModel,
-    required this.editor,
+    required super.editor,
     super.leadingControlsBuilder,
     super.topControlsBuilder,
     super.indentPerLevel,
@@ -194,7 +192,6 @@ class OutlineParagraphComponent extends OutlineComponent {
   }) : super(outlineComponentViewModel: viewModel);
 
   final OutlineParagraphComponentViewModel viewModel;
-  final Editor editor;
 
   @override
   State createState() => _OutlineParagraphComponentState();
