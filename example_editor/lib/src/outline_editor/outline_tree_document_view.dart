@@ -26,7 +26,8 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
 
     _scrollController = ScrollController();
 
-    _document = OutlineTreeDocument(root: OutlineTreenode(id: 'root'));
+    _document =
+        OutlineTreeDocument(treenodeBuilder: defaultOutlineTreenodeBuilder);
     _document.root.addChild(
       OutlineTreenode(
         id: '1',

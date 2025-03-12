@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:outline_editor/src/outline_editor/outline_editor_plugin.dart';
-import 'package:outline_editor/src/outline_editor/style.dart';
-import 'package:super_editor/super_editor.dart';
+import 'package:outline_editor/outline_editor.dart';
 
 /// [OutlineEditor] wraps a [SuperEditor] widget with settings for a
 /// "folding" text editing experience, like in outliners. In addition to

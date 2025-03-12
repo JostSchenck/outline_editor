@@ -30,7 +30,7 @@ bool _deleteSelectedTreenodes(OutlineTreeDocument outlineDoc,
         flatList.sublist(min(index1, index2), max(index1, index2) + 1).reversed;
     final parent = deleteList.last.parent!;
     final childIndex = deleteList.last.childIndex;
-    final newEmptyNode = OutlineTreenode(id: uuid.v4());
+    final newEmptyNode = outlineDoc.treenodeBuilder(id: uuid.v4());
     editContext.editor.execute([
       ...deleteList.map((treenode) =>
           DeleteOutlineTreenodeRequest(outlineTreenode: treenode)),

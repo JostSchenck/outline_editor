@@ -4,18 +4,34 @@ import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/infrastructure/uuid.dart';
 import 'package:outline_editor/src/util/logging.dart';
 
+typedef TreenodeBuilder = OutlineTreenode Function({
+  String? id,
+  TitleNode? titleNode,
+  List<DocumentNode>? contentNodes,
+});
+
+OutlineTreenode defaultOutlineTreenodeBuilder({
+  String? id,
+  TitleNode? titleNode,
+  List<DocumentNode>? contentNodes,
+}) =>
+    OutlineTreenode(
+      id: id ?? uuid.v4(),
+      contentNodes: contentNodes ?? [],
+      titleNode: titleNode ??
+          TitleNode(
+            id: uuid.v4(),
+            text: AttributedText(''),
+          ),
+    );
+
 class OutlineTreeDocument<T extends OutlineTreenode>
     with OutlineDocument<T>, Iterable<DocumentNode>
     implements MutableDocument {
-  OutlineTreeDocument({required T root}) : _root = root;
-  // {
-  //   _root = root ??
-  //       T(
-  //         id: 'root',
-  //         document: this,
-  //         children: [],
-  //       );
-  // }
+  OutlineTreeDocument({required this.treenodeBuilder})
+      : _root = treenodeBuilder(id: 'root') as T;
+
+  final TreenodeBuilder treenodeBuilder;
 
   @override
   void dispose() {
@@ -221,7 +237,7 @@ class OutlineTreeDocument<T extends OutlineTreenode>
       final lastTreenode = _root.getLastOutlineTreenodeInSubtree();
       if (node is TitleNode) {
         // a TitleNode always starts a new OutlineTreenode
-        (lastTreenode.parent!.addChild(OutlineTreenode(
+        (lastTreenode.parent!.addChild(treenodeBuilder(
           id: uuid.v4(),
           contentNodes: [node],
         )));
@@ -250,7 +266,7 @@ class OutlineTreeDocument<T extends OutlineTreenode>
         // such programmatically, we try to do something sensible and just
         // add a sibling.
         treenode.parent?.addChild(
-            OutlineTreenode(
+            treenodeBuilder(
               id: uuid.v4(),
               contentNodes: [node],
             ),
@@ -264,7 +280,7 @@ class OutlineTreeDocument<T extends OutlineTreenode>
     // a TitleNode, this effectively means splitting our OutlineTreenode, else
     // it means just inserting.
     if (node is TitleNode) {
-      final newNode = OutlineTreenode(
+      final newNode = treenodeBuilder(
         id: uuid.v4(),
         contentNodes: treenode.contentNodes.sublist(
           // minus 1, as a 0 path always points to the title node

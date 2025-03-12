@@ -74,7 +74,7 @@ class OutlineTreenode /*extends ChangeNotifier */
   late Map<String, dynamic> _metadata;
 
 // TODO: test
-  void traverseUpDown(void Function(OutlineTreenode) visitor) {
+  void traverseUpDown(void Function(OutlineTreenode treenode) visitor) {
     visitor(this);
     for (var child in _children) {
       child.traverseUpDown(visitor);
@@ -82,7 +82,7 @@ class OutlineTreenode /*extends ChangeNotifier */
   }
 
 // TODO: test
-  void traverseDownUp(void Function(OutlineTreenode) visitor) {
+  void traverseDownUp(void Function(OutlineTreenode treenode) visitor) {
     for (var child in _children) {
       child.traverseDownUp(visitor);
     }
