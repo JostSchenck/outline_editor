@@ -16,10 +16,10 @@ class MoveOutlineTreenodeRequest implements EditRequest {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is MoveOutlineTreenodeRequest &&
-              runtimeType == other.runtimeType &&
-              treenode == other.treenode &&
-              path == other.path;
+      other is MoveOutlineTreenodeRequest &&
+          runtimeType == other.runtimeType &&
+          treenode == other.treenode &&
+          path == other.path;
 
   @override
   int get hashCode => super.hashCode ^ treenode.hashCode ^ path.hashCode;
@@ -35,6 +35,9 @@ class MoveOutlineTreenodeCommand extends EditCommand {
   final TreenodePath path;
 
   @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
   void execute(EditContext context, CommandExecutor executor) {
     commandLog.fine(
         'executing MoveOutlineTreenodeCommand, moving $treenode to path $path');
@@ -47,8 +50,10 @@ class MoveOutlineTreenodeCommand extends EditCommand {
 
     final oldStartIndex = outlineDoc.getNodeIndexById(treenode.nodes.first.id);
     treenode.parent!.removeChild(treenode);
-    final newParent = path.length == 1 ? outlineDoc.root : outlineDoc.root
-        .getOutlineTreenodeByPath(path.sublist(0, path.length - 1));
+    final newParent = path.length == 1
+        ? outlineDoc.root
+        : outlineDoc.root
+            .getOutlineTreenodeByPath(path.sublist(0, path.length - 1));
     newParent!.addChild(treenode, path.last);
     final newStartIndex = outlineDoc.getNodeIndexById(treenode.nodes.first.id);
 

@@ -39,6 +39,9 @@ class MoveDocumentNodeIntoTreenodeCommand extends EditCommand {
   final int index;
 
   @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
   void execute(EditContext context, CommandExecutor executor) {
     commandLog.fine(
         'executing MoveDocumentNodeIntoTreenodeCommand, moving $documentNode to OutlineTreenode $outlineTreenode');

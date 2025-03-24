@@ -202,7 +202,8 @@ class _OutlineParagraphComponentState
     with
         ProxyDocumentComponent<OutlineParagraphComponent>,
         ProxyTextComposable {
-  final _textKey = GlobalKey();
+  final _textKey =
+      GlobalKey(debugLabel: '_OutlineParagraphComponentState._textKey');
 
   @override
   GlobalKey<State<StatefulWidget>> get childDocumentComponentKey => _textKey;

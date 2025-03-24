@@ -8,6 +8,26 @@ import 'package:outline_editor/src/reactions/outline_selection_reaction.dart';
 import 'package:outline_editor/src/util/logging.dart';
 // parts copied from super_editor LICENSE
 
+/// Undoes the most recent change within the [Editor].
+ExecutionInstruction undoWhenCmdZOrCtrlZIsPressed({
+  required SuperEditorContext editContext,
+  required KeyEvent keyEvent,
+}) {
+  if (keyEvent is! KeyDownEvent && keyEvent is! KeyRepeatEvent) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  if (keyEvent.logicalKey != LogicalKeyboardKey.keyZ ||
+      !keyEvent.isPrimaryShortcutKeyPressed ||
+      HardwareKeyboard.instance.isShiftPressed) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  editContext.editor.undo();
+
+  return ExecutionInstruction.haltExecution;
+}
+
 /// delete treenodes, if the selection spans whole treenodes; if not, return
 /// false, so the calling action can decide on passing on or halting.
 bool _deleteSelectedTreenodes(OutlineTreeDocument outlineDoc,
@@ -377,6 +397,7 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
           existingTreenode: parentTreenode,
           createChild: true,
           splitAtDocumentPosition: doSplitParagraph ? selection.base : null,
+          // newDocumentNodeId: uuid.v4(),
           moveCollapsedSelectionToInsertedNode: true,
         ),
       ]);
@@ -392,6 +413,7 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
               .getOutlineTreenodeForDocumentNodeId(selection.base.nodeId),
           createChild: false,
           splitAtDocumentPosition: doSplitParagraph ? selection.base : null,
+          // newDocumentNodeId: uuid.v4(),
         ),
       ]);
       return ExecutionInstruction.haltExecution;

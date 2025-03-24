@@ -43,6 +43,9 @@ class InsertDocumentNodeInTreenodeContentCommand extends EditCommand {
   final int index;
 
   @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
   void execute(EditContext context, CommandExecutor executor) {
     commandLog.fine(
         'executing InsertDocumentNodeInTreenodeContentCommand, inserting $documentNode in $outlineTreenode');
@@ -51,12 +54,12 @@ class InsertDocumentNodeInTreenodeContentCommand extends EditCommand {
         index == -1 ? outlineTreenode.contentNodes.length : index,
         documentNode);
     executor.logChanges([
-        DocumentEdit(
-          NodeInsertedEvent(
-            documentNode.id,
-            outlineDoc.getNodeIndexById(documentNode.id),
-          ),
+      DocumentEdit(
+        NodeInsertedEvent(
+          documentNode.id,
+          outlineDoc.getNodeIndexById(documentNode.id),
         ),
+      ),
     ]);
   }
 }

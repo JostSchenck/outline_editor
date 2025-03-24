@@ -28,8 +28,10 @@ OutlineTreenode defaultOutlineTreenodeBuilder({
 class OutlineTreeDocument<T extends OutlineTreenode>
     with OutlineDocument<T>, Iterable<DocumentNode>
     implements MutableDocument {
-  OutlineTreeDocument({required this.treenodeBuilder})
-      : _root = treenodeBuilder(id: 'root') as T;
+  OutlineTreeDocument({required this.treenodeBuilder, T? root})
+      : _root = root ?? treenodeBuilder(id: 'root') as T {
+    _resetRoot = _root.deepCopy() as T;
+  }
 
   final TreenodeBuilder treenodeBuilder;
 
@@ -49,6 +51,7 @@ class OutlineTreeDocument<T extends OutlineTreenode>
   }
 
   late T _root;
+  late T _resetRoot;
 
   final _listeners = <DocumentChangeListener>[];
   late final T _latestNodeSnapshot;
@@ -236,11 +239,15 @@ class OutlineTreeDocument<T extends OutlineTreenode>
       // Node is appended at the end of the document. Easy:
       final lastTreenode = _root.getLastOutlineTreenodeInSubtree();
       if (node is TitleNode) {
-        // a TitleNode always starts a new OutlineTreenode
-        (lastTreenode.parent!.addChild(treenodeBuilder(
-          id: uuid.v4(),
-          contentNodes: [node],
-        )));
+        throw Exception('A TitleNode must not be inserted using insertNodeXXX'
+            ' methods; instead, a Treenode must be inserted explicitly');
+        // // a TitleNode always starts a new OutlineTreenode
+        // Implicitly creating a Treenode would corrupt our undo history, as
+        // the generated uuid makes this call indeterministic.
+        // (lastTreenode.parent!.addChild(treenodeBuilder(
+        //   id: uuid.v4(),
+        //   contentNodes: [node],
+        // )));
       } else {
         lastTreenode.contentNodes.add(node);
       }
@@ -261,16 +268,20 @@ class OutlineTreeDocument<T extends OutlineTreenode>
       // A TitleNode is always the first DocumentNode in an OutlineTreenode.
       // This means we can not add to treenode, but must prepend to it.
       if (node is TitleNode) {
-        // Every TitleNode must correspond to an OutlineTreenode, so we have
-        // to insert one now. While new OutlineTreenodes should be inserted as
-        // such programmatically, we try to do something sensible and just
-        // add a sibling.
-        treenode.parent?.addChild(
-            treenodeBuilder(
-              id: uuid.v4(),
-              contentNodes: [node],
-            ),
-            treenode.childIndex);
+        throw Exception('A TitleNode must not be inserted using insertNodeXXX'
+            ' methods; instead, a Treenode must be inserted explicitly');
+        // // Every TitleNode must correspond to an OutlineTreenode, so we have
+        // // to insert one now. While new OutlineTreenodes should be inserted as
+        // // such programmatically, we try to do something sensible and just
+        // // add a sibling.
+        // // Implicitly creating a Treenode would corrupt our undo history, as
+        // // the generated uuid makes this call indeterministic.
+        // treenode.parent?.addChild(
+        //     treenodeBuilder(
+        //       id: uuid.v4(),
+        //       contentNodes: [node],
+        //     ),
+        //     treenode.childIndex);
       } else {
         treenode.outlineTreenodeBefore.contentNodes.add(node);
       }
@@ -280,17 +291,21 @@ class OutlineTreeDocument<T extends OutlineTreenode>
     // a TitleNode, this effectively means splitting our OutlineTreenode, else
     // it means just inserting.
     if (node is TitleNode) {
-      final newNode = treenodeBuilder(
-        id: uuid.v4(),
-        contentNodes: treenode.contentNodes.sublist(
-          // minus 1, as a 0 path always points to the title node
-          path.docNodeIndex - 1,
-        ),
-      );
-      treenode.parent!.addChild(newNode, treenode.childIndex + 1);
-      // minus 1, as a 0 path always points to the title node
-      treenode.contentNodes
-          .removeRange(path.docNodeIndex - 1, treenode.contentNodes.length);
+      throw Exception('A TitleNode must not be inserted using insertNodeXXX'
+          ' methods; instead, a Treenode must be inserted explicitly');
+      // // Implicitly creating a Treenode would corrupt our undo history, as
+      // // the generated uuid makes this call indeterministic.
+      // final newNode = treenodeBuilder(
+      //   id: uuid.v4(),
+      //   contentNodes: treenode.contentNodes.sublist(
+      //     // minus 1, as a 0 path always points to the title node
+      //     path.docNodeIndex - 1,
+      //   ),
+      // );
+      // treenode.parent!.addChild(newNode, treenode.childIndex + 1);
+      // // minus 1, as a 0 path always points to the title node
+      // treenode.contentNodes
+      //     .removeRange(path.docNodeIndex - 1, treenode.contentNodes.length);
     } else {
       // minus 1, as a 0 path always points to the title node
       treenode.contentNodes.insert(path.docNodeIndex - 1, node);
@@ -411,6 +426,8 @@ class OutlineTreeDocument<T extends OutlineTreenode>
   @override
   void reset() {
     // TODO: implement reset
+    _root = _resetRoot.deepCopy() as T;
+    _didReset = true;
   }
 
   @override

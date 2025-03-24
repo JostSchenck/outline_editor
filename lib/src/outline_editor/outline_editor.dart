@@ -50,7 +50,8 @@ class _OutlineEditorState extends State<OutlineEditor> {
   @override
   void initState() {
     super.initState();
-    _docLayoutKey = widget.documentLayoutKey ?? GlobalKey();
+    _docLayoutKey = widget.documentLayoutKey ??
+        GlobalKey(debugLabel: '_OutlineEditorState._docLayoutKey');
   }
 
   @override

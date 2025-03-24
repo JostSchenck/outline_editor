@@ -1,7 +1,6 @@
 import 'package:outline_editor/outline_editor.dart';
+import 'package:outline_editor/src/infrastructure/uuid.dart';
 import 'package:outline_editor/src/util/logging.dart';
-
-import '../infrastructure/uuid.dart';
 
 class InsertOutlineTreenodeRequest implements EditRequest {
   InsertOutlineTreenodeRequest({
@@ -10,6 +9,7 @@ class InsertOutlineTreenodeRequest implements EditRequest {
     required this.createChild,
     this.splitAtDocumentPosition,
     this.treenodeIndex = -1,
+    // this.newDocumentNodeId,
     this.moveCollapsedSelectionToInsertedNode = true,
   });
 
@@ -36,6 +36,12 @@ class InsertOutlineTreenodeRequest implements EditRequest {
   /// will throw if `splitAtDocumentPosition` lies in another treenode or in
   /// an illegal document node (like the title document node).
   final DocumentPosition? splitAtDocumentPosition;
+
+  /// Node id to be used if `splitAtDocumentPosition` is true. As
+  /// for undo-History every command must be completely deterministic, this
+  /// means the command must not generate a new node id, so the a potential
+  /// node id must be created by the caller.
+  // final String? newDocumentNodeId;
 
   /// Whether after insertion the caret should be moved to position 0 of the
   /// newly inserted Treenode.
@@ -65,15 +71,24 @@ class InsertOutlineTreenodeCommand extends EditCommand {
     required this.createChild,
     required this.treenodeIndex,
     required this.splitAtDocumentPosition,
+    // required this.newDocumentNodeId,
     required this.moveCollapsedSelectionToInsertedNode,
-  });
+  }) {
+    if (splitAtDocumentPosition != null) {
+      newDocumentNodeId = uuid.v4();
+    }
+  }
 
   final OutlineTreenode existingNode;
   final OutlineTreenode newNode;
   final bool createChild;
   final int treenodeIndex;
   final DocumentPosition? splitAtDocumentPosition;
+  late String? newDocumentNodeId;
   final bool moveCollapsedSelectionToInsertedNode;
+
+  @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
@@ -119,6 +134,8 @@ class InsertOutlineTreenodeCommand extends EditCommand {
     // in a title node. If the split occurs somewhere in the middle of a
     // DocumentNode, this currently is only allowed for a ParagraphNode.
     if (splitAtDocumentPosition != null) {
+      assert(newDocumentNodeId != null,
+          'If splitAtDocumentPosition is given, a newDocumentNodeId must be provided');
       // the index of the node where the split happens in the list of
       // contentNodes
       final splitContentNodeIndex = existingNode.contentNodes.indexWhere(
@@ -151,11 +168,12 @@ class InsertOutlineTreenodeCommand extends EditCommand {
           nodeId: splitAtDocumentPosition!.nodeId,
           splitPosition:
               splitAtDocumentPosition!.nodePosition as TextNodePosition,
-          newNodeId: uuid.v4(),
+          newNodeId: newDocumentNodeId!,
           replicateExistingMetadata: true,
         ));
         splitStartIndex++;
       }
+
       // Now move the latter part of the contentNodes to the new treenode
       final existingTitleNodeIndex =
           outlineDoc.getNodeIndexById(existingNode.titleNode.id);
@@ -170,6 +188,10 @@ class InsertOutlineTreenodeCommand extends EditCommand {
         )));
       }
     }
+
+    // Now add a TreenodeInsertedDocumentChange
+    // changes.add(
+    //     DocumentEdit(TreenodeInsertedDocumentChange(newNode.id, newNode.path)));
 
     executor.executeCommand(
       ChangeSelectionCommand(

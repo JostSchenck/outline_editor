@@ -50,6 +50,7 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
                 createChild: request.createChild,
                 treenodeIndex: request.treenodeIndex,
                 splitAtDocumentPosition: request.splitAtDocumentPosition,
+                // newDocumentNodeId: request.newDocumentNodeId,
                 moveCollapsedSelectionToInsertedNode:
                     request.moveCollapsedSelectionToInsertedNode,
               )

@@ -20,7 +20,8 @@ class ChangeCollapsedStateRequest implements EditRequest {
           isCollapsed == other.isCollapsed;
 
   @override
-  int get hashCode => super.hashCode ^ treenodeId.hashCode ^ isCollapsed.hashCode;
+  int get hashCode =>
+      super.hashCode ^ treenodeId.hashCode ^ isCollapsed.hashCode;
 }
 
 class ChangeCollapsedStateCommand extends EditCommand {
@@ -31,6 +32,10 @@ class ChangeCollapsedStateCommand extends EditCommand {
 
   final String treenodeId;
   final bool isCollapsed;
+
+  @override
+  // TODO: prüfen: Will ich Ein- und Ausklappen überhaupt undoable?
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
 
   @override
   void execute(EditContext context, CommandExecutor executor) {

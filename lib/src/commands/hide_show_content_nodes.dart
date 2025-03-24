@@ -36,6 +36,10 @@ class HideShowContentNodesCommand extends EditCommand {
   final bool hideContent;
 
   @override
+  // TODO: Will ich das überhaupt in der Undo-History?
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
   void execute(EditContext context, CommandExecutor executor) {
     final outlineDoc = context.document as OutlineDocument;
     if (treeNodeId == null) {

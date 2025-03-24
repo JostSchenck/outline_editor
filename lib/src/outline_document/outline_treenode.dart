@@ -57,6 +57,19 @@ class OutlineTreenode /*extends ChangeNotifier */
     _isCollapsed = isCollapsed;
   }
 
+  // this must be overridden if OutlineTreenode is to be subclassed.
+  OutlineTreenode deepCopy() {
+    return OutlineTreenode(
+      id: id,
+      titleNode: titleNode.copy() as TitleNode,
+      contentNodes: contentNodes.map((c) => (c as TextNode).copy()).toList(),
+      metadata: {..._metadata},
+      isCollapsed: isCollapsed,
+      hasContentHidden: hasContentHidden,
+      children: children.map((c) => c.deepCopy()).toList(),
+    );
+  }
+
   TitleNode titleNode;
   final List<DocumentNode> _contentNodes = [];
   final List<OutlineTreenode> _children = [];
@@ -73,6 +86,9 @@ class OutlineTreenode /*extends ChangeNotifier */
   bool hasContentHidden = false;
   late Map<String, dynamic> _metadata;
 
+  UnmodifiableMapView<String, dynamic> get metadata =>
+      UnmodifiableMapView(_metadata);
+
 // TODO: test
   void traverseUpDown(void Function(OutlineTreenode treenode) visitor) {
     visitor(this);
@@ -81,11 +97,33 @@ class OutlineTreenode /*extends ChangeNotifier */
     }
   }
 
+  /// Does an up down traversion of the tree where the visiting of all
+  /// children is awaited for before the parent is visited. Also, between
+  /// children is awaited.
+  Future<void> traverseUpDownAsync(
+      Future<void> Function(OutlineTreenode treenode) visitor) async {
+    visitor(this).then((value) async {
+      for (var child in _children) {
+        await child.traverseUpDownAsync(visitor);
+      }
+    });
+  }
+
 // TODO: test
   void traverseDownUp(void Function(OutlineTreenode treenode) visitor) {
     for (var child in _children) {
       child.traverseDownUp(visitor);
     }
+    visitor(this);
+  }
+
+  /// Does an down up traversion of the tree where the visiting of all
+  /// children is awaited for before the parent is visited.
+  Future<void> traverseDownUpAsync(
+      Future<void> Function(OutlineTreenode treenode) visitor) async {
+    final futures =
+        _children.map((c) => c.traverseDownUpAsync(visitor)).toList();
+    await Future.wait(futures);
     visitor(this);
   }
 

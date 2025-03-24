@@ -29,6 +29,12 @@ class MergeOutlineTreenodesCommand extends EditCommand {
     required this.mergedTreenode,
   });
 
+  final OutlineTreenode treenodeMergedInto;
+  final OutlineTreenode mergedTreenode;
+
+  @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
   @override
   void execute(EditContext context, CommandExecutor executor) {
     commandLog.fine(
@@ -51,8 +57,4 @@ class MergeOutlineTreenodesCommand extends EditCommand {
         DeleteOutlineTreenodeCommand(outlineTreenode: mergedTreenode));
     // there should not be anything left to log as we only executed other commands.
   }
-
-  final OutlineTreenode treenodeMergedInto;
-
-  final OutlineTreenode mergedTreenode;
 }

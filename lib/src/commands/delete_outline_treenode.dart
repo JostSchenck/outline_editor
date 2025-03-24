@@ -28,6 +28,9 @@ class DeleteOutlineTreenodeCommand extends EditCommand {
   final OutlineTreenode outlineTreenode;
 
   @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
   void execute(EditContext context, CommandExecutor executor) {
     commandLog
         .fine('executing DeleteOutlineTreenodeCommand on $outlineTreenode');
@@ -45,12 +48,12 @@ class DeleteOutlineTreenodeCommand extends EditCommand {
     // if this is not wanted, it is the responsibility of the caller to move
     // the selection some other place beforehand.
     if (context.composer.selection != null &&
-            (outlineDoc.getOutlineTreenodeForDocumentNodeId(
+        (outlineDoc.getOutlineTreenodeForDocumentNodeId(
                     context.composer.selection!.start.nodeId) ==
                 outlineTreenode ||
-        (outlineDoc.getOutlineTreenodeForDocumentNodeId(
-                context.composer.selection!.extent.nodeId) ==
-            outlineTreenode))) {
+            (outlineDoc.getOutlineTreenodeForDocumentNodeId(
+                    context.composer.selection!.extent.nodeId) ==
+                outlineTreenode))) {
       executor.executeCommand(const ChangeSelectionCommand(
           null,
           SelectionChangeType.deleteContent,

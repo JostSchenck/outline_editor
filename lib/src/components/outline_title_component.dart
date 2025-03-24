@@ -243,7 +243,8 @@ class OutlineTitleComponent extends OutlineComponent {
 class _OutlineTitleComponentState
     extends OutlineComponentState<OutlineTitleComponent>
     with ProxyDocumentComponent<OutlineTitleComponent>, ProxyTextComposable {
-  final _textKey = GlobalKey();
+  final _textKey =
+      GlobalKey(debugLabel: '_OutlineTitleComponentState._textKey');
 
   @override
   GlobalKey<State<StatefulWidget>> get childDocumentComponentKey => _textKey;

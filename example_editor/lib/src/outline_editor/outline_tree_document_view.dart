@@ -26,9 +26,10 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
 
     _scrollController = ScrollController();
 
-    _document =
-        OutlineTreeDocument(treenodeBuilder: defaultOutlineTreenodeBuilder);
-    _document.root.addChild(
+    final root = defaultOutlineTreenodeBuilder(
+      id: 'root',
+    );
+    root.addChild(
       OutlineTreenode(
         id: '1',
         titleNode: TitleNode(
@@ -76,7 +77,60 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
         ],
       ),
     );
-    _document.root.addChild(
+
+    _document = OutlineTreeDocument(
+      treenodeBuilder: defaultOutlineTreenodeBuilder,
+      root: root,
+    );
+/*    _document.root.addChild(
+      OutlineTreenode(
+        id: '1',
+        titleNode: TitleNode(
+            id: '1a', text: AttributedText('First Paragraph of a root node')),
+        contentNodes: [
+          ParagraphNode(
+              id: '1b', text: AttributedText('First Paragraph of a root node')),
+          ParagraphNode(
+              id: '1c',
+              text: AttributedText('Second Paragraph of a root node')),
+        ],
+        children: [
+          OutlineTreenode(
+            id: '2',
+            titleNode: TitleNode(
+                id: '2a', text: AttributedText('This is a child tree node')),
+            contentNodes: [
+              ParagraphNode(
+                  id: '2b', text: AttributedText('with its first paragraph')),
+              ParagraphNode(
+                  id: '2c', text: AttributedText('with its second paragraph')),
+            ],
+            children: [
+              OutlineTreenode(
+                id: '2-1',
+                titleNode: TitleNode(
+                    id: '2-1a', text: AttributedText('grand child yay')),
+                contentNodes: [
+                  ParagraphNode(
+                      id: '2-1b', text: AttributedText('still a grand child')),
+                ],
+                children: [],
+              )
+            ],
+          ),
+          OutlineTreenode(
+            id: '3',
+            titleNode:
+                TitleNode(id: '3a', text: AttributedText('And another child')),
+            contentNodes: [
+              ParagraphNode(id: '3b', text: AttributedText('with a paragraph')),
+            ],
+            children: [],
+          )
+        ],
+      ),
+    );*/
+/*    _document.root.addChild(
       OutlineTreenode(
         id: '4',
         titleNode: TitleNode(
@@ -110,10 +164,13 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
           ),
         ],
       ),
-    );
+    );*/
     _composer = MutableDocumentComposer();
     _editor = createDefaultOutlineDocumentEditor(
-        document: _document, composer: _composer);
+      document: _document,
+      composer: _composer,
+      isHistoryEnabled: true,
+    );
     _editorFocusNode = FocusNode();
     _docLayoutKey = GlobalKey();
   }
