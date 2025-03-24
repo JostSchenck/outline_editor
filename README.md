@@ -11,59 +11,19 @@ its state in a hierarchical manner; this can eg. happen based on paragraphs with
 metadata, or on nested data structures. If outline_editor does not come with an implementation that 
 suits your needs, just make your Document class implement the OutlineDocument interface.
 
+TThe tree structure is stored in "Treenodes", which can contain super_editor's DocumentNodes (one 
+as a title, the rest as content). For the case that OutlineTreenode must be extended, 
+OutlineDocument and OutlineTreeDocument are parameterized.  
+
 ## Usage
 
 To create an outline editor in your app, you must first create a [Document] of a class that 
 implements the [OutlineDocument] interface and create a corresponding [Editor], usually in
 the [State] class of your outline editor view. You can eg. use 
-[OutlineMutableDocumentByNodeDepthMetadata], which works like a [MutableDocument], ie. with
-a sequential list of [DocumentNode]s, which have a nesting level (0 for root, 1 for first child etc)
-and must be well-formed (really build a tree):
+[OutlineTreeDocument], which implements the [MutableDocument] interface to also present its 
+content as a flat list of nodes towards super_editor.
 
-```
-    _scrollController = ScrollController();
-    _document = OutlineMutableDocumentByNodeDepthMetadata(
-      nodes: [
-        ParagraphNode(
-          id: 'root_node',
-          text: AttributedText('My root node'),
-          metadata: {
-            'blockType': paragraphAttribution,
-            'depth': 0,
-          },
-        ),
-        ParagraphNode(
-          id: 'child_node',
-          text: AttributedText(
-              'First child'),
-          metadata: {
-            'depth': 1,
-          },
-        ),
-      ],
-    );
-    _composer = MutableDocumentComposer();
-    _editor = createDefaultDocumentEditor(document: _document, composer: _composer);
-```
-
-
-Then, just create a [SuperEditor] widget with the OutlineEditorPlugin:
-
-```
-Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Outline Editor')),
-      body: SuperEditor(
-        scrollController: _scrollController,
-        editor: _editor,
-        focusNode: _editorFocusNode,
-        plugins: const {
-          OutlineEditorPlugin(),
-        },
-      ),
-    );
-  }
-```
+For details, for now see the example app.
 
 
 ## Gedanken zur Entwicklung
