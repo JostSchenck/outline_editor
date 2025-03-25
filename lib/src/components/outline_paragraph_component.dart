@@ -121,11 +121,13 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
     required this.editor,
     this.leadingControlsBuilder,
     this.topControlsBuilder,
+    this.hideTextGlobally = false,
   });
 
   final Editor editor;
   final SideControlsBuilder? leadingControlsBuilder;
   final TopControlsBuilder? topControlsBuilder;
+  final bool hideTextGlobally;
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
@@ -152,7 +154,7 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
           .children
           .isNotEmpty,
       isCollapsed: outlineDoc.isCollapsed(node.id),
-      isVisible: outlineDoc.isVisible(node.id),
+      isVisible: hideTextGlobally ? false : outlineDoc.isVisible(node.id),
     );
   }
 
