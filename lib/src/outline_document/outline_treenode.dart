@@ -244,6 +244,24 @@ class OutlineTreenode /*extends ChangeNotifier */
     return null;
   }
 
+  /// Traverses this treenode's subtree up down, returning the first treenode
+  /// which satisfies `testFunction` or null.
+  OutlineTreenode? getFirstOutlineTreenodeWhereOrNull(
+      bool Function(OutlineTreenode treenode) testFunction) {
+    if (testFunction(this)) return this;
+    for (var child in children) {
+      final subtreeResult =
+          child.getFirstOutlineTreenodeWhereOrNull(testFunction);
+      if (subtreeResult != null) return subtreeResult;
+    }
+    return null;
+  }
+
+  bool isDescendant(OutlineTreenode treenode) {
+    return getFirstOutlineTreenodeWhereOrNull((tn) => tn.id == treenode.id) !=
+        null;
+  }
+
   DocumentNode? getDocumentNodeById(String docNodeId) {
     var ret = nodes.firstWhereOrNull((e) => e.id == docNodeId);
     if (ret != null) return ret;
