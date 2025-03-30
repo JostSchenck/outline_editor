@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:outline_editor/outline_editor.dart';
-import 'package:outline_editor/src/infrastructure/uuid.dart';
 
 const testInputTestString = '''
 # 1:Dies ist ein TitleNode
@@ -42,7 +41,8 @@ bool isTitleNode(String line) => line.startsWith(titleNodeCharacter);
 }
 
 OutlineTreeDocument deserializeTestInput(String str) {
-  final doc = OutlineTreeDocument(root: OutlineTreenode(id: uuid.v4()));
+  final doc =
+      OutlineTreeDocument(treenodeBuilder: defaultOutlineTreenodeBuilder);
   final lines = const LineSplitter().convert(str);
   int contentNodeCounter = 0;
   final List<OutlineTreenode> treenodeStack = [doc.root];

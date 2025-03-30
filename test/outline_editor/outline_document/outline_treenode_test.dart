@@ -106,7 +106,8 @@ void main() {
     late OutlineTreeDocument document;
 
     setUp(() {
-      document = OutlineTreeDocument(root: OutlineTreenode(id: 'root'));
+      document =
+          OutlineTreeDocument(treenodeBuilder: defaultOutlineTreenodeBuilder);
       document.root.addChild(OutlineTreenode(id: 'b'));
       document.root.addChild(OutlineTreenode(id: 'a'));
       document.root.addChild(OutlineTreenode(id: 'd'));

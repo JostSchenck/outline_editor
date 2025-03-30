@@ -287,8 +287,9 @@ ExecutionInstruction enterInOutlineTreeDocument({
   final textNode = outlineDoc.getNodeById(selection.base.nodeId) as TextNode;
 
   if (textNode is TitleNode) {
-    if (textNodePosition.offset == 0) {
-      // enter pressed at the start of a title node -- prepend a sibling Treenode
+    if (textNodePosition.offset == 0 && textNode.text.isNotEmpty) {
+      // enter pressed at the start of a title node with text in it --
+      // prepend a sibling Treenode
       editContext.editor.execute([
         InsertOutlineTreenodeRequest(
           existingTreenode: outlineTreenode.parent!,

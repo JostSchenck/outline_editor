@@ -1,9 +1,8 @@
 import 'package:outline_editor/outline_editor.dart';
-import 'package:outline_editor/src/infrastructure/uuid.dart';
 
 OutlineTreeDocument getVisibilityTestDocument() {
   OutlineTreeDocument document =
-      OutlineTreeDocument(root: OutlineTreenode(id: uuid.v4()));
+      OutlineTreeDocument(treenodeBuilder: defaultOutlineTreenodeBuilder);
   document.root.addChild(
     OutlineTreenode(
       id: 'tn_1',

@@ -28,9 +28,39 @@ OutlineTreenode defaultOutlineTreenodeBuilder({
 class OutlineTreeDocument<T extends OutlineTreenode>
     with OutlineDocument<T>, Iterable<DocumentNode>
     implements MutableDocument {
-  OutlineTreeDocument({required this.treenodeBuilder, T? root})
-      : _root = root ?? treenodeBuilder(id: 'root') as T {
+  OutlineTreeDocument({
+    this.treenodeBuilder = defaultOutlineTreenodeBuilder,
+    T? logicalRoot,
+    List<T>? rootTreeNodes,
+  }) : _root = logicalRoot ?? treenodeBuilder(id: 'root') as T {
+    if (rootTreeNodes != null) {
+      for (var tn in rootTreeNodes) {
+        _root.addChild(tn);
+      }
+    }
     _resetRoot = _root.deepCopy() as T;
+  }
+
+  /// Constructs an OutlineTreeDocument<T> with only an empty treenode with
+  /// an empty title node and one empty paragraph.
+  factory OutlineTreeDocument.empty({
+    String? treenodeId,
+    String? titleNodeId,
+    String? paragraphNodeId,
+    TreenodeBuilder? treenodeBuilder,
+  }) {
+    final doc = OutlineTreeDocument<T>(
+      treenodeBuilder: treenodeBuilder ?? defaultOutlineTreenodeBuilder,
+    );
+    doc.root.addChild(doc.treenodeBuilder(
+        id: treenodeId ?? uuid.v4(),
+        titleNode:
+            TitleNode(id: titleNodeId ?? uuid.v4(), text: AttributedText('')),
+        contentNodes: [
+          ParagraphNode(
+              id: paragraphNodeId ?? uuid.v4(), text: AttributedText('')),
+        ]));
+    return doc;
   }
 
   final TreenodeBuilder treenodeBuilder;

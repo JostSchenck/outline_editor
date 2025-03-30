@@ -2,8 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:outline_editor/outline_editor.dart';
 
 OutlineTreeDocument prepareDocument({changeIds = false}) {
-  final outlineTreeDocument =
-      OutlineTreeDocument(root: OutlineTreenode(id: 'root'));
+  final outlineTreeDocument = OutlineTreeDocument(
+      treenodeBuilder:
+          defaultOutlineTreenodeBuilder /*root: OutlineTreenode(id: 'root')*/);
   outlineTreeDocument.root.addChild(
     OutlineTreenode(
       id: changeIds ? 'asdf1' : '1',

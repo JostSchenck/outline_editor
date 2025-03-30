@@ -33,18 +33,17 @@ dependencies:
   uuid: ^4.5.1
   collection: ^1.19.1
 
-
-# dependency_overrides:
-#   super_editor:
-#     git:
-#       url: https://github.com/superlistapp/super_editor
-#       path: super_editor
-#       ref: main # or "main"
-#   super_editor_markdown:
-#     git:
-#       url: https://github.com/superlistapp/super_editor
-#       path: super_editor_markdown
-#       ref: main
+dependency_overrides:
+   super_editor_markdown:
+     git:
+       url: https://github.com/superlistapp/super_editor
+       path: super_editor_markdown
+       ref: main
+   super_editor:
+     git:
+       url: https://github.com/superlistapp/super_editor
+       path: super_editor
+       ref: 2367_add-more-specific-selection-change-types # or "main"
 #   super_text_layout:
 #     git:
 #       url: https://github.com/superlistapp/super_editor
@@ -71,5 +70,8 @@ dev_dependencies:
   flutter_test_runners: ^0.0.4
   flutter_lints: ^5.0.0
   flutter_test_robots: ^0.0.24
+  mockito: ^5.4.5
+  super_editor_markdown: ^0.1.7
+  text_table: ^4.0.3
 
-flutter:
+#flutter:
