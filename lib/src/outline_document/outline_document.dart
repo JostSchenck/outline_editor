@@ -185,7 +185,9 @@ abstract mixin class OutlineDocument<T extends OutlineTreenode>
     if (myDocNode is TitleNode) {
       return myTreeNode.isVisible;
     } else {
-      return !myTreeNode.hasContentHidden && myTreeNode.isVisible;
+      return !myTreeNode.hasContentHidden &&
+          !myTreeNode.isCollapsed &&
+          myTreeNode.isVisible;
     }
   }
 
