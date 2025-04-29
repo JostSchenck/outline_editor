@@ -26,7 +26,8 @@ class MoveDocumentNodeIntoTreenodeRequest implements EditRequest {
       super.hashCode ^ documentNodeId.hashCode ^ targetTreenodeId.hashCode;
 }
 
-class MoveDocumentNodeIntoTreenodeCommand extends EditCommand {
+class MoveDocumentNodeIntoTreenodeCommand<T extends OutlineTreenode<T>>
+    extends EditCommand {
   MoveDocumentNodeIntoTreenodeCommand({
     required this.documentNodeId,
     required this.targetTreenodeId,
@@ -42,7 +43,7 @@ class MoveDocumentNodeIntoTreenodeCommand extends EditCommand {
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    final outlineDoc = context.document as OutlineEditableDocument;
+    final outlineDoc = context.document as OutlineEditableDocument<T>;
 
     final currentRoot = outlineDoc.root;
     final (treenode: sourceTreenode, path: sourcePath) =

@@ -26,7 +26,8 @@ class HideShowContentNodesRequest implements EditRequest {
   int get hashCode => treeNodeId.hashCode ^ hideContent.hashCode;
 }
 
-class HideShowContentNodesCommand extends EditCommand {
+class HideShowContentNodesCommand<T extends OutlineTreenode<T>>
+    extends EditCommand {
   HideShowContentNodesCommand({
     required this.treenodeId,
     required this.hideContent,
@@ -41,10 +42,10 @@ class HideShowContentNodesCommand extends EditCommand {
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    final outlineDoc = context.document as OutlineEditableDocument;
+    final outlineDoc = context.document as OutlineEditableDocument<T>;
     if (treenodeId == null) {
       outlineDoc.root.traverseUpDown(
-          (treenode) => executor.executeCommand(HideShowContentNodesCommand(
+          (treenode) => executor.executeCommand(HideShowContentNodesCommand<T>(
                 treenodeId: treenode.id,
                 hideContent: hideContent,
               )));

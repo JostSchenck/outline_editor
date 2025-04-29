@@ -3,20 +3,6 @@ import 'package:outline_editor/outline_editor.dart';
 
 import 'build_test_document.dart';
 
-// const testInputTestString = '''
-// # 1:Dies ist ein TitleNode
-// >Content-Paragraph
-// >Noch ein Content-Paragraph
-//   ## 2:Dies ist noch ein TitleNode
-//   >mit einem ContentParagraph
-//     ### 3:Dies ist ein Enkelkind
-// >and it's not about whitespace before the '>' character
-// ## 4:weiteres Kind ohne Content
-// ## 5:und Kind Nr. 3
-// >mit Content mit Abstand am Ende
-// # 6:Weiterer RootNode ohne Content
-// ''';
-
 const testInputTestString = '''
 root:root
   1:Dies ist ein TitleNode
@@ -36,7 +22,7 @@ const titleNodeCharacter = '#';
 const textDelimiter = ':';
 
 main() {
-  late OutlineEditableDocument document;
+  late OutlineEditableDocument<BasicOutlineTreenode> document;
 
   setUp(() {
     document = buildTestDocumentFromString(testInputTestString);

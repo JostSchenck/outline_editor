@@ -6,10 +6,11 @@ import '../common/visibility_test_document.dart';
 
 void main() {
   group('OutlineTreeNode visibility (hiding and collapsing) of nodes', () {
-    late OutlineEditableDocument document;
+    late OutlineEditableDocument<BasicOutlineTreenode> document;
 
     setUp(() {
       document = getVisibilityTestDocument();
+      print(document.toPrettyTestString());
     });
 
     test(
@@ -36,31 +37,31 @@ void main() {
               .getLastVisibleDocumentNode(const DocumentPosition(
                   nodeId: '2title', nodePosition: TextNodePosition(offset: 2)))
               .id,
-          '2');
+          '2title');
       expect(
           document
               .getLastVisibleDocumentNode(const DocumentPosition(
                   nodeId: '3', nodePosition: TextNodePosition(offset: 2)))
               .id,
-          '2');
+          '2title');
       expect(
           document
               .getLastVisibleDocumentNode(const DocumentPosition(
                   nodeId: '4', nodePosition: TextNodePosition(offset: 2)))
               .id,
-          '2');
+          '2title');
       expect(
           document
               .getLastVisibleDocumentNode(const DocumentPosition(
                   nodeId: '5', nodePosition: TextNodePosition(offset: 2)))
               .id,
-          '5');
+          '5title');
       expect(
           document
               .getLastVisibleDocumentNode(const DocumentPosition(
                   nodeId: '6', nodePosition: TextNodePosition(offset: 2)))
               .id,
-          '5');
+          '5title');
     });
 
     test(
@@ -77,7 +78,7 @@ void main() {
               .getNextVisibleDocumentnode(const DocumentPosition(
                   nodeId: '2', nodePosition: TextNodePosition(offset: 2)))!
               .id,
-          '2');
+          '5title');
       expect(
           document
               .getNextVisibleDocumentnode(const DocumentPosition(
@@ -91,11 +92,9 @@ void main() {
               .id,
           '5title');
       expect(
-          document
-              .getNextVisibleDocumentnode(const DocumentPosition(
-                  nodeId: '5', nodePosition: TextNodePosition(offset: 2)))!
-              .id,
-          '5');
+          document.getNextVisibleDocumentnode(const DocumentPosition(
+              nodeId: '5', nodePosition: TextNodePosition(offset: 2))),
+          null);
       expect(
           document.getNextVisibleDocumentnode(const DocumentPosition(
               nodeId: '6', nodePosition: TextNodePosition(offset: 2))),
@@ -104,47 +103,43 @@ void main() {
   });
 
   group('OutlineTreeNode adding and removing nodes', () {
-    late OutlineEditableDocument document;
+    late OutlineEditableDocument<BasicOutlineTreenode> document;
 
     setUp(() {
-      document = OutlineEditableDocument(
-          treenodeBuilder: defaultOutlineTreenodeBuilder);
-      document.root = TreeEditor.insertChild(
-          parent: document.root,
-          child: OutlineTreenode(
-            id: 'b',
-            titleNode: TitleNode(
-              id: 'b-t',
-              text: AttributedText(''),
-            ),
-          ));
-      document.root = TreeEditor.insertChild(
-          parent: document.root,
-          child: OutlineTreenode(
-            id: 'a',
-            titleNode: TitleNode(
-              id: 'a-t',
-              text: AttributedText(''),
-            ),
-          ));
-      document.root = TreeEditor.insertChild(
-          parent: document.root,
-          child: OutlineTreenode(
-            id: 'd',
-            titleNode: TitleNode(
-              id: 'd-t',
-              text: AttributedText(''),
-            ),
-          ));
-      document.root = TreeEditor.insertChild(
-          parent: document.root,
-          child: OutlineTreenode(
-            id: 'c',
-            titleNode: TitleNode(
-              id: 'c-t',
-              text: AttributedText(''),
-            ),
-          ));
+      document =
+          OutlineEditableDocument(treenodeBuilder: basicOutlineTreenodeBuilder);
+      document.root = document.root.copyInsertChild(
+          child: BasicOutlineTreenode(
+        id: 'b',
+        titleNode: TitleNode(
+          id: 'b-t',
+          text: AttributedText(''),
+        ),
+      ));
+      document.root = document.root.copyInsertChild(
+          child: BasicOutlineTreenode(
+        id: 'a',
+        titleNode: TitleNode(
+          id: 'a-t',
+          text: AttributedText(''),
+        ),
+      ));
+      document.root = document.root.copyInsertChild(
+          child: BasicOutlineTreenode(
+        id: 'd',
+        titleNode: TitleNode(
+          id: 'd-t',
+          text: AttributedText(''),
+        ),
+      ));
+      document.root = document.root.copyInsertChild(
+          child: BasicOutlineTreenode(
+        id: 'c',
+        titleNode: TitleNode(
+          id: 'c-t',
+          text: AttributedText(''),
+        ),
+      ));
     });
 
     test(
@@ -168,7 +163,7 @@ void main() {
     });
 
     group('OutlineTreeNode addressing nodes by id or path', () {
-      late OutlineEditableDocument document;
+      late OutlineEditableDocument<BasicOutlineTreenode> document;
 
       setUp(() {
         document = getVisibilityTestDocument();

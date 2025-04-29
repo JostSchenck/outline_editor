@@ -4,7 +4,8 @@ import 'package:super_editor/super_editor.dart';
 import '../outline_document/outline_editable_document.dart';
 import '../outline_document/outline_treenode.dart';
 
-class InsertOutlineTreenodeRequest implements EditRequest {
+class InsertOutlineTreenodeRequest<T extends OutlineTreenode<T>>
+    implements EditRequest {
   InsertOutlineTreenodeRequest({
     required this.existingTreenodeId,
     this.newTreenode,
@@ -19,7 +20,7 @@ class InsertOutlineTreenodeRequest implements EditRequest {
   final String existingTreenodeId;
 
   /// The new node to be inserted.
-  final OutlineTreenode? newTreenode;
+  final T? newTreenode;
 
   /// true, if the new node should be a child of the existing node, false if it
   /// should be a sibling.
@@ -65,7 +66,8 @@ class InsertOutlineTreenodeRequest implements EditRequest {
       splitAtDocumentPosition.hashCode;
 }
 
-class InsertOutlineTreenodeCommand extends EditCommand {
+class InsertOutlineTreenodeCommand<T extends OutlineTreenode<T>>
+    extends EditCommand {
   InsertOutlineTreenodeCommand({
     required this.existingTreenodeId,
     required this.newTreenode,
@@ -77,7 +79,7 @@ class InsertOutlineTreenodeCommand extends EditCommand {
   });
 
   final String existingTreenodeId;
-  final OutlineTreenode newTreenode;
+  final T newTreenode;
   final bool createChild;
   final int treenodeIndex;
   final DocumentPosition? splitAtDocumentPosition;
@@ -89,7 +91,7 @@ class InsertOutlineTreenodeCommand extends EditCommand {
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    final outlineDoc = context.document as OutlineEditableDocument;
+    final outlineDoc = context.document as OutlineEditableDocument<T>;
     final existingTreenode =
         outlineDoc.root.getTreenodeById(existingTreenodeId);
 
@@ -100,12 +102,11 @@ class InsertOutlineTreenodeCommand extends EditCommand {
 
     final changes = <DocumentEdit>[];
 
-    OutlineTreenode updatedRoot = outlineDoc.root;
+    T updatedRoot = outlineDoc.root;
 
     // --- 1. Einfügen des neuen Treenodes ---
     if (createChild) {
-      final updatedParent = TreeEditor.insertChild(
-        parent: existingTreenode,
+      final updatedParent = existingTreenode.copyInsertChild(
         child: newTreenode,
         atIndex: treenodeIndex == -1
             ? existingTreenode.children.length
@@ -124,8 +125,7 @@ class InsertOutlineTreenodeCommand extends EditCommand {
         return;
       }
 
-      final parentUpdated = TreeEditor.insertChild(
-        parent: parent,
+      final parentUpdated = parent.copyInsertChild(
         child: newTreenode,
         atIndex: treenodeIndex == -1
             ? updatedRoot.getPathTo(existingTreenodeId)!.last + 1

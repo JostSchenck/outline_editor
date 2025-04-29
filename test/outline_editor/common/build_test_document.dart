@@ -1,10 +1,11 @@
 import 'package:outline_editor/outline_editor.dart';
 
-OutlineEditableDocument buildTestDocumentFromString(String input) {
+OutlineEditableDocument<BasicOutlineTreenode> buildTestDocumentFromString(
+    String input) {
   final lines = input.trim().split('\n');
-  final stack = <({int indent, OutlineTreenode treenode})>[];
+  final stack = <({int indent, BasicOutlineTreenode treenode})>[];
 
-  OutlineTreenode? root;
+  BasicOutlineTreenode? root;
 
   for (final rawLine in lines) {
     final line = rawLine.replaceAll('\t', '  ');
@@ -45,7 +46,7 @@ OutlineEditableDocument buildTestDocumentFromString(String input) {
     final id = line.substring(0, sep).trim();
     final text = line.substring(sep + 1).trim();
     final titleNode = TitleNode(id: id, text: AttributedText(text));
-    final newTreenode = OutlineTreenode(id: id, titleNode: titleNode);
+    final newTreenode = BasicOutlineTreenode(id: id, titleNode: titleNode);
 
     while (stack.isNotEmpty && stack.last.indent >= indent) {
       stack.removeLast();
@@ -58,10 +59,8 @@ OutlineEditableDocument buildTestDocumentFromString(String input) {
     }
 
     final parent = stack.removeLast();
-    var updatedParent = TreeEditor.insertChild(
-        parent: parent.treenode,
-        child: newTreenode,
-        atIndex: parent.treenode.children.length);
+    var updatedParent = parent.treenode.copyInsertChild(
+        child: newTreenode, atIndex: parent.treenode.children.length);
     stack.add((indent: parent.indent, treenode: updatedParent));
     stack.add((indent: indent, treenode: newTreenode));
 
@@ -79,14 +78,18 @@ OutlineEditableDocument buildTestDocumentFromString(String input) {
     }
   }
 
-  return OutlineEditableDocument(logicalRoot: root!);
+  return OutlineEditableDocument<BasicOutlineTreenode>(
+    treenodeBuilder: basicOutlineTreenodeBuilder,
+    logicalRoot: root!,
+  );
 }
 
-extension OutlineEditableDocumentPrettyPrinter on OutlineEditableDocument {
+extension OutlineEditableDocumentPrettyPrinter
+    on OutlineEditableDocument<BasicOutlineTreenode> {
   String toPrettyTestString() {
     final buffer = StringBuffer();
 
-    void writeTreenode(OutlineTreenode node, int indent) {
+    void writeTreenode(BasicOutlineTreenode node, int indent) {
       final indentStr = '  ' * indent;
       buffer
           .writeln('$indentStr${node.id}:${node.titleNode.text.toPlainText()}');

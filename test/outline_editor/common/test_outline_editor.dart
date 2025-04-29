@@ -52,7 +52,7 @@ class _TestOutlineEditorState extends State<TestOutlineEditor> {
           focusNode: _editorFocusNode,
           documentLayoutKey: _docLayoutKey,
           plugins: {
-            OutlineEditorPlugin(
+            OutlineEditorPlugin<BasicOutlineTreenode>(
               editor: _editor,
               documentLayoutKey: _docLayoutKey,
             ),

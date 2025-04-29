@@ -30,8 +30,10 @@ ExecutionInstruction undoWhenCmdZOrCtrlZIsPressed({
 
 /// delete treenodes, if the selection spans whole treenodes; if not, return
 /// false, so the calling action can decide on passing on or halting.
-bool _deleteSelectedTreenodes(OutlineEditableDocument outlineDoc,
-    DocumentSelection selection, SuperEditorContext editContext) {
+bool _deleteSelectedTreenodes<T extends OutlineTreenode<T>>(
+    OutlineEditableDocument<T> outlineDoc,
+    DocumentSelection selection,
+    SuperEditorContext editContext) {
   if (selection.isCollapsed) return false;
   final tn1 =
       outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
@@ -50,11 +52,11 @@ bool _deleteSelectedTreenodes(OutlineEditableDocument outlineDoc,
         flatList.sublist(min(index1, index2), max(index1, index2) + 1).reversed;
     final parent = outlineDoc.root.getParentOf(deleteList.last.id)!;
     final childIndex = parent.children.indexOf(deleteList.last);
-    final newEmptyNode = outlineDoc.treenodeBuilder(id: uuid.v4());
+    final newEmptyNode = outlineDoc.treenodeBuilder(id: uuid.v4()) as T;
     editContext.editor.execute([
       ...deleteList.map((treenode) =>
           DeleteOutlineTreenodeRequest(outlineTreenodeId: treenode.id)),
-      InsertOutlineTreenodeRequest(
+      InsertOutlineTreenodeRequest<T>(
         existingTreenodeId: parent.id,
         newTreenode: newEmptyNode,
         createChild: true,
@@ -76,7 +78,8 @@ bool _deleteSelectedTreenodes(OutlineEditableDocument outlineDoc,
   }
 }
 
-ExecutionInstruction backspaceSpecialCasesInOutlineTreeDocument({
+ExecutionInstruction
+    backspaceSpecialCasesInOutlineTreeDocument<T extends OutlineTreenode<T>>({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
 }) {
@@ -87,13 +90,13 @@ ExecutionInstruction backspaceSpecialCasesInOutlineTreeDocument({
     return ExecutionInstruction.continueExecution;
   }
 
-  final outlineDoc = editContext.document as OutlineEditableDocument;
+  final outlineDoc = editContext.document as OutlineEditableDocument<T>;
   final selection = editContext.composer.selection;
 
   if (selection == null) return ExecutionInstruction.continueExecution;
 
   if (!selection.isCollapsed) {
-    if (_deleteSelectedTreenodes(outlineDoc, selection, editContext)) {
+    if (_deleteSelectedTreenodes<T>(outlineDoc, selection, editContext)) {
       return ExecutionInstruction.haltExecution;
     } else {
       return ExecutionInstruction.continueExecution;
@@ -173,7 +176,8 @@ ExecutionInstruction backspaceSpecialCasesInOutlineTreeDocument({
   }
 }
 
-ExecutionInstruction deleteSpecialCasesInOutlineTreeDocument({
+ExecutionInstruction
+    deleteSpecialCasesInOutlineTreeDocument<T extends OutlineTreenode<T>>({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
 }) {
@@ -186,10 +190,10 @@ ExecutionInstruction deleteSpecialCasesInOutlineTreeDocument({
 
   final selection = editContext.composer.selection;
   if (selection == null) return ExecutionInstruction.continueExecution;
-  final outlineDoc = editContext.document as OutlineEditableDocument;
+  final outlineDoc = editContext.document as OutlineEditableDocument<T>;
 
   if (!selection.isCollapsed) {
-    if (_deleteSelectedTreenodes(outlineDoc, selection, editContext)) {
+    if (_deleteSelectedTreenodes<T>(outlineDoc, selection, editContext)) {
       return ExecutionInstruction.haltExecution;
     } else {
       return ExecutionInstruction.continueExecution;
@@ -253,7 +257,7 @@ ExecutionInstruction deleteSpecialCasesInOutlineTreeDocument({
   return ExecutionInstruction.continueExecution;
 }
 
-ExecutionInstruction enterInOutlineTreeDocument({
+ExecutionInstruction enterInOutlineTreeDocument<T extends OutlineTreenode<T>>({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
 }) {
@@ -293,7 +297,7 @@ ExecutionInstruction enterInOutlineTreeDocument({
       // enter pressed at the start of a title node with text in it --
       // prepend a sibling Treenode
       editContext.editor.execute([
-        InsertOutlineTreenodeRequest(
+        InsertOutlineTreenodeRequest<T>(
           existingTreenodeId: parent.id,
           createChild: true,
           treenodeIndex: parent.children.indexOf(outlineTreenode),
@@ -363,7 +367,8 @@ ExecutionInstruction enterInOutlineTreeDocument({
   return ExecutionInstruction.continueExecution;
 }
 
-ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
+ExecutionInstruction
+    insertTreenodeOnShiftOrCtrlEnter<T extends OutlineTreenode<T>>({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
 }) {
@@ -419,7 +424,7 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
         if (parentTreenode.isCollapsed)
           ChangeCollapsedStateRequest(
               treenodeId: parentTreenode.id, isCollapsed: false),
-        InsertOutlineTreenodeRequest(
+        InsertOutlineTreenodeRequest<T>(
           existingTreenodeId: parentTreenode.id,
           createChild: true,
           splitAtDocumentPosition: doSplitTreenode ? selection.base : null,
@@ -434,7 +439,7 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
   if (HardwareKeyboard.instance.isShiftPressed) {
     if (selection.isCollapsed) {
       editContext.editor.execute([
-        InsertOutlineTreenodeRequest(
+        InsertOutlineTreenodeRequest<T>(
           existingTreenodeId: outlineDoc
               .getTreenodeForDocumentNodeId(selection.base.nodeId)
               .treenode
@@ -451,7 +456,8 @@ ExecutionInstruction insertTreenodeOnShiftOrCtrlEnter({
   return ExecutionInstruction.continueExecution;
 }
 
-ExecutionInstruction reparentTreenodesOnTabAndShiftTab({
+ExecutionInstruction
+    reparentTreenodesOnTabAndShiftTab<T extends OutlineTreenode<T>>({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
 }) {
@@ -470,7 +476,7 @@ ExecutionInstruction reparentTreenodesOnTabAndShiftTab({
         'Indenting and unindenting non-collapsed selections not yet implemented');
     return ExecutionInstruction.haltExecution;
   }
-  final outlineDoc = editContext.document as OutlineEditableDocument;
+  final outlineDoc = editContext.document as OutlineEditableDocument<T>;
 
   // prepare splitting the treenode when the cursor is in the middle of
   // a ParagraphNode
@@ -489,7 +495,8 @@ ExecutionInstruction reparentTreenodesOnTabAndShiftTab({
   return ExecutionInstruction.haltExecution;
 }
 
-ExecutionInstruction upAndDownBehaviorWithModifiers({
+ExecutionInstruction
+    upAndDownBehaviorWithModifiers<T extends OutlineTreenode<T>>({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
 }) {
@@ -505,7 +512,7 @@ ExecutionInstruction upAndDownBehaviorWithModifiers({
   final moveUp = keyEvent.logicalKey == LogicalKeyboardKey.arrowUp;
   final selection = editContext.composer.selection;
   if (selection == null) return ExecutionInstruction.continueExecution;
-  final outlineDoc = editContext.document as OutlineEditableDocument;
+  final outlineDoc = editContext.document as OutlineEditableDocument<T>;
 
   if (HardwareKeyboard.instance.isAltPressed &&
       HardwareKeyboard.instance.isShiftPressed &&
@@ -514,7 +521,7 @@ ExecutionInstruction upAndDownBehaviorWithModifiers({
       final treenodeResult =
           outlineDoc.getTreenodeForDocumentNodeId(selection.base.nodeId);
       final parent = outlineDoc.root.getParentOf(treenodeResult.treenode.id)!;
-      final childIndex = parent.children.indexOf(treenodeResult);
+      final childIndex = parent.children.indexOf(treenodeResult.treenode);
       if (keyEvent.logicalKey == LogicalKeyboardKey.arrowUp) {
         // swap treenode with sibling before, if we aren't already the first
         // sibling.
@@ -561,7 +568,7 @@ ExecutionInstruction upAndDownBehaviorWithModifiers({
     } else {
       // Ctrl-Up and Ctrl-Down move the caret to the beginning of the treenode
       // before or after base, collapsing it, if it isn't collapsed yet.
-      late OutlineTreenode newTreenode;
+      late T newTreenode;
       final curTreenode = outlineDoc
           .getOutlineTreenodeByDocumentNodeId(selection.base.nodeId)
           .treenode;

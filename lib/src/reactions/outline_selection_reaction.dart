@@ -3,14 +3,15 @@ import 'dart:ui';
 import 'package:collection/collection.dart';
 import 'package:outline_editor/outline_editor.dart';
 
-class OutlineSelectionReaction extends EditReaction {
+class OutlineSelectionReaction<T extends OutlineTreenode<T>>
+    extends EditReaction {
   OutlineSelectionReaction();
 
   @override
   void modifyContent(EditContext editorContext,
       RequestDispatcher requestDispatcher, List<EditEvent> changeList) {
     assert(editorContext.document is OutlineEditableDocument);
-    final outlineDoc = editorContext.document as OutlineEditableDocument;
+    final outlineDoc = editorContext.document as OutlineEditableDocument<T>;
 
     final event = changeList
         .lastWhereOrNull((editevent) => editevent is SelectionChangeEvent);

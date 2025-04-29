@@ -10,33 +10,18 @@ typedef TreenodeBuilder = OutlineTreenode Function({
   List<DocumentNode>? contentNodes,
 });
 
-OutlineTreenode defaultOutlineTreenodeBuilder({
-  String? id,
-  TitleNode? titleNode,
-  List<DocumentNode>? contentNodes,
-}) =>
-    OutlineTreenode(
-      id: id ?? uuid.v4(),
-      contentNodes: contentNodes ?? [],
-      titleNode: titleNode ??
-          TitleNode(
-            id: uuid.v4(),
-            text: AttributedText(''),
-          ),
-    );
-
-class OutlineEditableDocument
-    with OutlineDocument, Iterable<DocumentNode>
+class OutlineEditableDocument<T extends OutlineTreenode<T>>
+    with OutlineDocument<T>, Iterable<DocumentNode>
     implements MutableDocument {
   OutlineEditableDocument({
-    this.treenodeBuilder = defaultOutlineTreenodeBuilder,
-    OutlineTreenode? logicalRoot,
-    List<OutlineTreenode>? rootTreeNodes,
+    required this.treenodeBuilder,
+    T? logicalRoot,
+    List<T>? rootTreeNodes,
   }) : // we take care that the logical root is empty, so that insertion logic works later
         _root = logicalRoot != null
             ? logicalRoot.copyWith(titleNode: null, contentNodes: [])
             : treenodeBuilder(id: 'root')
-                .copyWith(titleNode: null, contentNodes: []) {
+                .copyWith(titleNode: null, contentNodes: []) as T {
     _resetRoot = root.copyWith();
   }
 
@@ -48,8 +33,8 @@ class OutlineEditableDocument
     String? paragraphNodeId,
     TreenodeBuilder? treenodeBuilder,
   }) {
-    final myTreenodeBuilder = treenodeBuilder ?? defaultOutlineTreenodeBuilder;
-    final doc = OutlineEditableDocument(
+    final myTreenodeBuilder = treenodeBuilder ?? basicOutlineTreenodeBuilder;
+    final doc = OutlineEditableDocument<T>(
         treenodeBuilder: myTreenodeBuilder,
         logicalRoot: myTreenodeBuilder(id: 'root').copyWith(children: [
           myTreenodeBuilder(
@@ -60,7 +45,7 @@ class OutlineEditableDocument
                 ParagraphNode(
                     id: paragraphNodeId ?? uuid.v4(), text: AttributedText('')),
               ])
-        ]));
+        ]) as T);
     return doc;
   }
 
@@ -72,20 +57,20 @@ class OutlineEditableDocument
   }
 
   @override
-  OutlineTreenode get root => _root;
+  T get root => _root;
 
-  set root(OutlineTreenode value) {
+  set root(T value) {
     _root = value;
     // _latestNodeSnapshot = value;
     // _didReset = true;
     // _notifyListeners();
   }
 
-  late OutlineTreenode _root;
-  late OutlineTreenode _resetRoot;
+  late T _root;
+  late T _resetRoot;
 
   final _listeners = <DocumentChangeListener>[];
-  late final OutlineTreenode _latestNodeSnapshot;
+  late final T _latestNodeSnapshot;
   bool _didReset = false;
 
   @override
@@ -163,7 +148,7 @@ class OutlineEditableDocument
     }
     root = _root.replaceTreenodeById(
       outlineNode.id,
-      (p) => TreeEditor.removeContentNode(treenode: p, docNodeId: nodeId),
+      (p) => p.copyRemoveContentNode(docNodeId: nodeId),
     );
     return true;
   }
@@ -232,7 +217,7 @@ class OutlineEditableDocument
 
   @override
   bool hasEquivalentContent(Document other) {
-    if (other is OutlineEditableDocument) {
+    if (other is OutlineEditableDocument<T>) {
       return root.hasEquivalentContent(other.root);
     }
     return other.hasEquivalentContent(this);
@@ -295,10 +280,8 @@ class OutlineEditableDocument
     // okay, index pointed to a simple content node:
     // minus 1, as a 0 path always points to the title node
     final cnIndex = index - getNodeIndexById(treenode.titleNode.id) - 1;
-    root = _root.replaceTreenodeById(
-        treenode.id,
-        (p) => TreeEditor.insertDocumentNode(
-            treenode: p, docNode: node, atIndex: cnIndex));
+    root = _root.replaceTreenodeById(treenode.id,
+        (p) => p.copyInsertDocumentNode(docNode: node, atIndex: cnIndex));
   }
 
   /// Inserts a node right before a given existing node. While this is trivial
@@ -364,12 +347,11 @@ class OutlineEditableDocument
     }
     assert(node is! TitleNode,
         'moveNode called on a TitleNode, this is not supported; internal error');
-    final nodePath =
-        _root.getDocumentNodePathById(nodeId); //getPathToDocumentNode(node);
+    final nodePath = _root.getDocumentNodePathById(nodeId);
     final treenode = _root.getTreenodeByPath(nodePath!.treenodePath)!;
-    root = root.replaceTreenodeById(treenode.id,
-        (p) => TreeEditor.removeContentNode(treenode: p, docNodeId: nodeId));
-    root = TreeEditor.insertDocumentNode(treenode: treenode, docNode: node);
+    root = root.replaceTreenodeById(
+        treenode.id, (p) => p.copyRemoveContentNode(docNodeId: nodeId));
+    insertNodeAt(targetIndex, node);
   }
 
   @override
@@ -391,10 +373,8 @@ class OutlineEditableDocument
     } else {
       assert(
           newNode is! TitleNode, 'Tried inserting a TitleNode in contentNodes');
-      root = _root.replaceTreenodeById(
-          treenode.id,
-          (p) => TreeEditor.replaceContentNodeInTreenode(
-              treenode: p, replaceNode: newNode));
+      root = _root.replaceTreenodeById(treenode.id,
+          (p) => p.copyReplaceContentNodeInTreenode(replaceNode: newNode));
     }
   }
 

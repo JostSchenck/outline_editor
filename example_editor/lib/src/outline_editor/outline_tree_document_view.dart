@@ -26,12 +26,11 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
 
     _scrollController = ScrollController();
 
-    OutlineTreenode root = defaultOutlineTreenodeBuilder(
+    BasicOutlineTreenode root = basicOutlineTreenodeBuilder(
       id: 'root',
     );
-    root = TreeEditor.insertChild(
-      parent: root,
-      child: OutlineTreenode(
+    root = root.copyInsertChild(
+      child: BasicOutlineTreenode(
         id: '1',
         titleNode: TitleNode(
             id: '1a', text: AttributedText('First Paragraph of a root node')),
@@ -43,7 +42,7 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
               text: AttributedText('Second Paragraph of a root node')),
         ],
         children: [
-          OutlineTreenode(
+          BasicOutlineTreenode(
             id: '2',
             titleNode: TitleNode(
                 id: '2a', text: AttributedText('This is a child tree node')),
@@ -54,7 +53,7 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
                   id: '2c', text: AttributedText('with its second paragraph')),
             ],
             children: [
-              OutlineTreenode(
+              BasicOutlineTreenode(
                 id: '2-1',
                 titleNode: TitleNode(
                     id: '2-1a', text: AttributedText('grand child yay')),
@@ -66,7 +65,7 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
               )
             ],
           ),
-          OutlineTreenode(
+          BasicOutlineTreenode(
             id: '3',
             titleNode:
                 TitleNode(id: '3a', text: AttributedText('And another child')),
@@ -79,7 +78,8 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
       ),
     );
 
-    _document = OutlineEditableDocument(
+    _document = OutlineEditableDocument<BasicOutlineTreenode>(
+      treenodeBuilder: basicOutlineTreenodeBuilder,
       logicalRoot: root,
     );
 
@@ -125,7 +125,7 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
         focusNode: _editorFocusNode,
         documentLayoutKey: _docLayoutKey,
         plugins: {
-          OutlineEditorPlugin(
+          OutlineEditorPlugin<BasicOutlineTreenode>(
               editor: _editor, documentLayoutKey: _docLayoutKey),
         },
         stylesheet: defaultOutlineEditorStylesheet,

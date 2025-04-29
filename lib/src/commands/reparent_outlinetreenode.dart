@@ -27,7 +27,8 @@ class ReparentOutlineTreenodeRequest implements EditRequest {
       super.hashCode ^ childTreenodeId.hashCode ^ newParentTreenodeId.hashCode;
 }
 
-class ReparentOutlineTreenodeCommand extends EditCommand {
+class ReparentOutlineTreenodeCommand<T extends OutlineTreenode<T>>
+    extends EditCommand {
   ReparentOutlineTreenodeCommand({
     required this.childTreenodeId,
     required this.newParentTreenodeId,
@@ -43,7 +44,7 @@ class ReparentOutlineTreenodeCommand extends EditCommand {
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    final outlineDoc = context.document as OutlineEditableDocument;
+    final outlineDoc = context.document as OutlineEditableDocument<T>;
     final oldRoot = outlineDoc.root;
 
     commandLog.fine(
@@ -65,8 +66,7 @@ class ReparentOutlineTreenodeCommand extends EditCommand {
     // 2. Füge Kind in neuen Parent ein
     final (treenode: newParentTreenode, path: newParentPath) =
         updatedRoot.getTreenodeAndPathById(newParentTreenodeId)!;
-    final updatedChildren =
-        List<OutlineTreenode>.from(newParentTreenode.children);
+    final updatedChildren = List<T>.from(newParentTreenode.children);
     updatedChildren.insert(index, childTreenode);
 
     final updatedNewParent =
@@ -139,7 +139,8 @@ class ChangeTreenodeIndentationRequest implements EditRequest {
       super.hashCode ^ treenodeId.hashCode ^ moveUpInHierarchy.hashCode;
 }
 
-class ChangeTreenodeIndentationCommand extends EditCommand {
+class ChangeTreenodeIndentationCommand<T extends OutlineTreenode<T>>
+    extends EditCommand {
   ChangeTreenodeIndentationCommand({
     required this.treenodeId,
     required this.moveUpInHierarchy,
@@ -150,7 +151,7 @@ class ChangeTreenodeIndentationCommand extends EditCommand {
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    final outlineDoc = context.document as OutlineEditableDocument;
+    final outlineDoc = context.document as OutlineEditableDocument<T>;
 
     commandLog.fine(
       'executing ChangeTreenodeIndentationCommand, moving $treenodeId ${moveUpInHierarchy ? 'up' : 'down'}',
@@ -162,26 +163,30 @@ class ChangeTreenodeIndentationCommand extends EditCommand {
       return;
     }
     final parent = outlineDoc.root.getParentOf(treenodeId);
-    if (parent == null || parent == outlineDoc.root) {
-      commandLog
-          .info('No moving further up or down in hierarchy, at top already');
+    if (parent == null) {
+      commandLog.info('No moving up or down of logical root node');
       return;
     }
-    final childIndex = parent.children.indexOf(treenode);
 
     if (moveUpInHierarchy) {
-      final grandParent = outlineDoc.root.getTreenodeById(treenodeId);
+      if (parent == outlineDoc.root) {
+        commandLog.info('No moving further up in hierarchy, at top already');
+        return;
+      }
+      final grandParent = outlineDoc.root.getParentOf(parent.id);
       if (grandParent == null) {
         commandLog.warning('Grandparent not found');
         return;
       }
+      final childIndex = grandParent.children.indexOf(parent);
 
-      executor.executeCommand(ReparentOutlineTreenodeCommand(
+      executor.executeCommand(ReparentOutlineTreenodeCommand<T>(
         childTreenodeId: treenodeId,
         newParentTreenodeId: grandParent.id,
         index: childIndex + 1,
       ));
     } else {
+      final childIndex = parent.children.indexOf(treenode);
       if (childIndex == 0) {
         commandLog.info('No moving down in hierarchy, no older sibling');
         return;
@@ -190,7 +195,7 @@ class ChangeTreenodeIndentationCommand extends EditCommand {
       final newParent = parent.children[childIndex - 1];
       final selection = context.composer.selection;
 
-      executor.executeCommand(ReparentOutlineTreenodeCommand(
+      executor.executeCommand(ReparentOutlineTreenodeCommand<T>(
         childTreenodeId: treenodeId,
         newParentTreenodeId: newParent.id,
         index: newParent.children.length,

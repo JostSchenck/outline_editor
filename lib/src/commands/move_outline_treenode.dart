@@ -25,7 +25,8 @@ class MoveOutlineTreenodeRequest implements EditRequest {
   int get hashCode => super.hashCode ^ treenodeId.hashCode ^ newPath.hashCode;
 }
 
-class MoveOutlineTreenodeCommand extends EditCommand {
+class MoveOutlineTreenodeCommand<T extends OutlineTreenode<T>>
+    extends EditCommand {
   MoveOutlineTreenodeCommand({
     required this.treenodeId,
     required this.newPath,
@@ -39,7 +40,7 @@ class MoveOutlineTreenodeCommand extends EditCommand {
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    final outlineDoc = context.document as OutlineEditableDocument;
+    final outlineDoc = context.document as OutlineEditableDocument<T>;
     commandLog.fine(
       'executing MoveOutlineTreenodeCommand, moving treenode $treenodeId to path $newPath',
     );
@@ -68,7 +69,7 @@ class MoveOutlineTreenodeCommand extends EditCommand {
       return;
     }
 
-    final updatedChildren = List<OutlineTreenode>.from(targetParent.children);
+    final updatedChildren = List<T>.from(targetParent.children);
     updatedChildren.insert(insertIndex, treenode);
 
     final updatedParent = targetParent.copyWith(children: updatedChildren);

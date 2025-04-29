@@ -1,58 +1,66 @@
 import 'package:outline_editor/outline_editor.dart';
 
-OutlineEditableDocument singleParagraphEmptyDoc() =>
+OutlineEditableDocument<BasicOutlineTreenode> singleParagraphEmptyDoc() =>
     OutlineEditableDocument.empty(
       treenodeId: 'tree1',
       titleNodeId: 'title1',
       paragraphNodeId: 'par1',
     );
 
-OutlineEditableDocument twoParagraphsEmptyDoc() =>
-    OutlineEditableDocument(rootTreeNodes: [
-      OutlineTreenode(
-        id: 'tree1',
-        titleNode: TitleNode(id: 'title1', text: AttributedText('')),
-        contentNodes: [ParagraphNode(id: 'par1', text: AttributedText(''))],
-      ),
-      OutlineTreenode(
-        id: 'tree2',
-        titleNode: TitleNode(id: 'title2', text: AttributedText('')),
-        contentNodes: [ParagraphNode(id: 'par2', text: AttributedText(''))],
-      ),
-    ]);
-
-OutlineEditableDocument onlyTitleEmptyDoc() => OutlineEditableDocument(
+OutlineEditableDocument<BasicOutlineTreenode> twoParagraphsEmptyDoc() =>
+    OutlineEditableDocument<BasicOutlineTreenode>(
       rootTreeNodes: [
-        OutlineTreenode(
+        BasicOutlineTreenode(
+          id: 'tree1',
+          titleNode: TitleNode(id: 'title1', text: AttributedText('')),
+          contentNodes: [ParagraphNode(id: 'par1', text: AttributedText(''))],
+        ),
+        BasicOutlineTreenode(
+          id: 'tree2',
+          titleNode: TitleNode(id: 'title2', text: AttributedText('')),
+          contentNodes: [ParagraphNode(id: 'par2', text: AttributedText(''))],
+        ),
+      ],
+      treenodeBuilder: basicOutlineTreenodeBuilder,
+    );
+
+OutlineEditableDocument<BasicOutlineTreenode> onlyTitleEmptyDoc() =>
+    OutlineEditableDocument<BasicOutlineTreenode>(
+      rootTreeNodes: [
+        BasicOutlineTreenode(
           id: 'tree1',
           titleNode: TitleNode(id: 'title1', text: AttributedText('')),
           contentNodes: [],
         ),
       ],
+      treenodeBuilder: basicOutlineTreenodeBuilder,
     );
 
-OutlineEditableDocument singleParagraphDoc() {
-  return OutlineEditableDocument(rootTreeNodes: [
-    OutlineTreenode(
-      id: 'tree1',
-      titleNode: TitleNode(
-        id: 'title1',
-        text: AttributedText('Titel'),
-      ),
-      contentNodes: [
-        ParagraphNode(
-          id: 'par1',
-          text: AttributedText(
-              'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.'),
+OutlineEditableDocument<BasicOutlineTreenode> singleParagraphDoc() {
+  return OutlineEditableDocument<BasicOutlineTreenode>(
+    rootTreeNodes: [
+      BasicOutlineTreenode(
+        id: 'tree1',
+        titleNode: TitleNode(
+          id: 'title1',
+          text: AttributedText('Titel'),
         ),
-      ],
-    ),
-  ]);
+        contentNodes: [
+          ParagraphNode(
+            id: 'par1',
+            text: AttributedText(
+                'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.'),
+          ),
+        ],
+      ),
+    ],
+    treenodeBuilder: basicOutlineTreenodeBuilder,
+  );
 }
 
-OutlineEditableDocument singleParagraphDocShortText() {
-  return OutlineEditableDocument(rootTreeNodes: [
-    OutlineTreenode(
+OutlineEditableDocument<BasicOutlineTreenode> singleParagraphDocShortText() {
+  return OutlineEditableDocument<BasicOutlineTreenode>(rootTreeNodes: [
+    BasicOutlineTreenode(
       id: 'tree1',
       titleNode: TitleNode(
         id: 'title1',
@@ -65,7 +73,8 @@ OutlineEditableDocument singleParagraphDocShortText() {
         ),
       ],
     ),
-  ]);
+  ],
+  treenodeBuilder: basicOutlineTreenodeBuilder,);
 }
 
 /*

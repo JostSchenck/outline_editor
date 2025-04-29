@@ -20,7 +20,8 @@ class DeleteOutlineTreenodeRequest implements EditRequest {
   int get hashCode => super.hashCode ^ outlineTreenodeId.hashCode;
 }
 
-class DeleteOutlineTreenodeCommand extends EditCommand {
+class DeleteOutlineTreenodeCommand<T extends OutlineTreenode<T>>
+    extends EditCommand {
   DeleteOutlineTreenodeCommand({
     required this.outlineTreenodeId,
   });
@@ -34,7 +35,7 @@ class DeleteOutlineTreenodeCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     commandLog
         .fine('executing DeleteOutlineTreenodeCommand on $outlineTreenodeId');
-    final outlineDoc = context.document as OutlineEditableDocument;
+    final outlineDoc = context.document as OutlineEditableDocument<T>;
 
     /*// if he OutlineTreenode is not in the document, skip it; this can happen
     // if delete requests for a whole list of OutlineTreenodes is dispatched

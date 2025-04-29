@@ -44,7 +44,7 @@ class InputAndGestureTuple {
 /// A [TextInputConnection] that tracks the number of content updates, to verify
 /// within tests.
 class ImeConnectionWithUpdateCount extends TextInputConnectionDecorator {
-  ImeConnectionWithUpdateCount(TextInputConnection client) : super(client);
+  ImeConnectionWithUpdateCount(TextInputConnection super.client);
 
   int get contentUpdateCount => _contentUpdateCount;
   int _contentUpdateCount = 0;

@@ -24,7 +24,8 @@ class ChangeCollapsedStateRequest implements EditRequest {
       super.hashCode ^ treenodeId.hashCode ^ isCollapsed.hashCode;
 }
 
-class ChangeCollapsedStateCommand extends EditCommand {
+class ChangeCollapsedStateCommand<T extends OutlineTreenode<T>>
+    extends EditCommand {
   ChangeCollapsedStateCommand({
     required this.treenodeId,
     required this.isCollapsed,
@@ -41,7 +42,7 @@ class ChangeCollapsedStateCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     commandLog.fine(
         'executing ChangeCollapsedStateCommand, setting $treenodeId to $isCollapsed');
-    final outlineDoc = context.document as OutlineEditableDocument;
+    final outlineDoc = context.document as OutlineEditableDocument<T>;
     final treenode = outlineDoc.getTreenodeById(treenodeId);
     outlineDoc.root = outlineDoc.root.replaceTreenodeById(
       treenodeId,

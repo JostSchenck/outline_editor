@@ -749,7 +749,7 @@ class _TestSuperEditorState extends State<_TestSuperEditor> {
       scrollController: widget.testConfiguration.scrollController,
       documentOverlayBuilders: _createOverlayBuilders(),
       plugins: {
-        OutlineEditorPlugin(
+        OutlineEditorPlugin<BasicOutlineTreenode>(
           editor: widget.testDocumentContext.editor,
           documentLayoutKey: widget.testDocumentContext.layoutKey,
         ),

@@ -12,7 +12,7 @@ import 'package:outline_editor/outline_editor.dart';
 ///
 /// The Editor must also have a [DocumentStructureReaction] as the last
 /// reaction in its `reactionPipeline`.
-class OutlineEditor extends StatefulWidget {
+class OutlineEditor<T extends OutlineTreenode<T>> extends StatefulWidget {
   const OutlineEditor({
     super.key,
     required this.scrollController,
@@ -25,7 +25,7 @@ class OutlineEditor extends StatefulWidget {
     this.documentOverlayBuilders = defaultSuperEditorDocumentOverlayBuilders,
     this.documentUnderlayBuilders = const [],
     this.keyboardActions,
-    this.defaultTreenodeBuilder = defaultOutlineTreenodeBuilder,
+    this.defaultTreenodeBuilder = basicOutlineTreenodeBuilder,
   });
 
   final ScrollController scrollController;
@@ -41,10 +41,11 @@ class OutlineEditor extends StatefulWidget {
   final TreenodeBuilder defaultTreenodeBuilder;
 
   @override
-  State<OutlineEditor> createState() => _OutlineEditorState();
+  State<OutlineEditor<T>> createState() => _OutlineEditorState<T>();
 }
 
-class _OutlineEditorState extends State<OutlineEditor> {
+class _OutlineEditorState<T extends OutlineTreenode<T>>
+    extends State<OutlineEditor<T>> {
   late GlobalKey _docLayoutKey;
 
   @override
@@ -68,7 +69,7 @@ class _OutlineEditorState extends State<OutlineEditor> {
       documentOverlayBuilders: widget.documentOverlayBuilders,
       documentUnderlayBuilders: widget.documentUnderlayBuilders,
       plugins: {
-        OutlineEditorPlugin(
+        OutlineEditorPlugin<T>(
           editor: widget.editor,
           documentLayoutKey: _docLayoutKey,
           defaultTreenodeBuilder: widget.defaultTreenodeBuilder,

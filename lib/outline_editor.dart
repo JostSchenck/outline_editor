@@ -16,6 +16,7 @@ export 'src/components/component_animations.dart';
 export 'src/components/outline_component_base.dart';
 export 'src/components/outline_paragraph_component.dart';
 export 'src/components/outline_title_component.dart';
+export 'src/outline_document/basic_outline_treenode.dart';
 export 'src/outline_document/outline_document.dart';
 export 'src/outline_document/outline_editable_document.dart';
 export 'src/outline_document/outline_treenode.dart';

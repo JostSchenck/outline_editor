@@ -25,7 +25,8 @@ class MergeOutlineTreenodesRequest implements EditRequest {
       mergedTreenodeId.hashCode;
 }
 
-class MergeOutlineTreenodesCommand extends EditCommand {
+class MergeOutlineTreenodesCommand<T extends OutlineTreenode<T>>
+    extends EditCommand {
   MergeOutlineTreenodesCommand({
     required this.treenodeMergedIntoId,
     required this.mergedTreenodeId,
@@ -41,7 +42,7 @@ class MergeOutlineTreenodesCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     commandLog.fine(
         'executing MergeOutlineTreenodesCommand, appending $mergedTreenodeId to $treenodeMergedIntoId');
-    final outlineDoc = context.document as OutlineEditableDocument;
+    final outlineDoc = context.document as OutlineEditableDocument<T>;
     final treenodeMergedInto =
         outlineDoc.root.getTreenodeById(treenodeMergedIntoId) ??
             (throw Exception(
@@ -51,20 +52,20 @@ class MergeOutlineTreenodesCommand extends EditCommand {
 
     // append all documentNodes of the merged node one after one to the node merged into
     for (final docNode in [...mergedTreenode.contentNodes]) {
-      executor.executeCommand(MoveDocumentNodeIntoTreenodeCommand(
+      executor.executeCommand(MoveDocumentNodeIntoTreenodeCommand<T>(
           documentNodeId: docNode.id,
           targetTreenodeId: treenodeMergedInto.id,
           index: -1));
     }
     // prepend all children of the merged node one after one to the node merged into
     for (final child in [...mergedTreenode.children.reversed]) {
-      executor.executeCommand(ReparentOutlineTreenodeCommand(
+      executor.executeCommand(ReparentOutlineTreenodeCommand<T>(
           childTreenodeId: child.id,
           newParentTreenodeId: treenodeMergedIntoId,
           index: 0));
     }
     executor.executeCommand(
-        DeleteOutlineTreenodeCommand(outlineTreenodeId: mergedTreenodeId));
+        DeleteOutlineTreenodeCommand<T>(outlineTreenodeId: mergedTreenodeId));
     // there should not be anything left to log as we only executed other commands.
   }
 }
