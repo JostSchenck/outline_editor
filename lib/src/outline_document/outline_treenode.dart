@@ -31,7 +31,7 @@ abstract class OutlineTreenode<
         T extends OutlineTreenode<T>> /*extends ChangeNotifier */
     with
         Iterable<DocumentNode> {
-  TitleNode titleNode;
+  final TitleNode titleNode;
   final UnmodifiableListView<DocumentNode> contentNodes;
   final UnmodifiableListView<T> children;
 
