@@ -14,7 +14,7 @@ class OutlineTreeDocumentView extends StatefulWidget {
 
 class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
   late ScrollController _scrollController;
-  late OutlineTreeDocument _document;
+  late OutlineEditableDocument _document;
   late Editor _editor;
   late MutableDocumentComposer _composer;
   late FocusNode _editorFocusNode;
@@ -26,11 +26,12 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
 
     _scrollController = ScrollController();
 
-    final root = defaultOutlineTreenodeBuilder(
+    OutlineTreenode root = defaultOutlineTreenodeBuilder(
       id: 'root',
     );
-    root.addChild(
-      OutlineTreenode(
+    root = TreeEditor.insertChild(
+      parent: root,
+      child: OutlineTreenode(
         id: '1',
         titleNode: TitleNode(
             id: '1a', text: AttributedText('First Paragraph of a root node')),
@@ -78,7 +79,7 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
       ),
     );
 
-    _document = OutlineTreeDocument(
+    _document = OutlineEditableDocument(
       logicalRoot: root,
     );
 

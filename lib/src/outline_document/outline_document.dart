@@ -1,30 +1,33 @@
+import 'dart:math';
+
 import 'package:outline_editor/outline_editor.dart';
 
 const isHiddenKey = 'isHidden';
 
 /// Mixin to be used or implemented implemented by the Document
 /// class to be used in an outline editor.
-abstract mixin class OutlineDocument<T extends OutlineTreenode>
-    implements Document {
-  T get root;
+abstract mixin class OutlineDocument implements Document {
+  OutlineTreenode get root;
 
-  T getOutlineTreenodeForDocumentNodeId(String nodeId) {
-    final ret = root.getOutlineTreenodeByDocumentNodeId(nodeId) as T?;
+  ({OutlineTreenode treenode, TreenodePath path}) getTreenodeForDocumentNodeId(
+      String docNodeId) {
+    final ret = root.getTreenodeContainingDocumentNode(docNodeId);
     if (ret == null) {
-      throw Exception('Did not find OutlineTreenode for DocumentNode $nodeId');
+      throw Exception(
+          'Did not find OutlineTreenode for DocumentNode $docNodeId');
     }
-    return ret;
+    return (treenode: ret.treenode, path: ret.path);
   }
 
-  int getTreenodeDepth(String nodeId) =>
-      getOutlineTreenodeForDocumentNodeId(nodeId).depth;
+  int getTreenodeDepth(String docNodeId) =>
+      getTreenodeForDocumentNodeId(docNodeId).path.length;
 
-  TreenodePath getOutlinePathByDocNodeId(String docNodeId) =>
-      getOutlineTreenodeForDocumentNodeId(docNodeId).path;
+  TreenodePath? getTreenodePathByDocNodeId(String docNodeId) =>
+      root.getPathTo(getTreenodeForDocumentNodeId(docNodeId).treenode.id);
 
-  T getOutlineTreenodeByPath(TreenodePath path) {
+  OutlineTreenode getTreenodeByPath(TreenodePath path) {
     if (path.isEmpty) return root;
-    final ret = root.getOutlineTreenodeByPath(path) as T?;
+    final ret = root.getTreenodeByPath(path);
     if (ret == null) {
       throw Exception('Could not find OutlineTreenode for path $path');
     }
@@ -32,8 +35,8 @@ abstract mixin class OutlineDocument<T extends OutlineTreenode>
   }
 
   // test
-  T getOutlineTreenodeById(String treenodeId) {
-    final ret = root.getOutlineTreenodeById(treenodeId) as T?;
+  OutlineTreenode getTreenodeById(String treenodeId) {
+    final ret = root.getTreenodeById(treenodeId);
     if (ret == null) {
       throw Exception('Could not find OutlineTreenode for id $treenodeId');
     }
@@ -41,8 +44,9 @@ abstract mixin class OutlineDocument<T extends OutlineTreenode>
   }
 
   // test
-  T getOutlineTreenodeByDocumentNodeId(String docNodeId) {
-    final ret = root.getOutlineTreenodeByDocumentNodeId(docNodeId) as T?;
+  ({OutlineTreenode treenode, TreenodePath path})
+      getOutlineTreenodeByDocumentNodeId(String docNodeId) {
+    final ret = root.getTreenodeContainingDocumentNode(docNodeId);
     if (ret == null) {
       throw Exception(
           'Could not find OutlineTreenode for docNodeId $docNodeId');
@@ -52,46 +56,46 @@ abstract mixin class OutlineDocument<T extends OutlineTreenode>
 
   /// Returns the OutlineTreenode directly preceding this OutlineTreenode in
   /// presentation. This can be a sibling, a parent, or even just some cousin.
-  T? getOutlineTreenodeBeforeTreenode(T treenode) {
-    if (treenode.parent == null) return null;
-    final childIndex = treenode.childIndex;
-    if (childIndex == 0) {
-      // omit logical root node
-      if (treenode.parent?.parent == null) return null;
-      return treenode.parent as T?;
+  OutlineTreenode? getOutlineTreenodeBeforeTreenode(String treenodeId) {
+    final flattenedTree = root.subtreeList;
+    for (int i = 0; i < flattenedTree.length - 1; i++) {
+      if (flattenedTree[i + 1].id == treenodeId) {
+        return flattenedTree[i] as OutlineTreenode?;
+      }
     }
-    return (treenode
-        .parent!.children[childIndex - 1].lastOutlineTreeNodeInSubtree as T);
+    return null;
   }
 
   /// Returns the OutlineTreenode directly following this OutlineTreenode in
   /// presentation. This can be a sibling, an uncle, or even just some cousin.
-  T? getOutlineTreenodeAfterTreenode(T treenode) {
-    // if we have children, move to the first child
-    if (treenode.children.isNotEmpty) {
-      return treenode.children.first as T;
-    }
-    // So we don't. If we are the root node, there's nothing to move to
-    if (treenode.parent == null) return null;
-    // if we happen to have a directly following sibling, go there, if not,
-    // return our next ancestor's sibling
-    T currentTreenode = treenode;
-    while (currentTreenode.parent != null) {
-      if (currentTreenode.parent!.children.length >
-          currentTreenode.childIndex + 1) {
-        return currentTreenode.parent!.children[currentTreenode.childIndex + 1]
-            as T;
-      }
-      currentTreenode = currentTreenode.parent! as T;
+  OutlineTreenode? getOutlineTreenodeAfterTreenode(String treenodeId) {
+    final flattenedTree = root.subtreeList;
+    for (int i = 0; i < flattenedTree.length - 1; i++) {
+      if (flattenedTree[i].id == treenodeId) return flattenedTree[i + 1];
     }
     return null;
+  }
+
+  TreenodePath getLowestCommonAncestorPath(
+      OutlineTreenode tn1, OutlineTreenode tn2) {
+    final TreenodePath lowestAncestorPath = [];
+    final tn1path = root.getPathTo(tn1.id)!;
+    final tn2path = root.getPathTo(tn2.id)!;
+    for (int i = 0; i < min(tn1path.length, tn2path.length); i++) {
+      if (tn1path[i] == tn2path[i]) {
+        lowestAncestorPath.add(tn1path[i]);
+      } else {
+        break;
+      }
+    }
+    return lowestAncestorPath;
   }
 
   /// At which position in the parent's content a certain [DocumentNode] is
   /// located, ie. 0 for the first child, 1 for the second, etc. Returns -1 if
   /// it does not find nodeId. The result is used for component building.
   int getIndexInChildren(String docNodeId) {
-    final treeNode = getOutlineTreenodeForDocumentNodeId(docNodeId);
+    final treeNode = getTreenodeForDocumentNodeId(docNodeId).treenode;
     for (var i = 0; i < treeNode.nodes.length; i++) {
       if (treeNode.nodes[i].id == docNodeId) {
         return i;
@@ -161,6 +165,11 @@ abstract mixin class OutlineDocument<T extends OutlineTreenode>
     );
   }
 
+  @override
+  DocumentNode? getNodeById(String docNodeId) {
+    return root.getDocumentNodeById(docNodeId);
+  }
+
   /// Returns whether the specified [OutlineTreenode] with id `treeNodeID` '
   /// is collapsed (ie. child [OutlineTreenode]s with their
   /// [DocumentNode]s hidden, not this [OutlineTreenode]'s own [DocumentNode]s).
@@ -180,15 +189,7 @@ abstract mixin class OutlineDocument<T extends OutlineTreenode>
   /// Return visibility of the [DocumentNode] with the given id, taking
   /// folding state of tree nodes as well as document nodes into account.
   bool isVisible(String documentNodeId) {
-    final myDocNode = getNodeById(documentNodeId);
-    final myTreeNode = getOutlineTreenodeForDocumentNodeId(documentNodeId);
-    if (myDocNode is TitleNode) {
-      return myTreeNode.isVisible;
-    } else {
-      return !myTreeNode.hasContentHidden &&
-          !myTreeNode.isCollapsed &&
-          myTreeNode.isVisible;
-    }
+    return root.isDocumentNodeVisible(documentNodeId);
   }
 
   /// Returns the last visible [DocumentNode] in the document before `pos`, or the node

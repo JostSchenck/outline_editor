@@ -9,8 +9,8 @@ class OutlineSelectionReaction extends EditReaction {
   @override
   void modifyContent(EditContext editorContext,
       RequestDispatcher requestDispatcher, List<EditEvent> changeList) {
-    assert(editorContext.document is OutlineTreeDocument);
-    final outlineDoc = editorContext.document as OutlineTreeDocument;
+    assert(editorContext.document is OutlineEditableDocument);
+    final outlineDoc = editorContext.document as OutlineEditableDocument;
 
     final event = changeList
         .lastWhereOrNull((editevent) => editevent is SelectionChangeEvent);
@@ -24,11 +24,13 @@ class OutlineSelectionReaction extends EditReaction {
     if (selection.base.nodeId == selection.extent.nodeId) return;
     // if the selection spans more than one node, see if it spans TitleNodes or
     // OutlineTreenodes:
-    final baseTreenode =
-        outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
+    final baseTreenode = outlineDoc
+        .getOutlineTreenodeByDocumentNodeId(selection.base.nodeId)
+        .treenode;
     final baseDocNode = outlineDoc.getNodeById(selection.base.nodeId);
-    final extentTreenode =
-        outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.extent.nodeId);
+    final extentTreenode = outlineDoc
+        .getOutlineTreenodeByDocumentNodeId(selection.extent.nodeId)
+        .treenode;
     final extentDocNode = outlineDoc.getNodeById(selection.extent.nodeId);
     final selectionAffinity = selection.calculateAffinity(outlineDoc);
     if (baseTreenode.id == extentTreenode.id) {
@@ -39,10 +41,11 @@ class OutlineSelectionReaction extends EditReaction {
               (baseDocNode is! TitleNode && extentDocNode is TitleNode);
       if (contentAndTitleSelected) {
         stretchSelection(
-            requestDispatcher: requestDispatcher,
-            document: outlineDoc,
-            affinity: selectionAffinity,
-            baseTreenode: baseTreenode);
+          requestDispatcher: requestDispatcher,
+          document: outlineDoc,
+          affinity: selectionAffinity,
+          baseTreenode: baseTreenode,
+        );
       }
     } else {
       stretchSelection(
@@ -57,7 +60,7 @@ class OutlineSelectionReaction extends EditReaction {
 
   void stretchSelection({
     required RequestDispatcher requestDispatcher,
-    required OutlineTreeDocument document,
+    required OutlineEditableDocument document,
     required TextAffinity affinity,
     required OutlineTreenode baseTreenode,
     OutlineTreenode? extentTreenode,
@@ -83,12 +86,12 @@ class OutlineSelectionReaction extends EditReaction {
     OutlineTreenode tn1 = downstream ? baseTreenode : extentTreenode;
     OutlineTreenode tn2 = downstream ? extentTreenode : baseTreenode;
 
-    final lowestCommonAncestor =
-        document.getOutlineTreenodeByPath(tn1.getLowestCommonAncestorPath(tn2));
+    final lowestCommonAncestor = document
+        .getTreenodeByPath(document.getLowestCommonAncestorPath(tn1, tn2));
     tn1 = lowestCommonAncestor == tn1
         ? lowestCommonAncestor
         : lowestCommonAncestor.children.first;
-    tn2 = lowestCommonAncestor.lastOutlineTreeNodeInSubtree;
+    tn2 = lowestCommonAncestor.lastTreenodeInSubtree;
     requestDispatcher.execute([
       ChangeSelectionRequest(
           DocumentSelection(

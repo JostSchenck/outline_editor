@@ -1,13 +1,14 @@
 import 'package:outline_editor/outline_editor.dart';
 
-OutlineTreeDocument singleParagraphEmptyDoc() => OutlineTreeDocument.empty(
+OutlineEditableDocument singleParagraphEmptyDoc() =>
+    OutlineEditableDocument.empty(
       treenodeId: 'tree1',
       titleNodeId: 'title1',
       paragraphNodeId: 'par1',
     );
 
-OutlineTreeDocument twoParagraphsEmptyDoc() =>
-    OutlineTreeDocument(rootTreeNodes: [
+OutlineEditableDocument twoParagraphsEmptyDoc() =>
+    OutlineEditableDocument(rootTreeNodes: [
       OutlineTreenode(
         id: 'tree1',
         titleNode: TitleNode(id: 'title1', text: AttributedText('')),
@@ -20,7 +21,7 @@ OutlineTreeDocument twoParagraphsEmptyDoc() =>
       ),
     ]);
 
-OutlineTreeDocument onlyTitleEmptyDoc() => OutlineTreeDocument(
+OutlineEditableDocument onlyTitleEmptyDoc() => OutlineEditableDocument(
       rootTreeNodes: [
         OutlineTreenode(
           id: 'tree1',
@@ -30,8 +31,8 @@ OutlineTreeDocument onlyTitleEmptyDoc() => OutlineTreeDocument(
       ],
     );
 
-OutlineTreeDocument singleParagraphDoc() {
-  return OutlineTreeDocument(rootTreeNodes: [
+OutlineEditableDocument singleParagraphDoc() {
+  return OutlineEditableDocument(rootTreeNodes: [
     OutlineTreenode(
       id: 'tree1',
       titleNode: TitleNode(
@@ -49,8 +50,8 @@ OutlineTreeDocument singleParagraphDoc() {
   ]);
 }
 
-OutlineTreeDocument singleParagraphDocShortText() {
-  return OutlineTreeDocument(rootTreeNodes: [
+OutlineEditableDocument singleParagraphDocShortText() {
+  return OutlineEditableDocument(rootTreeNodes: [
     OutlineTreenode(
       id: 'tree1',
       titleNode: TitleNode(

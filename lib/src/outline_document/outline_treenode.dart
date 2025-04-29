@@ -1,10 +1,6 @@
-import 'dart:math';
-
 import 'package:collection/collection.dart';
 import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/util/logging.dart';
-
-import '../infrastructure/uuid.dart';
 
 const isCollapsedKey = 'isCollapsed';
 
@@ -14,7 +10,7 @@ const isCollapsedKey = 'isCollapsed';
 typedef TreenodePath = List<int>;
 
 /// A [DocumentNodePath] is used to address a [DocumentNode] in an
-/// [OutlineTreeDocument]. It consists of a `treenodePath`, only addressing
+/// [OutlineEditableDocument]. It consists of a `treenodePath`, only addressing
 /// the [OutlineTreenode] that contains this DocumentNode] and then the
 /// index of the [DocumentNode] in the treenode's `documentNodes` list.
 class DocumentNodePath {
@@ -34,65 +30,267 @@ class DocumentNodePath {
 class OutlineTreenode /*extends ChangeNotifier */
     with
         Iterable<DocumentNode> {
-  OutlineTreenode({
-    TitleNode? titleNode,
-    List<DocumentNode> contentNodes = const [],
-    List<OutlineTreenode>? children,
-    this.parent,
-    bool isCollapsed = false,
-    this.hasContentHidden = false,
-    required this.id,
-    Map<String, dynamic>? metadata,
-  }) : titleNode =
-            titleNode ?? TitleNode(id: uuid.v4(), text: AttributedText('')) {
-    // _titleNode =
-    //     titleNode ?? TitleNode(id: uuid.v4(), text: AttributedText(''));
-    _contentNodes.addAll(contentNodes);
-    _metadata = metadata ?? {};
-    if (children != null) {
-      for (var child in children) {
-        addChild(child);
-      }
-    }
-    _isCollapsed = isCollapsed;
-  }
-
-  // this must be overridden if OutlineTreenode is to be subclassed.
-  OutlineTreenode deepCopy() {
-    return OutlineTreenode(
-      id: id,
-      titleNode: titleNode.copy() as TitleNode,
-      contentNodes: contentNodes.map((c) => (c as TextNode).copy()).toList(),
-      metadata: {..._metadata},
-      isCollapsed: isCollapsed,
-      hasContentHidden: hasContentHidden,
-      children: children.map((c) => c.deepCopy()).toList(),
-    );
-  }
-
   TitleNode titleNode;
-  final List<DocumentNode> _contentNodes = [];
-  final List<OutlineTreenode> _children = [];
-
-  /// This [OutlineTreenode]'s parent; passing this in the constructor does
-  /// not automatically add this node to the parent's `children` list.
-  OutlineTreenode? parent;
+  final UnmodifiableListView<DocumentNode> contentNodes;
+  final UnmodifiableListView<OutlineTreenode> children;
 
   /// A unique identifier for this OutlineTreenode. Addressing OutlineTreenodes
   /// by path will usually be faster.
   final String id;
 
-  bool _isCollapsed = false;
-  bool hasContentHidden = false;
-  late Map<String, dynamic> _metadata;
+  final bool isCollapsed;
+  final bool hasContentHidden;
+  late UnmodifiableMapView<String, dynamic> metadata;
 
-  UnmodifiableMapView<String, dynamic> get metadata =>
-      UnmodifiableMapView(_metadata);
+  OutlineTreenode({
+    required this.id,
+    required this.titleNode,
+    final List<DocumentNode>? contentNodes,
+    final List<OutlineTreenode>? children,
+    this.isCollapsed = false,
+    this.hasContentHidden = false,
+    Map<String, dynamic>? metadata,
+  })  : contentNodes = UnmodifiableListView(contentNodes ?? []),
+        children = UnmodifiableListView(children ?? []),
+        metadata = UnmodifiableMapView(metadata ?? {});
 
-// TODO: test
+  /// Returns a copy of this treenode, with optional replacements. This copy is
+  /// deep in the sense that the whole tree of OutlineTreenode's is copied.
+  /// If also DocumentNodes should be deeply copied, use copyWithDeep.
+  OutlineTreenode copyWith({
+    String? id,
+    TitleNode? titleNode,
+    List<DocumentNode>? contentNodes,
+    List<OutlineTreenode>? children,
+    bool? isCollapsed,
+    bool? hasContentHidden,
+    Map<String, dynamic>? metadata,
+  }) {
+    return OutlineTreenode(
+      id: id ?? this.id,
+      titleNode: titleNode ?? this.titleNode.copy() as TitleNode,
+      contentNodes: contentNodes ?? [...this.contentNodes],
+      children: children ?? this.children.map((c) => c.copyWith()).toList(),
+      isCollapsed: isCollapsed ?? this.isCollapsed,
+      hasContentHidden: hasContentHidden ?? this.hasContentHidden,
+      metadata: metadata != null
+          ? UnmodifiableMapView(metadata)
+          : UnmodifiableMapView(Map<String, dynamic>.from(this.metadata)),
+    );
+  }
+
+  /// Returns a full deep copy of this treenode and all its contents
+  OutlineTreenode copyWithDeep() {
+    return OutlineTreenode(
+      id: id,
+      titleNode: titleNode.copy() as TitleNode,
+      contentNodes: contentNodes.map((n) => (n as TextNode).copy()).toList(),
+      children: children.map((t) => t.copyWithDeep()).toList(),
+      isCollapsed: isCollapsed,
+      hasContentHidden: hasContentHidden,
+      metadata: Map<String, dynamic>.from(metadata),
+    );
+  }
+
+  /// Traverses the tree and replaces a node by id using the given transformer function.
+  OutlineTreenode replaceTreenodeById(
+      String targetId, OutlineTreenode Function(OutlineTreenode p) transform) {
+    if (id == targetId) {
+      return transform(this);
+    }
+    return copyWith(
+      children: children
+          .map((c) => c.replaceTreenodeById(targetId, transform))
+          .toList(),
+    );
+  }
+
+  /// Deletes the treenode with the given [targetId] from the tree.
+  /// Returns the updated root treenode, or `this` if not found or root is target.
+  OutlineTreenode removeTreenode(String targetId) {
+    // Sonderfall: aktuelle Wurzel soll gelöscht werden – nicht erlaubt
+    if (id == targetId) return this;
+
+    // Falls Kind direkt getroffen: entfernen
+    final updatedChildren = children.where((c) => c.id != targetId).toList();
+    if (updatedChildren.length != children.length) {
+      return copyWith(children: updatedChildren);
+    }
+
+    // Sonst rekursiv in den Unterbäumen weiter suchen
+    return copyWith(
+      children: children.map((c) => c.removeTreenode(targetId)).toList(),
+    );
+  }
+
+  /// Searches for a node by id
+  OutlineTreenode? getTreenodeById(String targetId) {
+    if (id == targetId) return this;
+    for (final child in children) {
+      final result = child.getTreenodeById(targetId);
+      if (result != null) return result;
+    }
+    return null;
+  }
+
+  /// Returns the parent of the node with [targetId], if any
+  OutlineTreenode? getParentOf(String targetId) {
+    for (final child in children) {
+      if (child.id == targetId) return this;
+      final result = child.getParentOf(targetId);
+      if (result != null) return result;
+    }
+    return null;
+  }
+
+  /// Returns the path (list of child indices) to the treenode with [treenodeId], or null if not found
+  TreenodePath? getPathTo(String treenodeId) {
+    if (id == treenodeId) return [];
+    for (int i = 0; i < children.length; i++) {
+      final pathFromChild = children[i].getPathTo(treenodeId);
+      if (pathFromChild != null) {
+        return [i, ...pathFromChild];
+      }
+    }
+    return null;
+  }
+
+  /// Getss the node at the given path, or null if invalid
+  OutlineTreenode? getTreenodeByPath(TreenodePath path) {
+    if (path.isEmpty) return this;
+    final index = path.first;
+    if (index < 0 || index >= children.length) return null;
+    return children[index].getTreenodeByPath(path.sublist(1));
+  }
+
+  /// Returns the list of ancestor nodes (from root to parent of target), or null if not found
+  List<OutlineTreenode>? getAncestorsOf(String targetId) {
+    if (id == targetId) return [];
+    for (final child in children) {
+      final subAncestors = child.getAncestorsOf(targetId);
+      if (subAncestors != null) {
+        return [this, ...subAncestors];
+      }
+    }
+    return null;
+  }
+
+  /// Returns both the node with the given id and its path, or null if not found
+  ({OutlineTreenode treenode, TreenodePath path})? getTreenodeAndPathById(
+      String targetId) {
+    if (id == targetId) return (treenode: this, path: []);
+    for (int i = 0; i < children.length; i++) {
+      final result = children[i].getTreenodeAndPathById(targetId);
+      if (result != null) {
+        return (treenode: result.treenode, path: [i, ...result.path]);
+      }
+    }
+    return null;
+  }
+
+  /// Returns both the treenode that contains [docNode], and its path, or null if not found
+  ({OutlineTreenode treenode, TreenodePath path})?
+      getTreenodeContainingDocumentNode(String docNodeId) {
+    if (titleNode.id == docNodeId ||
+        contentNodes.any((n) => n.id == docNodeId)) {
+      return (treenode: this, path: []);
+    }
+    for (int i = 0; i < children.length; i++) {
+      final result = children[i].getTreenodeContainingDocumentNode(docNodeId);
+      if (result != null) {
+        return (treenode: result.treenode, path: [i, ...result.path]);
+      }
+    }
+    return null;
+  }
+
+  /// Returns both the treenode that contains [docNode], and its path, or null if not found
+  DocumentNodePath? getDocumentNodePathById(String docNodeId) {
+    final index = nodes.indexWhere((element) => element.id == docNodeId);
+    if (index != -1) return DocumentNodePath([], index);
+    for (int i = 0; i < children.length; i++) {
+      final result = children[i].getDocumentNodePathById(docNodeId);
+      if (result != null) {
+        return DocumentNodePath(
+            [i, ...result.treenodePath], result.docNodeIndex);
+      }
+    }
+    return null;
+  }
+
+  /// Returns a flat list of all nodes in this subtree (depth-first)
+  List<OutlineTreenode> get subtreeList {
+    return [
+      this,
+      for (final child in children) ...child.subtreeList,
+    ];
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OutlineTreenode &&
+          id == other.id &&
+          titleNode == other.titleNode &&
+          _listEquals(contentNodes, other.contentNodes) &&
+          _listEquals(children, other.children) &&
+          isCollapsed == other.isCollapsed &&
+          hasContentHidden == other.hasContentHidden &&
+          _mapEquals(metadata, other.metadata);
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      titleNode.hashCode ^
+      contentNodes.hashCode ^
+      children.hashCode ^
+      isCollapsed.hashCode ^
+      hasContentHidden.hashCode ^
+      metadata.hashCode;
+
+  static bool _listEquals<T>(List<T> a, List<T> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  static bool _mapEquals<K, V>(Map<K, V> a, Map<K, V> b) {
+    if (a.length != b.length) return false;
+    for (final key in a.keys) {
+      if (!b.containsKey(key) || a[key] != b[key]) return false;
+    }
+    return true;
+  }
+
+  @override
+  String toString() {
+    final shortenedId = id.length > 6 ? '#${id.substring(0, 6)}' : '#$id';
+    final shortenedTitle = titleNode.text.toPlainText().length > 13
+        ? '"${titleNode.text.toPlainText().substring(0, 10)}..."'
+        : '"${titleNode.text.toPlainText()}"';
+    return '[OutlineTreenode $shortenedId $shortenedTitle ${contentNodes.length} content nodes, ${children.length} children]';
+  }
+
+  List<DocumentNode> get nodes => [titleNode, ...contentNodes];
+
+  // this must be overridden if OutlineTreenode is to be subclassed.
+  // OutlineTreenode deepCopy() {
+  //   return OutlineTreenode(
+  //     id: id,
+  //     titleNode: titleNode.copy() as TitleNode,
+  //     contentNodes: contentNodes.map((c) => (c as TextNode).copy()).toList(),
+  //     metadata: {..._metadata},
+  //     isCollapsed: isCollapsed,
+  //     hasContentHidden: hasContentHidden,
+  //     children: children.map((c) => c.deepCopy()).toList(),
+  //   );
+  // }
+
   void traverseUpDown(void Function(OutlineTreenode treenode) visitor) {
     visitor(this);
-    for (var child in _children) {
+    for (var child in children) {
       child.traverseUpDown(visitor);
     }
   }
@@ -103,15 +301,14 @@ class OutlineTreenode /*extends ChangeNotifier */
   Future<void> traverseUpDownAsync(
       Future<void> Function(OutlineTreenode treenode) visitor) async {
     visitor(this).then((value) async {
-      for (var child in _children) {
+      for (var child in children) {
         await child.traverseUpDownAsync(visitor);
       }
     });
   }
 
-// TODO: test
   void traverseDownUp(void Function(OutlineTreenode treenode) visitor) {
-    for (var child in _children) {
+    for (var child in children) {
       child.traverseDownUp(visitor);
     }
     visitor(this);
@@ -122,92 +319,63 @@ class OutlineTreenode /*extends ChangeNotifier */
   Future<void> traverseDownUpAsync(
       Future<void> Function(OutlineTreenode treenode) visitor) async {
     final futures =
-        _children.map((c) => c.traverseDownUpAsync(visitor)).toList();
+        children.map((c) => c.traverseDownUpAsync(visitor)).toList();
     await Future.wait(futures);
     visitor(this);
   }
 
   bool get isConsideredEmpty =>
-      nodes.every((n) => n is TextNode && n.text.toPlainText().isEmpty) &&
-      titleNode.text.toPlainText().isEmpty;
+      nodes.every((n) => n is TextNode && n.text.toPlainText().isEmpty);
 
-  bool hasMetadataValue(String key) => _metadata[key] != null;
+  bool hasMetadataValue(String key) => metadata[key] != null;
 
-  dynamic getMetadataValue(String key) => _metadata[key];
-
-  void putMetadataValue(String key, dynamic value) {
-    if (_metadata[key] == value) {
-      return;
-    }
-
-    _metadata[key] = value;
-    // notifyListeners();
-  }
-
-  void removeMetadataValue(String key) {
-    _metadata.remove(key);
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OutlineTreenode &&
-          id == other.id &&
-          parent == other.parent &&
-          titleNode == other.titleNode &&
-          const DeepCollectionEquality()
-              .equals(_contentNodes, other._contentNodes) &&
-          const DeepCollectionEquality().equals(_children, other._children);
-
-  @override
-  int get hashCode =>
-      _contentNodes.hashCode ^
-      titleNode.hashCode ^
-      _children.hashCode ^
-      id.hashCode ^
-      parent.hashCode;
-
-  // TitleNode get titleNode => _titleNode;
-  // set titleNode(TitleNode node) => _titleNode = node;
-
-  List<DocumentNode> get contentNodes => _contentNodes;
-
-  List<DocumentNode> get nodes => [titleNode, ..._contentNodes];
+  // void putMetadataValue(String key, dynamic value) {
+  //   if (_metadata[key] == value) {
+  //     return;
+  //   }
+  //
+  //   _metadata[key] = value;
+  //   // notifyListeners();
+  // }
+  //
+  // void removeMetadataValue(String key) {
+  //   _metadata.remove(key);
+  // }
 
   List<DocumentNode> get nodesSubtree {
     return [
       titleNode,
-      ..._contentNodes,
+      ...contentNodes,
       ...nodesChildren,
     ];
   }
 
   List<DocumentNode> get nodesChildren =>
-      [for (var child in _children) ...child.nodesSubtree];
+      [for (var child in children) ...child.nodesSubtree];
 
-  /// Returns the [TreenodePath] to this treenode, which is a List of int with
-  /// the first element being the index of my first ancestor in the root node's
-  /// children.
-  TreenodePath get path {
-    if (parent == null) {
-      return [];
-    }
-    final ret = parent!.path;
-    ret.add(parent!.children.indexOf(this));
-    return [...parent!.path, childIndex];
-  }
+  // /// Returns the [TreenodePath] to this treenode, which is a List of int with
+  // /// the first element being the index of my first ancestor in the root node's
+  // /// children.
+  // TreenodePath get path {
+  //   if (parent == null) {
+  //     return [];
+  //   }
+  //   final ret = parent!.path;
+  //   ret.add(parent!.children.indexOf(this));
+  //   return [...parent!.path, childIndex];
+  // }
 
-  /// Returns the [OutlineTreenode] with the given [TreenodePath], if there
-  /// is such a descendent, else null.
-  OutlineTreenode? getOutlineTreenodeByPath(TreenodePath path) {
-    if (path.isEmpty) {
-      return null;
-    }
-    if (path.length == 1) {
-      return _children[path.first];
-    }
-    return _children[path.first].getOutlineTreenodeByPath(path.sublist(1));
-  }
+  // /// Returns the [OutlineTreenode] with the given [TreenodePath], if there
+  // /// is such a descendent, else null.
+  // OutlineTreenode? getOutlineTreenodeByPath(TreenodePath path) {
+  //   if (path.isEmpty) {
+  //     return null;
+  //   }
+  //   if (path.length == 1) {
+  //     return _children[path.first];
+  //   }
+  //   return _children[path.first].getOutlineTreenodeByPath(path.sublist(1));
+  // }
 
   OutlineTreenode getLastOutlineTreenodeInSubtree() {
     if (children.isNotEmpty) {
@@ -223,7 +391,7 @@ class OutlineTreenode /*extends ChangeNotifier */
     if (docNodePath.treenodePath.isEmpty) {
       return nodes[docNodePath.docNodeIndex];
     }
-    return _children[docNodePath.treenodePath.first].getDocumentNodeByPath(
+    return children[docNodePath.treenodePath.first].getDocumentNodeByPath(
       DocumentNodePath(
         docNodePath.treenodePath.sublist(1),
         docNodePath.docNodeIndex,
@@ -231,150 +399,153 @@ class OutlineTreenode /*extends ChangeNotifier */
     );
   }
 
-  /// Returns the [OutlineTreenode] corresponding to the given treenode id
-  /// (not DocumentNode id), or null if it isn't found in this node's subtree.
-  OutlineTreenode? getOutlineTreenodeById(String id) {
-    if (id == this.id) {
-      return this;
-    }
-    for (var child in _children) {
-      final ret = child.getOutlineTreenodeById(id);
-      if (ret != null) return ret;
-    }
-    return null;
-  }
+  // /// Returns the [OutlineTreenode] corresponding to the given treenode id
+  // /// (not DocumentNode id), or null if it isn't found in this node's subtree.
+  // OutlineTreenode? getOutlineTreenodeById(String id) {
+  //   if (id == this.id) {
+  //     return this;
+  //   }
+  //   for (var child in _children) {
+  //     final ret = child.getOutlineTreenodeById(id);
+  //     if (ret != null) return ret;
+  //   }
+  //   return null;
+  // }
 
   /// Traverses this treenode's subtree up down, returning the first treenode
   /// which satisfies `testFunction` or null.
-  OutlineTreenode? getFirstOutlineTreenodeWhereOrNull(
+  OutlineTreenode? getFirstTreenodeWhereOrNull(
       bool Function(OutlineTreenode treenode) testFunction) {
     if (testFunction(this)) return this;
     for (var child in children) {
-      final subtreeResult =
-          child.getFirstOutlineTreenodeWhereOrNull(testFunction);
+      final subtreeResult = child.getFirstTreenodeWhereOrNull(testFunction);
       if (subtreeResult != null) return subtreeResult;
     }
     return null;
   }
 
   bool isDescendant(OutlineTreenode treenode) {
-    return getFirstOutlineTreenodeWhereOrNull((tn) => tn.id == treenode.id) !=
-        null;
+    return getFirstTreenodeWhereOrNull((tn) => tn.id == treenode.id) != null;
   }
 
   DocumentNode? getDocumentNodeById(String docNodeId) {
     var ret = nodes.firstWhereOrNull((e) => e.id == docNodeId);
     if (ret != null) return ret;
-    for (var child in _children) {
+    for (var child in children) {
       ret = child.getDocumentNodeById(docNodeId);
       if (ret != null) return ret;
     }
     return null;
   }
 
-  DocumentNodePath? getPathToDocumentNode(DocumentNode docNode) {
-    final index = nodes.indexOf(docNode);
-    if (index != -1) {
-      return DocumentNodePath(path, index);
+  // DocumentNodePath? getPathToDocumentNode(DocumentNode docNode) {
+  //   final index = nodes.indexOf(docNode);
+  //   if (index != -1) {
+  //     return DocumentNodePath(path, index);
+  //   }
+  //   for (var i = 0; i < _children.length; i++) {
+  //     final ret = _children[i].getPathToDocumentNode(docNode);
+  //     if (ret != null) return ret;
+  //   }
+  //   return null;
+  // }
+
+  /// Whether the descendent OutlineTreenode with `id` is actually supposed to
+  /// be visible. This returns false if a collapsed ancestor exists.
+  bool isTreenodeVisible(String treenodeId) {
+    final ancestors = getAncestorsOf(treenodeId);
+    if (ancestors == null) {
+      throw Exception(
+          'isTreenodeVisible called on id that does not exist in this tree');
     }
-    for (var i = 0; i < _children.length; i++) {
-      final ret = _children[i].getPathToDocumentNode(docNode);
-      if (ret != null) return ret;
-    }
-    return null;
+    if (ancestors.isEmpty) return true;
+    if (ancestors.reversed.any((element) => element.isCollapsed)) return false;
+    return true;
   }
 
-  /// Whether this Treenode is considered collapsed.
-  bool get isCollapsed => _isCollapsed;
-
-  /// Sets whether this Treenode is considered collapsed.
-  set isCollapsed(bool isCollapsed) {
-    outlineDocLog.fine('set isCollapsed to $isCollapsed');
-    _isCollapsed = isCollapsed;
-    // titleNode.putMetadataValue(isCollapsedKey, isCollapsed);
-    // notifyListeners();
+  /// Whether the descendent OutlineTreenode in `path` is actually supposed to
+  /// be visible. This returns false if a collapsed ancestor exists.
+  bool isTreenodeVisibleByPath(TreenodePath path) {
+    if (path.isEmpty) return true;
+    // as path is not empty, it signifies a descendent of this node, so its
+    // visibility is false, if this node is collapsed:
+    if (isCollapsed) return false;
+    if (children.isEmpty) {
+      outlineDocLog.shout('local path not empty, but children is?');
+    }
+    return (children[path.first].isTreenodeVisibleByPath(path.sublist(1)));
   }
 
-  /// Whether this OutlineTreenode is actually supposed to be visible. This
-  /// returns false if a collapsed ancestor exists.
-  bool get isVisible {
-    if (parent == null) return true;
-    if (parent!.isCollapsed) {
+  /// Whether the descendent DocumentNode with `id` is actually supposed to
+  /// be visible. This returns false if the corresponding treenode's content
+  /// is hidden or a collapsed ancestor exists for the corresponding treenode.
+  bool isDocumentNodeVisible(String docNodeId) {
+    final result = getTreenodeContainingDocumentNode(docNodeId);
+    if (result == null) {
+      throw Exception(
+          'isDocumentNodeVisible called on id that does not exist in this tree');
+    }
+    final docNodePath = getDocumentNodePathById(docNodeId);
+    // Hide DocumentNodes if content is supposed to be hidden, of if the
+    // treenode is collapsed; don't hide the title node:
+    if (docNodePath!.docNodeIndex != 0 && result.treenode.isCollapsed ||
+        result.treenode.hasContentHidden) {
       return false;
     }
-    return parent!.isVisible;
+    return isTreenodeVisibleByPath(result.path);
   }
 
-  /// Returns a list of the Treenodes representing children of this Treenode.
-  List<OutlineTreenode> get children => UnmodifiableListView(_children);
+  // /// Get the `TreenodePath` to the lowest OutlineTreenode (ie. deepest depth)
+  // /// that is direct ancestor of both `this` and `other`. This may be this or
+  // /// other itself.
+  // TreenodePath getLowestCommonAncestorPath(OutlineTreenode other) {
+  //   final TreenodePath lowestAncestorPath = [];
+  //   final myPath = [...path];
+  //   final otherPath = [...other.path];
+  //   for (int i = 0; i < min(myPath.length, otherPath.length); i++) {
+  //     if (myPath[i] == otherPath[i]) {
+  //       lowestAncestorPath.add(myPath[i]);
+  //     } else {
+  //       break;
+  //     }
+  //   }
+  //   return lowestAncestorPath;
+  // }
 
-  void addChild(OutlineTreenode child, [int index = -1]) {
-    if (index >= 0) {
-      _children.insert(index, child);
-    } else {
-      _children.add(child);
-    }
-    child.parent = this;
-    // notifyListeners();
-  }
+  // /// Whether this OutlineTreenode is a direct descendant of `other`.
+  // /// In the case of `other==this`, this method will return `false`.
+  // bool isDescendantOf(OutlineTreenode other) {
+  //   if (parent == null) {
+  //     return false;
+  //   }
+  //   return parent!.isDescendantOf(other);
+  // }
 
-  void removeChild(OutlineTreenode child) {
-    _children.remove(child);
-    child.parent = null;
-    // notifyListeners();
-  }
+  // /// Whether this OutlineTreenode is a direct ancestor of `other`.
+  // /// In the case of `other==this`, this method will return `false`.
+  // bool isAncestorOf(OutlineTreenode other) {
+  //   for (final child in children) {
+  //     if (child == other || child.isAncestorOf(other)) {
+  //       return true;
+  //     }
+  //   }
+  //   return false;
+  // }
 
-  /// Get the `TreenodePath` to the lowest OutlineTreenode (ie. deepest depth)
-  /// that is direct ancestor of both `this` and `other`. This may be this or
-  /// other itself.
-  TreenodePath getLowestCommonAncestorPath(OutlineTreenode other) {
-    final TreenodePath lowestAncestorPath = [];
-    final myPath = [...path];
-    final otherPath = [...other.path];
-    for (int i = 0; i < min(myPath.length, otherPath.length); i++) {
-      if (myPath[i] == otherPath[i]) {
-        lowestAncestorPath.add(myPath[i]);
-      } else {
-        break;
-      }
-    }
-    return lowestAncestorPath;
-  }
-
-  /// Whether this OutlineTreenode is a direct descendant of `other`.
-  /// In the case of `other==this`, this method will return `false`.
-  bool isDescendantOf(OutlineTreenode other) {
-    if (parent == null) {
-      return false;
-    }
-    return parent!.isDescendantOf(other);
-  }
-
-  /// Whether this OutlineTreenode is a direct ancestor of `other`.
-  /// In the case of `other==this`, this method will return `false`.
-  bool isAncestorOf(OutlineTreenode other) {
-    for (final child in children) {
-      if (child == other || child.isAncestorOf(other)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /// The index this OutlineTreenode holds in its parent's list of children,
-  /// or -1 if root.
-  int get childIndex => parent == null ? -1 : parent!.children.indexOf(this);
-
-  /// Returns the depth of this TreeNode, 0 meaning a root node.
-  /// Implementation begins with -1 as we skip the internal 'logical root node'.
-  int get depth => parent == null ? -1 : parent!.depth + 1;
+  // /// The index this OutlineTreenode holds in its parent's list of children,
+  // /// or -1 if root.
+  // int get childIndex => parent == null ? -1 : parent!.children.indexOf(this);
+  //
+  // /// Returns the depth of this TreeNode, 0 meaning a root node.
+  // /// Implementation begins with -1 as we skip the internal 'logical root node'.
+  // int get depth => parent == null ? -1 : parent!.depth + 1;
 
   /// Returns the first document node in this tree node's whole
   /// subtree (including this node itself), iterating through all descendents
   /// if needed.
   DocumentNode? get firstDocumentNodeInSubtree {
     if (nodes.isNotEmpty) {
-      return _contentNodes.first;
+      return nodes.first;
     }
     return firstDocumentNodeInChildren;
   }
@@ -382,7 +553,7 @@ class OutlineTreenode /*extends ChangeNotifier */
   /// Returns the first document node in this tree node's child nodes,
   /// iterating through all descendents if needed.
   DocumentNode? get firstDocumentNodeInChildren {
-    for (var child in _children) {
+    for (var child in children) {
       final returnNodeId = child.firstDocumentNodeInSubtree;
       if (returnNodeId != null) {
         return returnNodeId;
@@ -395,7 +566,7 @@ class OutlineTreenode /*extends ChangeNotifier */
   /// subtree (including this node itself), iterating through all descendents
   /// if needed.
   DocumentNode? get lastDocumentNodeInSubtree {
-    if (_children.isNotEmpty) {
+    if (children.isNotEmpty) {
       return lastDocumentNodeInChildren;
     }
     return nodes.last;
@@ -404,8 +575,8 @@ class OutlineTreenode /*extends ChangeNotifier */
   /// Returns the last document node in this tree node's child nodes,
   /// iterating through all descendents if needed.
   DocumentNode? get lastDocumentNodeInChildren {
-    if (_children.isEmpty) return null;
-    for (var child in _children.reversed) {
+    if (children.isEmpty) return null;
+    for (var child in children.reversed) {
       final returnNode = child.lastDocumentNodeInSubtree;
       if (returnNode != null) {
         return returnNode;
@@ -416,9 +587,9 @@ class OutlineTreenode /*extends ChangeNotifier */
 
   /// Returns the [OutlineTreenode] that will be presented last in this
   /// node's whole subtree.
-  OutlineTreenode get lastOutlineTreeNodeInSubtree {
-    if (_children.isNotEmpty) {
-      return _children.last.lastOutlineTreeNodeInSubtree;
+  OutlineTreenode get lastTreenodeInSubtree {
+    if (children.isNotEmpty) {
+      return children.last.lastTreenodeInSubtree;
     }
     return this;
   }
@@ -426,41 +597,66 @@ class OutlineTreenode /*extends ChangeNotifier */
   /// Searches this [OutlineTreenode]'s whole subtree and returns
   /// the [OutlineTreenode] that holds the given id to a
   /// [DocumentNode].
-  OutlineTreenode? getOutlineTreenodeByDocumentNodeId(String docNodeId) {
+  OutlineTreenode? getTreenodeByDocumentNodeId(String docNodeId) {
     if (nodes.where((e) => e.id == docNodeId).isNotEmpty) return this;
 
     for (var treeNode in children) {
-      final childRet = treeNode.getOutlineTreenodeByDocumentNodeId(docNodeId);
+      final childRet = treeNode.getTreenodeByDocumentNodeId(docNodeId);
       if (childRet != null) return childRet;
     }
     return null;
   }
 
-  OutlineTreenode get outlineTreenodeBefore {
-    if (parent == null) {
-      throw Exception(
-          'tried finding OutlineTreenode before root, this is not allowed');
-    }
-    if (childIndex == 0) {
-      return parent!;
-    }
-    return parent!.children[childIndex - 1].getLastOutlineTreenodeInSubtree();
+  // OutlineTreenode get outlineTreenodeBefore {
+  //   if (parent == null) {
+  //     throw Exception(
+  //         'tried finding OutlineTreenode before root, this is not allowed');
+  //   }
+  //   if (childIndex == 0) {
+  //     return parent!;
+  //   }
+  //   return parent!.children[childIndex - 1].getLastOutlineTreenodeInSubtree();
+  // }
+
+  /// Moves a treenode at [fromPath] into [toPath], inserting it at [insertIndex] in the children list.
+  /// Returns the updated root treenode.
+  OutlineTreenode moveTreenode({
+    required TreenodePath fromPath,
+    required TreenodePath toPath,
+    required int insertIndex,
+  }) {
+    final movingTreenode = getTreenodeByPath(fromPath);
+    if (movingTreenode == null) return this;
+
+    final rootWithoutSource = removeTreenodeAtPath(fromPath);
+    final targetParent = rootWithoutSource.getTreenodeByPath(toPath);
+    if (targetParent == null) return this;
+
+    final newChildren = [...targetParent.children];
+    newChildren.insert(insertIndex, movingTreenode);
+
+    final updatedTarget = targetParent.copyWith(children: newChildren);
+    return rootWithoutSource.replaceTreenodeById(
+        updatedTarget.id, (_) => updatedTarget);
   }
 
-  /// Returns a flat list of all OutlineTreenodes in this subtree, in depth-first
-  /// order of appearance in the document
-  List<OutlineTreenode> get subtreeList {
-    return [
-      this,
-      for (final child in children) ...child.subtreeList,
-    ];
+  OutlineTreenode removeTreenodeAtPath(TreenodePath path) {
+    if (path.isEmpty) return this;
+    final indexToRemove = path.first;
+    if (path.length == 1) {
+      final updatedChildren = [...children]..removeAt(indexToRemove);
+      return copyWith(children: updatedChildren);
+    } else {
+      final child = children[indexToRemove];
+      final updatedChild = child.removeTreenodeAtPath(path.sublist(1));
+      final updatedChildren = [...children];
+      updatedChildren[indexToRemove] = updatedChild;
+      return copyWith(children: updatedChildren);
+    }
   }
 
   @override
-  // we only use child nodes for iterating if this is the root node, as
-  // having content in the root would lead to problems eg. when inserting later
-  Iterator<DocumentNode> get iterator =>
-      parent == null ? nodesChildren.iterator : nodesSubtree.iterator;
+  Iterator<DocumentNode> get iterator => nodesSubtree.iterator;
 
   /// Returns whether the subtree of this [OutlineTreenode] has
   /// equivalent content to the one in `other`.
@@ -488,13 +684,102 @@ class OutlineTreenode /*extends ChangeNotifier */
     }
     return true;
   }
+}
 
-  @override
-  String toString() {
-    final shortenedId = id.length > 6 ? '#${id.substring(0, 6)}' : '#$id';
-    final shortenedTitle = titleNode.text.toPlainText().length > 13
-        ? '"${titleNode.text.toPlainText().substring(0, 10)}..."'
-        : '"${titleNode.text.toPlainText()}"';
-    return '[OutlineTreenode $shortenedId $shortenedTitle ${contentNodes.length} content nodes, ${children.length} children]';
+class TreeEditor {
+  /// Fügt ein neues Kind an gegebener Stelle ein (oder am Ende, wenn kein Index angegeben).
+  static OutlineTreenode insertChild({
+    required OutlineTreenode parent,
+    required OutlineTreenode child,
+    int? atIndex,
+  }) {
+    final children = [...parent.children];
+    final index = atIndex ?? children.length;
+    return parent.copyWith(
+      children: [
+        ...children.sublist(0, index),
+        child,
+        ...children.sublist(index),
+      ],
+    );
+  }
+
+  /// Entfernt ein Kind per ID
+  static OutlineTreenode removeChild({
+    required OutlineTreenode parent,
+    required String childId,
+  }) {
+    final children = parent.children.where((c) => c.id != childId).toList();
+    return parent.copyWith(children: children);
+  }
+
+  /// Fügt einen neuen DocumentNode an gegebener Stelle in den contentNodes
+  /// eines treenodes ein (oder am Ende, wenn kein Index angegeben).
+  static OutlineTreenode insertDocumentNode({
+    required OutlineTreenode treenode,
+    required DocumentNode docNode,
+    int? atIndex,
+  }) {
+    assert(docNode is! TitleNode);
+    final contentNodes = [...treenode.contentNodes];
+    final index = atIndex ?? contentNodes.length;
+    return treenode.copyWith(
+      contentNodes: [
+        ...contentNodes.sublist(0, index),
+        docNode,
+        ...contentNodes.sublist(index),
+      ],
+    );
+  }
+
+  /// Entfernt einen content node per ID
+  static OutlineTreenode removeContentNode({
+    required OutlineTreenode treenode,
+    required String docNodeId,
+  }) {
+    final contentNodes =
+        treenode.contentNodes.where((c) => c.id != docNodeId).toList();
+    return treenode.copyWith(contentNodes: contentNodes);
+  }
+
+  /// Replaces a DocumentNode in contentNodes by id
+  static OutlineTreenode replaceContentNodeInTreenode(
+      {required OutlineTreenode treenode, required DocumentNode replaceNode}) {
+    final index =
+        treenode.contentNodes.indexWhere((n) => n.id == replaceNode.id);
+    if (index == -1) {
+      throw Exception(
+          'replaceContentNodeInTreenode, but content node not found in treenode');
+    }
+    final updatedContent = [...treenode.contentNodes];
+    updatedContent[index] = replaceNode;
+    return treenode.copyWith(contentNodes: updatedContent);
+  }
+
+  /// Aktualisiert den `isCollapsed`-Zustand
+  static OutlineTreenode setCollapsed(
+    OutlineTreenode node,
+    bool isCollapsed,
+  ) {
+    return node.copyWith(isCollapsed: isCollapsed);
+  }
+
+  /// Fügt oder ändert einen Metadata-Eintrag
+  static OutlineTreenode setMetadataValue(
+    OutlineTreenode node,
+    String key,
+    dynamic value,
+  ) {
+    final newMetadata = {...node.metadata, key: value};
+    return node.copyWith(metadata: newMetadata);
+  }
+
+  /// Entfernt einen Metadata-Eintrag
+  static OutlineTreenode removeMetadataValue(
+    OutlineTreenode node,
+    String key,
+  ) {
+    final newMetadata = {...node.metadata}..remove(key);
+    return node.copyWith(metadata: newMetadata);
   }
 }

@@ -38,16 +38,16 @@ class TitleNode extends TextNode {
     );
   }
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) || super == other && other is TitleNode;
-    // bisher noch kein Unterschied zu TextNode
-    // && other is TitleNode && runtimeType == other.runtimeType && ......;
-  }
-
-  // stub, noch überlüssig
-  @override
-  int get hashCode => super.hashCode;
+  // @override
+  // bool operator ==(Object other) {
+  //   return identical(this, other) || super == other && other is TitleNode;
+  //   // bisher noch kein Unterschied zu TextNode
+  //   // && other is TitleNode && runtimeType == other.runtimeType && ......;
+  // }
+  //
+  // // stub, noch überlüssig
+  // @override
+  // int get hashCode => super.hashCode;
 }
 
 class OutlineTitleComponentViewModel extends OutlineComponentViewModel
@@ -183,7 +183,8 @@ class OutlineTitleComponentBuilder implements ComponentBuilder {
       outlineIndentLevel: outlineDoc.getTreenodeDepth(node.id),
       indexInChildren: outlineDoc.getIndexInChildren(node.id),
       hasChildren: outlineDoc
-          .getOutlineTreenodeForDocumentNodeId(node.id)
+          .getTreenodeForDocumentNodeId(node.id)
+          .treenode
           .children
           .isNotEmpty,
       isCollapsed: outlineDoc.isCollapsed(node.id),

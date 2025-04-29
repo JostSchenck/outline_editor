@@ -14,7 +14,7 @@ class TestOutlineEditor extends StatefulWidget {
 
 class _TestOutlineEditorState extends State<TestOutlineEditor> {
   late ScrollController _scrollController;
-  late OutlineTreeDocument _document;
+  late OutlineEditableDocument _document;
   late Editor _editor;
   late MutableDocumentComposer _composer;
   late FocusNode _editorFocusNode;

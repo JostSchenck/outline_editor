@@ -22,7 +22,8 @@ void main() {
             ))
             .autoFocus(true)
             .pump();
-        final doc = context.findEditContext().document as OutlineTreeDocument;
+        final doc =
+            context.findEditContext().document as OutlineEditableDocument;
         expect(doc.nodeCount, 1,
             reason:
                 'Expected only a single node (title node) in start of test');
@@ -58,7 +59,8 @@ void main() {
             ))
             .autoFocus(true)
             .pump();
-        final doc = context.findEditContext().document as OutlineTreeDocument;
+        final doc =
+            context.findEditContext().document as OutlineEditableDocument;
         context.composer.setSelectionWithReason(DocumentSelection(
             base: DocumentPosition(
                 nodeId: 'par2', nodePosition: TextNodePosition(offset: 0)),

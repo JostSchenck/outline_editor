@@ -41,9 +41,12 @@ class ChangeCollapsedStateCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     commandLog.fine(
         'executing ChangeCollapsedStateCommand, setting $treenodeId to $isCollapsed');
-    final outlineDoc = context.document as OutlineDocument;
-    final treenode = outlineDoc.getOutlineTreenodeById(treenodeId);
-    treenode.isCollapsed = isCollapsed;
+    final outlineDoc = context.document as OutlineEditableDocument;
+    final treenode = outlineDoc.getTreenodeById(treenodeId);
+    outlineDoc.root = outlineDoc.root.replaceTreenodeById(
+      treenodeId,
+      (p) => p.copyWith(isCollapsed: isCollapsed),
+    );
 
     executor.logChanges([
       DocumentEdit(

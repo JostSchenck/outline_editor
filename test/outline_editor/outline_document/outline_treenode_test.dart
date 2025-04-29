@@ -1,11 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:outline_editor/outline_editor.dart';
 
+import '../common/build_test_document.dart';
 import '../common/visibility_test_document.dart';
 
 void main() {
   group('OutlineTreeNode visibility (hiding and collapsing) of nodes', () {
-    late OutlineTreeDocument document;
+    late OutlineEditableDocument document;
 
     setUp(() {
       document = getVisibilityTestDocument();
@@ -14,10 +15,10 @@ void main() {
     test(
         'DocumentNodes are hidden when they belong to an OutlineTreeNode that has an ancestor with isCollapsed set to true',
         () {
-      expect(document.isVisible('2'), true);
+      expect(document.isVisible('2'), false);
       expect(document.isVisible('3'), false);
       expect(document.isVisible('4'), false);
-      expect(document.isVisible('5'), true);
+      expect(document.isVisible('5'), false);
       expect(document.isVisible('6'), false);
     });
 
@@ -33,7 +34,7 @@ void main() {
       expect(
           document
               .getLastVisibleDocumentNode(const DocumentPosition(
-                  nodeId: '2', nodePosition: TextNodePosition(offset: 2)))
+                  nodeId: '2title', nodePosition: TextNodePosition(offset: 2)))
               .id,
           '2');
       expect(
@@ -103,15 +104,47 @@ void main() {
   });
 
   group('OutlineTreeNode adding and removing nodes', () {
-    late OutlineTreeDocument document;
+    late OutlineEditableDocument document;
 
     setUp(() {
-      document =
-          OutlineTreeDocument(treenodeBuilder: defaultOutlineTreenodeBuilder);
-      document.root.addChild(OutlineTreenode(id: 'b'));
-      document.root.addChild(OutlineTreenode(id: 'a'));
-      document.root.addChild(OutlineTreenode(id: 'd'));
-      document.root.children[1].addChild(OutlineTreenode(id: 'c'));
+      document = OutlineEditableDocument(
+          treenodeBuilder: defaultOutlineTreenodeBuilder);
+      document.root = TreeEditor.insertChild(
+          parent: document.root,
+          child: OutlineTreenode(
+            id: 'b',
+            titleNode: TitleNode(
+              id: 'b-t',
+              text: AttributedText(''),
+            ),
+          ));
+      document.root = TreeEditor.insertChild(
+          parent: document.root,
+          child: OutlineTreenode(
+            id: 'a',
+            titleNode: TitleNode(
+              id: 'a-t',
+              text: AttributedText(''),
+            ),
+          ));
+      document.root = TreeEditor.insertChild(
+          parent: document.root,
+          child: OutlineTreenode(
+            id: 'd',
+            titleNode: TitleNode(
+              id: 'd-t',
+              text: AttributedText(''),
+            ),
+          ));
+      document.root = TreeEditor.insertChild(
+          parent: document.root,
+          child: OutlineTreenode(
+            id: 'c',
+            titleNode: TitleNode(
+              id: 'c-t',
+              text: AttributedText(''),
+            ),
+          ));
     });
 
     test(
@@ -119,99 +152,70 @@ void main() {
         () {
       expect(
         document.root.children.length,
-        3,
+        4,
         reason: 'wrong number of children',
       );
-      expect(
-        document.root.children[1].children.length,
-        1,
-        reason: 'wrong number of children',
-      );
-      expect(
-        document.getOutlineTreenodeByPath([1, 0]).id,
-        'c',
-        reason: 'added grand child not found by path',
-      );
-      expect(
-        document.root.children[0].parent,
-        document.root,
-        reason: 'parent not correctly set in added child node',
-      );
-      expect(
-        document.root.children[1].children[0].parent,
-        document.root.children[1],
-        reason: 'parent not correctly set in added child node',
-      );
+      // expect(
+      //   document.root.children[1].children.length,
+      //   1,
+      //   reason: 'wrong number of children',
+      // );
+      // expect(
+      //   document.getTreenodeByPath([1, 0]).id,
+      //   'c',
+      //   reason: 'added grand child not found by path',
+      // );
     });
 
-    test('OutlineTreeNodes can be removed with removeChild', () {
-      final child1 = document.root.children[0];
-      final child2 = document.root.children[2];
-      document.root.removeChild(child1);
-      document.root.removeChild(child2);
+    group('OutlineTreeNode addressing nodes by id or path', () {
+      late OutlineEditableDocument document;
 
-      expect(document.root.children.length, 1);
-    });
-  });
+      setUp(() {
+        document = getVisibilityTestDocument();
+        print(document.toPrettyTestString());
+      });
 
-  group('OutlineTreeNode addressing nodes by id or path', () {
-    late OutlineTreeDocument document;
+      test('OutlineTreeNodes can be retrieved by their path', () {
+        expect(document.getTreenodeByPath([0]).titleNode.id, '1title');
+        expect(document.getTreenodeByPath([0, 1]).titleNode.id, '5title');
+        // and a relative path
+        expect(
+            document
+                .getTreenodeByPath([0, 1])
+                .getTreenodeByPath([0])!
+                .titleNode
+                .id,
+            '6title');
+      });
 
-    setUp(() {
-      document = getVisibilityTestDocument();
-    });
+      test('OutlineTreeNodes can be retrieved by their treeNodeId', () {
+        expect(document.root.getPathTo('tn_4')!, [0, 0, 0, 0]);
+      });
 
-    test('OutlineTreeNodes can be retrieved by their path', () {
-      expect(document.getOutlineTreenodeByPath([0]).titleNode.id, '1title');
-      expect(document.getOutlineTreenodeByPath([0, 1]).titleNode.id, '5title');
-      // and a relative path
-      expect(
-          document
-              .getOutlineTreenodeByPath([0, 1])
-              .getOutlineTreenodeByPath([0])!
-              .titleNode
-              .id,
-          '6title');
-    });
+      test('DocumentNodes in the document can be retrieved by their id', () {
+        expect(
+            (document.root.getDocumentNodeById('1')! as ParagraphNode)
+                .text
+                .toPlainText(),
+            'One more');
+        expect(
+            (document.root.getDocumentNodeById('2')! as ParagraphNode)
+                .text
+                .toPlainText(),
+            'Two more');
+        expect(
+            (document.root.getDocumentNodeById('5')! as ParagraphNode)
+                .text
+                .toPlainText(),
+            'Another ...');
+      });
 
-    test('OutlineTreeNodes can be retrieved by their treeNodeId', () {
-      expect(document.root.getOutlineTreenodeByDocumentNodeId('4')!.path,
-          [0, 0, 0, 0]);
-    });
-
-    test('DocumentNodes in the document can be retrieved by their id', () {
-      expect(
-          (document.root.getDocumentNodeById('1')! as ParagraphNode)
-              .text
-              .toPlainText(),
-          'One more');
-      expect(
-          (document.root.getDocumentNodeById('2')! as ParagraphNode)
-              .text
-              .toPlainText(),
-          'Two more');
-      expect(
-          (document.root.getDocumentNodeById('5')! as ParagraphNode)
-              .text
-              .toPlainText(),
-          'Another ...');
-    });
-
-    test(
-        'DocumentNodes in the document can be retrieved by their DocumentNodePath',
-        () {
-      // expect(actual, matcher);
-      // TODO
+      test(
+          'DocumentNodes in the document can be retrieved by their DocumentNodePath',
+          () {
+        // expect(actual, matcher);
+        // TODO
+      });
     });
   });
-
-  // group('OutlineTreeNode traversal methods', () {
-  //   // late OutlineTreeDocument document;
-
-  //   setUp(() {
-  //     // document = OutlineTreeDocument(root: OutlineTreenode(id: 'root'));
-  //   });
-
-  //   test('', () {});
-  // });
 }

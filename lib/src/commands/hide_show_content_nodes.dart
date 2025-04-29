@@ -28,11 +28,11 @@ class HideShowContentNodesRequest implements EditRequest {
 
 class HideShowContentNodesCommand extends EditCommand {
   HideShowContentNodesCommand({
-    required this.treeNodeId,
+    required this.treenodeId,
     required this.hideContent,
   });
 
-  final String? treeNodeId;
+  final String? treenodeId;
   final bool hideContent;
 
   @override
@@ -41,22 +41,25 @@ class HideShowContentNodesCommand extends EditCommand {
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    final outlineDoc = context.document as OutlineDocument;
-    if (treeNodeId == null) {
+    final outlineDoc = context.document as OutlineEditableDocument;
+    if (treenodeId == null) {
       outlineDoc.root.traverseUpDown(
           (treenode) => executor.executeCommand(HideShowContentNodesCommand(
-                treeNodeId: treenode.id,
+                treenodeId: treenode.id,
                 hideContent: hideContent,
               )));
       return;
     }
     commandLog.fine(
-        'executing HideShowContentNodesCommand, setting $treeNodeId to $hideContent');
-    final outlineTreenode = outlineDoc.getOutlineTreenodeById(treeNodeId!);
+        'executing HideShowContentNodesCommand, setting $treenodeId to $hideContent');
+    final outlineTreenode = outlineDoc.getTreenodeById(treenodeId!);
     if (outlineTreenode.hasContentHidden == hideContent) {
       return;
     }
-    outlineTreenode.hasContentHidden = hideContent;
+    outlineDoc.root = outlineDoc.root.replaceTreenodeById(
+      treenodeId!,
+      (p) => p.copyWith(hasContentHidden: hideContent),
+    );
     executor.logChanges([
       DocumentEdit(
         NodeChangeEvent(outlineTreenode.titleNode.id),

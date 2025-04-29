@@ -52,7 +52,8 @@ class TestDocumentSelector {
 
   final WidgetTester _widgetTester;
 
-  TestSuperEditorConfigurator withCustomContent(OutlineTreeDocument document) {
+  TestSuperEditorConfigurator withCustomContent(
+      OutlineEditableDocument document) {
     return TestSuperEditorConfigurator._(_widgetTester, document);
   }
 

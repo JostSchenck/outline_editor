@@ -1,15 +1,14 @@
 import 'package:outline_editor/outline_editor.dart';
-import 'package:outline_editor/src/util/logging.dart';
 
 class MoveDocumentNodeIntoTreenodeRequest implements EditRequest {
   MoveDocumentNodeIntoTreenodeRequest({
-    required this.documentNode,
-    required this.outlineTreenode,
+    required this.documentNodeId,
+    required this.targetTreenodeId,
     this.index = -1,
   });
 
-  final DocumentNode documentNode;
-  final OutlineTreenode outlineTreenode;
+  final String documentNodeId;
+  final String targetTreenodeId;
 
   /// If -1, will append the DocumentNode, else insert it at index.
   final int index;
@@ -19,23 +18,23 @@ class MoveDocumentNodeIntoTreenodeRequest implements EditRequest {
       identical(this, other) ||
       other is MoveDocumentNodeIntoTreenodeRequest &&
           runtimeType == other.runtimeType &&
-          documentNode == other.documentNode &&
-          outlineTreenode == other.outlineTreenode;
+          documentNodeId == other.documentNodeId &&
+          targetTreenodeId == other.targetTreenodeId;
 
   @override
   int get hashCode =>
-      super.hashCode ^ documentNode.hashCode ^ outlineTreenode.hashCode;
+      super.hashCode ^ documentNodeId.hashCode ^ targetTreenodeId.hashCode;
 }
 
 class MoveDocumentNodeIntoTreenodeCommand extends EditCommand {
   MoveDocumentNodeIntoTreenodeCommand({
-    required this.documentNode,
-    required this.outlineTreenode,
+    required this.documentNodeId,
+    required this.targetTreenodeId,
     required this.index,
   });
 
-  final DocumentNode documentNode;
-  final OutlineTreenode outlineTreenode;
+  final String documentNodeId;
+  final String targetTreenodeId;
   final int index;
 
   @override
@@ -43,13 +42,53 @@ class MoveDocumentNodeIntoTreenodeCommand extends EditCommand {
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    commandLog.fine(
-        'executing MoveDocumentNodeIntoTreenodeCommand, moving $documentNode to OutlineTreenode $outlineTreenode');
-    executor.executeCommand(DeleteNodeCommand(nodeId: documentNode.id));
-    executor.executeCommand(InsertDocumentNodeInTreenodeContentCommand(
-      documentNode: documentNode,
-      outlineTreenode: outlineTreenode,
-      index: index,
-    ));
+    final outlineDoc = context.document as OutlineEditableDocument;
+
+    final currentRoot = outlineDoc.root;
+    final (treenode: sourceTreenode, path: sourcePath) =
+        outlineDoc.root.getTreenodeContainingDocumentNode(documentNodeId) ??
+            (throw Exception('Source treenode for $documentNodeId not found'));
+
+    final documentNode = outlineDoc.root.getDocumentNodeById(documentNodeId) ??
+        (throw Exception('DocumentNode $documentNodeId not found'));
+
+    final targetTreenode = outlineDoc.root.getTreenodeById(targetTreenodeId) ??
+        (throw Exception('Target treenode $targetTreenodeId not found'));
+
+    // 1. Remove from old treenode
+    final updatedSourceContent =
+        List<DocumentNode>.from(sourceTreenode.contentNodes)
+          ..removeWhere((node) => node.id == documentNodeId);
+    final updatedSourceTreenode =
+        sourceTreenode.copyWith(contentNodes: updatedSourceContent);
+
+    // 2. Insert into new treenode
+    final updatedTargetContent =
+        List<DocumentNode>.from(targetTreenode.contentNodes);
+    if (index >= 0 && index <= updatedTargetContent.length) {
+      updatedTargetContent.insert(index, documentNode);
+    } else {
+      updatedTargetContent.add(documentNode);
+    }
+    final updatedTargetTreenode =
+        targetTreenode.copyWith(contentNodes: updatedTargetContent);
+
+    // 3. Update the root
+    var newRoot = currentRoot
+        .replaceTreenodeById(
+            updatedSourceTreenode.id, (_) => updatedSourceTreenode)
+        .replaceTreenodeById(
+            updatedTargetTreenode.id, (_) => updatedTargetTreenode);
+
+    outlineDoc.root = newRoot;
+
+    // 4. Log changes
+    executor.logChanges([
+      DocumentEdit(NodeMovedEvent(
+        nodeId: documentNodeId,
+        from: outlineDoc.getNodeIndexById(documentNodeId),
+        to: outlineDoc.getNodeIndexById(documentNodeId),
+      )),
+    ]);
   }
 }

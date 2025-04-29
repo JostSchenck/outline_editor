@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:outline_editor/outline_editor.dart';
 import 'package:outline_editor/src/commands/move_outline_treenode.dart';
+import 'package:outline_editor/src/infrastructure/uuid.dart';
 import 'package:outline_editor/src/outline_editor/keyboard_actions.dart';
 import 'package:outline_editor/src/reactions/node_visibility_reaction.dart';
 import 'package:outline_editor/src/reactions/outline_selection_reaction.dart';
@@ -45,57 +46,59 @@ class OutlineEditorPlugin extends SuperEditorPlugin {
             : null,
         (editor, request) => request is InsertOutlineTreenodeRequest
             ? InsertOutlineTreenodeCommand(
-                existingNode: request.existingTreenode,
-                newNode: request.newTreenode ?? defaultTreenodeBuilder(),
+                existingTreenodeId: request.existingTreenodeId,
+                newTreenode: request.newTreenode ?? defaultTreenodeBuilder(),
                 createChild: request.createChild,
                 treenodeIndex: request.treenodeIndex,
                 splitAtDocumentPosition: request.splitAtDocumentPosition,
                 // newDocumentNodeId: request.newDocumentNodeId,
                 moveCollapsedSelectionToInsertedNode:
                     request.moveCollapsedSelectionToInsertedNode,
+                newDocumentNodeId:
+                    request.splitAtDocumentPosition != null ? uuid.v4() : null,
               )
             : null,
         (editor, request) => request is DeleteOutlineTreenodeRequest
             ? DeleteOutlineTreenodeCommand(
-                outlineTreenode: request.outlineTreenode)
+                outlineTreenodeId: request.outlineTreenodeId)
             : null,
         (editor, request) => request is MergeOutlineTreenodesRequest
             ? MergeOutlineTreenodesCommand(
-                treenodeMergedInto: request.treenodeMergedInto,
-                mergedTreenode: request.mergedTreenode,
+                treenodeMergedIntoId: request.treenodeMergedIntoId,
+                mergedTreenodeId: request.mergedTreenodeId,
               )
             : null,
         (editor, request) =>
             request is InsertDocumentNodeInOutlineTreenodeRequest
                 ? InsertDocumentNodeInTreenodeContentCommand(
                     documentNode: request.documentNode,
-                    outlineTreenode: request.outlineTreenode,
+                    outlineTreenodeId: request.outlineTreenodeId,
                     index: request.index)
                 : null,
         (editor, request) => request is MoveDocumentNodeIntoTreenodeRequest
             ? MoveDocumentNodeIntoTreenodeCommand(
-                documentNode: request.documentNode,
-                outlineTreenode: request.outlineTreenode,
+                documentNodeId: request.documentNodeId,
+                targetTreenodeId: request.targetTreenodeId,
                 index: request.index)
             : null,
         (editor, request) => request is ReparentOutlineTreenodeRequest
             ? ReparentOutlineTreenodeCommand(
-                childTreenode: request.childTreenode,
-                newParentTreenode: request.newParentTreenode,
+                childTreenodeId: request.childTreenodeId,
+                newParentTreenodeId: request.newParentTreenodeId,
                 index: request.index)
             : null,
         (editor, request) => request is HideShowContentNodesRequest
             ? HideShowContentNodesCommand(
-                treeNodeId: request.treeNodeId,
+                treenodeId: request.treeNodeId,
                 hideContent: request.hideContent)
             : null,
         (editor, request) => request is MoveOutlineTreenodeRequest
             ? MoveOutlineTreenodeCommand(
-                treenode: request.treenode, path: request.path)
+                treenodeId: request.treenodeId, newPath: request.newPath)
             : null,
         (editor, request) => request is ChangeTreenodeIndentationRequest
             ? ChangeTreenodeIndentationCommand(
-                treenode: request.treenode,
+                treenodeId: request.treenodeId,
                 moveUpInHierarchy: request.moveUpInHierarchy)
             : null,
         ...addRequestHandlers,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:outline_editor/outline_editor.dart';
-import 'package:outline_editor/src/components/component_animations.dart';
 import 'package:outline_editor/src/util/logging.dart';
 
 class CollapseExpandButton extends StatelessWidget {
@@ -19,9 +18,9 @@ class CollapseExpandButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final document = editor.document as OutlineTreeDocument;
+    final document = editor.document as OutlineEditableDocument;
     final outlineTreenode =
-        document.getOutlineTreenodeByDocumentNodeId(docNodeId);
+        document.getOutlineTreenodeByDocumentNodeId(docNodeId).treenode;
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () {

@@ -150,7 +150,8 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
       outlineIndentLevel: outlineDoc.getTreenodeDepth(node.id),
       indexInChildren: outlineDoc.getIndexInChildren(node.id),
       hasChildren: outlineDoc
-          .getOutlineTreenodeForDocumentNodeId(node.id)
+          .getTreenodeForDocumentNodeId(node.id)
+          .treenode
           .children
           .isNotEmpty,
       isCollapsed: outlineDoc.isCollapsed(node.id),

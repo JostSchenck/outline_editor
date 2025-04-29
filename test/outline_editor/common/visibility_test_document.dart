@@ -1,10 +1,11 @@
 import 'package:outline_editor/outline_editor.dart';
 
-OutlineTreeDocument getVisibilityTestDocument() {
-  OutlineTreeDocument document =
-      OutlineTreeDocument(treenodeBuilder: defaultOutlineTreenodeBuilder);
-  document.root.addChild(
-    OutlineTreenode(
+OutlineEditableDocument getVisibilityTestDocument() {
+  OutlineEditableDocument document =
+      OutlineEditableDocument(treenodeBuilder: defaultOutlineTreenodeBuilder);
+  document.root = TreeEditor.insertChild(
+    parent: document.root,
+    child: OutlineTreenode(
       id: 'tn_1',
       titleNode: TitleNode(id: '1title', text: AttributedText('Title node')),
       contentNodes: [
