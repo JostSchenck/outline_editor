@@ -23,8 +23,14 @@ abstract mixin class OutlineDocument<T extends OutlineTreenode<T>>
   int getTreenodeDepth(String docNodeId) =>
       getTreenodeForDocumentNodeId(docNodeId).path.length;
 
-  TreenodePath? getTreenodePathByDocNodeId(String docNodeId) =>
-      root.getPathTo(getTreenodeForDocumentNodeId(docNodeId).treenode.id);
+  TreenodePath getTreenodePathByDocNodeId(String docNodeId) {
+    final ret =
+        root.getPathTo(getTreenodeForDocumentNodeId(docNodeId).treenode.id);
+    if (ret == null) {
+      throw Exception('DocumentNode $docNodeId not found in document');
+    }
+    return ret;
+  }
 
   T getTreenodeByPath(TreenodePath path) {
     if (path.isEmpty) return root;
