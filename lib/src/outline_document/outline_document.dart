@@ -51,7 +51,7 @@ abstract mixin class OutlineDocument<T extends OutlineTreenode<T>>
   }
 
   // test
-  ({T treenode, TreenodePath path}) getOutlineTreenodeByDocumentNodeId(
+  ({T treenode, TreenodePath path}) getTreenodeWithPathByDocumentNodeId(
       String docNodeId) {
     final ret = root.getTreenodeContainingDocumentNode(docNodeId);
     if (ret == null) {
@@ -63,7 +63,7 @@ abstract mixin class OutlineDocument<T extends OutlineTreenode<T>>
 
   /// Returns the OutlineTreenode directly preceding this OutlineTreenode in
   /// presentation. This can be a sibling, a parent, or even just some cousin.
-  T? getOutlineTreenodeBeforeTreenode(String treenodeId) {
+  T? getTreenodeBeforeTreenode(String treenodeId) {
     final flattenedTree = root.subtreeList;
     for (int i = 0; i < flattenedTree.length - 1; i++) {
       if (flattenedTree[i + 1].id == treenodeId) {
@@ -75,7 +75,7 @@ abstract mixin class OutlineDocument<T extends OutlineTreenode<T>>
 
   /// Returns the OutlineTreenode directly following this OutlineTreenode in
   /// presentation. This can be a sibling, an uncle, or even just some cousin.
-  T? getOutlineTreenodeAfterTreenode(String treenodeId) {
+  T? getTreenodeAfterTreenode(String treenodeId) {
     final flattenedTree = root.subtreeList;
     for (int i = 0; i < flattenedTree.length - 1; i++) {
       if (flattenedTree[i].id == treenodeId) return flattenedTree[i + 1];

@@ -36,9 +36,9 @@ bool _deleteSelectedTreenodes<T extends OutlineTreenode<T>>(
     SuperEditorContext editContext) {
   if (selection.isCollapsed) return false;
   final tn1 =
-      outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.base.nodeId);
+      outlineDoc.getTreenodeWithPathByDocumentNodeId(selection.base.nodeId);
   final tn2 =
-      outlineDoc.getOutlineTreenodeByDocumentNodeId(selection.extent.nodeId);
+      outlineDoc.getTreenodeWithPathByDocumentNodeId(selection.extent.nodeId);
 
   if ((selection.base.isEquivalentTo(tn1.treenode.firstPosition) &&
           selection.extent.isEquivalentTo(tn2.treenode.lastPosition)) ||
@@ -127,8 +127,7 @@ ExecutionInstruction
     final mergeNodes = outlineNodeResult.treenode.isConsideredEmpty ||
         outlineNodeResult.treenode.titleNode.text.toPlainText().isEmpty;
     final treenodeBefore = mergeNodes
-        ? outlineDoc
-            .getOutlineTreenodeBeforeTreenode(outlineNodeResult.treenode.id)
+        ? outlineDoc.getTreenodeBeforeTreenode(outlineNodeResult.treenode.id)
         : null;
     if (mergeNodes && treenodeBefore == null) {
       return ExecutionInstruction.haltExecution;
@@ -481,7 +480,7 @@ ExecutionInstruction
   // prepare splitting the treenode when the cursor is in the middle of
   // a ParagraphNode
   final treenode = outlineDoc
-      .getOutlineTreenodeByDocumentNodeId(selection.base.nodeId)
+      .getTreenodeWithPathByDocumentNodeId(selection.base.nodeId)
       .treenode;
 
   final moveUpInHierarchy = HardwareKeyboard.instance.isShiftPressed;
@@ -570,7 +569,7 @@ ExecutionInstruction
       // before or after base, collapsing it, if it isn't collapsed yet.
       late T newTreenode;
       final curTreenode = outlineDoc
-          .getOutlineTreenodeByDocumentNodeId(selection.base.nodeId)
+          .getTreenodeWithPathByDocumentNodeId(selection.base.nodeId)
           .treenode;
       final curDocNode = outlineDoc.getNodeById(selection.base.nodeId);
       if (moveUp) {
@@ -578,14 +577,12 @@ ExecutionInstruction
             (selection.base.nodePosition as TextNodePosition).offset != 0) {
           newTreenode = curTreenode;
         } else {
-          newTreenode =
-              outlineDoc.getOutlineTreenodeBeforeTreenode(curTreenode.id) ??
-                  curTreenode;
+          newTreenode = outlineDoc.getTreenodeBeforeTreenode(curTreenode.id) ??
+              curTreenode;
         }
       } else {
         newTreenode =
-            outlineDoc.getOutlineTreenodeAfterTreenode(curTreenode.id) ??
-                curTreenode;
+            outlineDoc.getTreenodeAfterTreenode(curTreenode.id) ?? curTreenode;
       }
       if (moveUp || newTreenode != curTreenode) {
         editContext.editor.execute([

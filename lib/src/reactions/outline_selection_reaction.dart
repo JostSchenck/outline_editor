@@ -26,11 +26,11 @@ class OutlineSelectionReaction<T extends OutlineTreenode<T>>
     // if the selection spans more than one node, see if it spans TitleNodes or
     // OutlineTreenodes:
     final baseTreenode = outlineDoc
-        .getOutlineTreenodeByDocumentNodeId(selection.base.nodeId)
+        .getTreenodeWithPathByDocumentNodeId(selection.base.nodeId)
         .treenode;
     final baseDocNode = outlineDoc.getNodeById(selection.base.nodeId);
     final extentTreenode = outlineDoc
-        .getOutlineTreenodeByDocumentNodeId(selection.extent.nodeId)
+        .getTreenodeWithPathByDocumentNodeId(selection.extent.nodeId)
         .treenode;
     final extentDocNode = outlineDoc.getNodeById(selection.extent.nodeId);
     final selectionAffinity = selection.calculateAffinity(outlineDoc);

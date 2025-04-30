@@ -20,7 +20,7 @@ class CollapseExpandButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final document = editor.document as OutlineEditableDocument;
     final outlineTreenode =
-        document.getOutlineTreenodeByDocumentNodeId(docNodeId).treenode;
+        document.getTreenodeWithPathByDocumentNodeId(docNodeId).treenode;
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () {

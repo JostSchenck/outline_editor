@@ -272,7 +272,7 @@ class OutlineEditableDocument<T extends OutlineTreenode<T>>
     if (existingNode is TitleNode) {
       // A TitleNode is always the first DocumentNode in an OutlineTreenode.
       // This means we can not add to treenode, but must prepend to it.
-      final treenodeBefore = getOutlineTreenodeBeforeTreenode(treenode.id);
+      final treenodeBefore = getTreenodeBeforeTreenode(treenode.id);
       root = _root.replaceTreenodeById(treenodeBefore!.id,
           (p) => p.copyWith(contentNodes: [...p.contentNodes, node]));
       return;
