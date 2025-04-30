@@ -338,6 +338,10 @@ class OutlineEditableDocument<T extends OutlineTreenode<T>>
         documentNodeId, node.copyWithAddedMetadata({isHiddenKey: isHidden}));
   }
 
+  void replaceTreenode(String targetId, T Function(T p) transformer) {
+    root = _root.replaceTreenodeById(targetId, transformer);
+  }
+
   @override
   void moveNode({required String nodeId, required int targetIndex}) {
     final node = _root.getDocumentNodeById(nodeId);
