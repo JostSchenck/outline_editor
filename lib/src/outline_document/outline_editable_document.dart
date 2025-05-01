@@ -20,8 +20,10 @@ class OutlineEditableDocument<T extends OutlineTreenode<T>>
   }) : // we take care that the logical root is empty, so that insertion logic works later
         _root = logicalRoot != null
             ? logicalRoot.copyWith(titleNode: null, contentNodes: [])
-            : treenodeBuilder(id: 'root')
-                .copyWith(titleNode: null, contentNodes: []) as T {
+            : treenodeBuilder(id: 'root').copyWith(
+                titleNode: null,
+                contentNodes: [],
+                children: rootTreeNodes) as T {
     _resetRoot = root.copyWith();
   }
 
