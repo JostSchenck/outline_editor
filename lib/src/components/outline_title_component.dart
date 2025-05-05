@@ -4,6 +4,7 @@ import 'package:outline_editor/src/components/outline_component_base.dart';
 import 'package:outline_editor/src/outline_document/outline_document.dart';
 import 'package:outline_editor/src/outline_editor/attributions.dart';
 import 'package:super_editor/super_editor.dart';
+import 'package:super_text_layout/super_text_layout.dart';
 
 class TitleNode extends TextNode {
   TitleNode({
@@ -243,12 +244,19 @@ class OutlineTitleComponent extends OutlineComponent {
 
 class _OutlineTitleComponentState
     extends OutlineComponentState<OutlineTitleComponent>
-    with ProxyDocumentComponent<OutlineTitleComponent>, ProxyTextComposable {
+    with
+        ProxyDocumentComponent<OutlineTitleComponent>,
+        ProxyTextComposable,
+        ProseTextBlock {
   final _textKey =
       GlobalKey(debugLabel: '_OutlineTitleComponentState._textKey');
 
   @override
   GlobalKey<State<StatefulWidget>> get childDocumentComponentKey => _textKey;
+
+  @override
+  ProseTextLayout get textLayout =>
+      (_textKey.currentState as ProseTextBlock).textLayout;
 
   @override
   TextComposable get childTextComposable =>

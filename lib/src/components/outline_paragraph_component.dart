@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:outline_editor/outline_editor.dart';
+import 'package:super_text_layout/super_text_layout.dart';
 
 class OutlineParagraphComponentViewModel extends OutlineComponentViewModel
     with TextComponentViewModel {
@@ -204,12 +205,17 @@ class _OutlineParagraphComponentState
     extends OutlineComponentState<OutlineParagraphComponent>
     with
         ProxyDocumentComponent<OutlineParagraphComponent>,
-        ProxyTextComposable {
+        ProxyTextComposable,
+        ProseTextBlock {
   final _textKey =
       GlobalKey(debugLabel: '_OutlineParagraphComponentState._textKey');
 
   @override
   GlobalKey<State<StatefulWidget>> get childDocumentComponentKey => _textKey;
+
+  @override
+  ProseTextLayout get textLayout =>
+      (_textKey.currentState as ProseTextBlock).textLayout;
 
   @override
   TextComposable get childTextComposable =>
