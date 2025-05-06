@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:outline_editor/outline_editor.dart';
-import 'package:outline_editor/src/util/logging.dart';
 
 class NodeVisibilityReaction extends EditReaction {
   NodeVisibilityReaction({
@@ -227,7 +226,39 @@ class NodeVisibilityReaction extends EditReaction {
             // apparently, this can happen, although I can not reliably reproduce it
             return;
           }
+          final oldNodeIndex = outlineDoc
+              .getNodeIndexById(selectionEvent.oldSelection!.base.nodeId);
+          final newNodeIndex = outlineDoc
+              .getNodeIndexById(selectionEvent.newSelection!.base.nodeId);
+          late bool movedDownstream;
+          if (oldNodeIndex < newNodeIndex) {
+            movedDownstream = true;
+          } else if (oldNodeIndex > newNodeIndex) {
+            movedDownstream = false;
+          } else {
+            movedDownstream = (selectionEvent.oldSelection!.base.nodePosition
+                        as TextNodePosition)
+                    .offset <
+                (selectionEvent.newSelection!.base.nodePosition
+                        as TextNodePosition)
+                    .offset;
+          }
 
+          if (movedDownstream) {
+            _collapseAtNextVisibleTextNodePosition(
+              requestDispatcher,
+              outlineDoc,
+              selectionEvent.newSelection!,
+            );
+          } else {
+            _collapseAtLastVisibleTextNodePosition(
+              requestDispatcher,
+              outlineDoc,
+              selectionEvent.newSelection!,
+            );
+          }
+
+/*
           switch (selectionEvent.changeType) {
             case SelectionChangeType.pushCaretDownstream:
               _collapseAtNextVisibleTextNodePosition(
@@ -289,6 +320,7 @@ class NodeVisibilityReaction extends EditReaction {
                 'Unhandled SelectionChangeType ${selectionEvent.changeType}',
               );
           }
+*/
         }
       }
     }

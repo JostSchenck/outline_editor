@@ -204,10 +204,12 @@ class OutlineTitleComponentBuilder implements ComponentBuilder {
     if (componentViewModel is! OutlineTitleComponentViewModel) {
       return null;
     }
+    final globalKey = GlobalKey<OutlineTitleComponentState>();
     return OutlineTitleComponent(
       key: componentContext.componentKey,
       viewModel: componentViewModel,
       editor: editor,
+      globalKey: globalKey,
       leadingControlsBuilder: leadingControlsBuilder ??
           (context, editor, nodeId, indexInChildren) {
             if (indexInChildren == 0) {
@@ -228,6 +230,7 @@ class OutlineTitleComponent extends OutlineComponent {
     super.key,
     required this.viewModel,
     required super.editor,
+    required super.globalKey,
     super.leadingControlsBuilder,
     super.topControlsBuilder,
     super.indentPerLevel,
@@ -239,10 +242,10 @@ class OutlineTitleComponent extends OutlineComponent {
   final OutlineTitleComponentViewModel viewModel;
 
   @override
-  State createState() => _OutlineTitleComponentState();
+  State createState() => OutlineTitleComponentState();
 }
 
-class _OutlineTitleComponentState
+class OutlineTitleComponentState
     extends OutlineComponentState<OutlineTitleComponent>
     with
         ProxyDocumentComponent<OutlineTitleComponent>,

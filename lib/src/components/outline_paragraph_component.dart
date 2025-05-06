@@ -165,10 +165,12 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
       SingleColumnLayoutComponentViewModel componentViewModel) {
     assert(componentViewModel is OutlineParagraphComponentViewModel,
         "componentViewModel is no OutlineParagraphComponentViewModel but a ${componentViewModel.runtimeType}");
+    final globalKey = GlobalKey<OutlineParagraphComponentState>();
     return OutlineParagraphComponent(
       key: componentContext.componentKey,
       viewModel: componentViewModel as OutlineParagraphComponentViewModel,
       editor: editor,
+      globalKey: globalKey,
       leadingControlsBuilder: leadingControlsBuilder ??
           (context, editor, nodeId, indexInChildren) {
             if (indexInChildren == 0) {
@@ -188,6 +190,7 @@ class OutlineParagraphComponent extends OutlineComponent {
   const OutlineParagraphComponent({
     super.key,
     required this.viewModel,
+    required super.globalKey,
     required super.editor,
     super.leadingControlsBuilder,
     super.topControlsBuilder,
@@ -198,10 +201,10 @@ class OutlineParagraphComponent extends OutlineComponent {
   final OutlineParagraphComponentViewModel viewModel;
 
   @override
-  State createState() => _OutlineParagraphComponentState();
+  State createState() => OutlineParagraphComponentState();
 }
 
-class _OutlineParagraphComponentState
+class OutlineParagraphComponentState
     extends OutlineComponentState<OutlineParagraphComponent>
     with
         ProxyDocumentComponent<OutlineParagraphComponent>,

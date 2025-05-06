@@ -44,6 +44,7 @@ abstract class OutlineComponent extends StatefulWidget {
     super.key,
     required this.outlineComponentViewModel,
     required this.editor,
+    required this.globalKey,
     this.leadingControlsBuilder,
     this.topControlsBuilder,
     this.indentPerLevel = 30,
@@ -56,6 +57,7 @@ abstract class OutlineComponent extends StatefulWidget {
   final TopControlsBuilder? topControlsBuilder;
   final double indentPerLevel;
   final double minimumIndent;
+  final GlobalKey<OutlineComponentState> globalKey;
 }
 
 /// Base class for state classes for classes derived from
