@@ -72,11 +72,11 @@ abstract class OutlineComponentState<T extends OutlineComponent>
   }
 
   /// Builds a component that is to be wrapped in outline stuff by this mixin.
-  /// Components using this mixin must return here only the component itself,
-  /// instead of overriding `build`.
+  /// Components extending this class should return here only the component
+  /// itself, instead of overriding `build`.
   Widget buildWrappedComponent(BuildContext context);
 
-  double _indentWidth() =>
+  double indentWidth() =>
       widget.minimumIndent +
       widget.indentPerLevel *
           (widget.outlineComponentViewModel.outlineIndentLevel.toDouble() + 1);
@@ -107,7 +107,7 @@ abstract class OutlineComponentState<T extends OutlineComponent>
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SizedBox(
-                  width: _indentWidth(),
+                  width: indentWidth(),
                 ),
                 Expanded(child: topControls),
               ],
@@ -118,7 +118,7 @@ abstract class OutlineComponentState<T extends OutlineComponent>
             children: [
               // Indent on start side
               SizedBox(
-                width: _indentWidth(),
+                width: indentWidth(),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.center,

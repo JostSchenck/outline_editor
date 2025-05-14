@@ -218,7 +218,8 @@ class OutlineParagraphComponentState
 
   @override
   ProseTextLayout get textLayout =>
-      (_textKey.currentState as ProseTextBlock).textLayout;
+      // FIXME: this is @visibleForTesting only --> how to legally retrieve textLayout?
+      (_textKey.currentState as TextComponentState).textLayout;
 
   @override
   TextComposable get childTextComposable =>

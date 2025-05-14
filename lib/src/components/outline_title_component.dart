@@ -259,7 +259,8 @@ class OutlineTitleComponentState
 
   @override
   ProseTextLayout get textLayout =>
-      (_textKey.currentState as ProseTextBlock).textLayout;
+      // FIXME: this is @visibleForTesting only --> how to legally retrieve textLayout?
+      (_textKey.currentState as TextComponentState).textLayout;
 
   @override
   TextComposable get childTextComposable =>
@@ -283,26 +284,4 @@ class OutlineTitleComponentState
       showDebugPaint: false,
     );
   }
-
-  // @override
-  // Widget? buildTopControls(BuildContext context) {
-  //   if (widget.topControlsBuilder == null) {
-  //     return null;
-  //   } else {
-  //     return widget.topControlsBuilder!(
-  //       context,
-  //     );
-  //   }
-  // }
-
-  // @override
-  // Widget? buildLeadingControls(BuildContext context, int indexInChildren) {
-  //   if (indexInChildren == 0) {
-  //     return CollapseExpandButton(
-  //       editor: widget.editor,
-  //       docNodeId: widget.viewModel.nodeId,
-  //     );
-  //   }
-  //   return null;
-  // }
 }
