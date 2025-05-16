@@ -36,7 +36,14 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
             id: '1a', text: AttributedText('First Paragraph of a root node')),
         contentNodes: [
           ParagraphNode(
-              id: '1b', text: AttributedText('First Paragraph of a root node')),
+              id: '1b',
+              text: AttributedText(
+                'First Paragraph of a root node',
+                AttributedSpans(),
+                {
+                  1: 'asdf',
+                },
+              )),
           ParagraphNode(
               id: '1c',
               text: AttributedText('Second Paragraph of a root node')),

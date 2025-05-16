@@ -150,6 +150,7 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
       paragraphComponentViewModel: paragraphViewModel,
       outlineIndentLevel: outlineDoc.getTreenodeDepth(node.id),
       indexInChildren: outlineDoc.getIndexInChildren(node.id),
+      inlineWidgetBuilders: paragraphViewModel.inlineWidgetBuilders,
       hasChildren: outlineDoc
           .getTreenodeForDocumentNodeId(node.id)
           .treenode
@@ -232,6 +233,7 @@ class OutlineParagraphComponentState
       text: widget.viewModel.paragraphComponentViewModel.text,
       textStyleBuilder:
           widget.viewModel.paragraphComponentViewModel.textStyleBuilder,
+      inlineWidgetBuilders: widget.viewModel.inlineWidgetBuilders,
       textScaler: widget.viewModel.paragraphComponentViewModel.textScaler,
       textAlign: widget.viewModel.paragraphComponentViewModel.textAlignment,
       metadata: widget.viewModel.paragraphComponentViewModel.blockType != null

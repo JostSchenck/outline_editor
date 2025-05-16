@@ -3,6 +3,21 @@ import 'package:super_editor/super_editor.dart';
 
 var defaultOutlineEditorStylesheet = defaultStylesheet.copyWith(
   documentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+
+  // TESTING:
+  inlineWidgetBuilders: [
+    (context, style, placeholder) {
+      if (placeholder is String && placeholder == 'asdf') {
+        return SizedBox(
+          width: 8,
+          child: Container(
+            color: Colors.red,
+          ),
+        );
+      }
+      return null;
+    }
+  ],
   rules: [
     StyleRule(
       BlockSelector.all,

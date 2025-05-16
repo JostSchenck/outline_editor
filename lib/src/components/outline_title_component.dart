@@ -272,6 +272,7 @@ class OutlineTitleComponentState
       key: _textKey,
       text: widget.viewModel.text,
       textStyleBuilder: widget.viewModel.textStyleBuilder,
+      inlineWidgetBuilders: widget.viewModel.inlineWidgetBuilders,
       textAlign: widget.viewModel.textAlignment,
       metadata: {
         'blockType': NamedAttribution('title'),
