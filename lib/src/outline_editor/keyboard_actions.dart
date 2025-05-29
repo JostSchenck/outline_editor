@@ -306,39 +306,54 @@ ExecutionInstruction enterInOutlineTreeDocument<T extends OutlineTreenode<T>>(
       ]);
       return ExecutionInstruction.haltExecution;
     }
-    if (textNodePosition.offset <= textNode.text.toPlainText().length) {
+    if (textNodePosition.offset <= textNode.text.length) {
       // Enter pressed somewhere else in a title node: Jump to start of content,
-      if (outlineTreenode.contentNodes.isEmpty) {
-        // ... inserting a ParagraphNode, as there are no content nodes
-        final newParagraphNode =
-            ParagraphNode(id: uuid.v4(), text: AttributedText(''));
-        editContext.editor.execute([
-          InsertDocumentNodeInOutlineTreenodeRequest(
-            documentNode: newParagraphNode,
-            outlineTreenodeId: outlineTreenode.id,
-          ),
-          ChangeSelectionRequest(
-              DocumentSelection.collapsed(
-                position: DocumentPosition(
-                  nodeId: newParagraphNode.id,
-                  nodePosition: const TextNodePosition(offset: 0),
+      // if content isn't hidden globally:
+      if (!hideTextGlobally) {
+        if (outlineTreenode.contentNodes.isEmpty) {
+          // ... inserting a ParagraphNode, as there are no content nodes
+          final newParagraphNode =
+              ParagraphNode(id: uuid.v4(), text: AttributedText(''));
+          editContext.editor.execute([
+            InsertDocumentNodeInOutlineTreenodeRequest(
+              documentNode: newParagraphNode,
+              outlineTreenodeId: outlineTreenode.id,
+            ),
+            ChangeSelectionRequest(
+                DocumentSelection.collapsed(
+                  position: DocumentPosition(
+                    nodeId: newParagraphNode.id,
+                    nodePosition: const TextNodePosition(offset: 0),
+                  ),
                 ),
-              ),
-              SelectionChangeType.insertContent,
-              'jumped to content')
-        ]);
+                SelectionChangeType.insertContent,
+                'jumped to content')
+          ]);
+        } else {
+          // jump to existing content node, nothing to insert
+          editContext.editor.execute([
+            ChangeSelectionRequest(
+                DocumentSelection.collapsed(
+                  position: DocumentPosition(
+                    nodeId: outlineTreenode.contentNodes.first.id,
+                    nodePosition: const TextNodePosition(offset: 0),
+                  ),
+                ),
+                SelectionChangeType.insertContent,
+                'jumped to content'),
+          ]);
+        }
       } else {
-        // jump to existing content node, nothing to insert
+        // content is globally hidden, create a new sibling treenode
         editContext.editor.execute([
-          ChangeSelectionRequest(
-              DocumentSelection.collapsed(
-                position: DocumentPosition(
-                  nodeId: outlineTreenode.contentNodes.first.id,
-                  nodePosition: const TextNodePosition(offset: 0),
-                ),
-              ),
-              SelectionChangeType.insertContent,
-              'jumped to content'),
+          InsertOutlineTreenodeRequest<T>(
+            existingTreenodeId: outlineDoc
+                .getTreenodeForDocumentNodeId(selection.base.nodeId)
+                .treenode
+                .id,
+            createChild: false,
+            // newDocumentNodeId: uuid.v4(),
+          ),
         ]);
       }
       return ExecutionInstruction.haltExecution;
