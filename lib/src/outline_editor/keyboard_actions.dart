@@ -256,10 +256,12 @@ ExecutionInstruction
   return ExecutionInstruction.continueExecution;
 }
 
-ExecutionInstruction enterInOutlineTreeDocument<T extends OutlineTreenode<T>>({
-  required SuperEditorContext editContext,
-  required KeyEvent keyEvent,
-}) {
+// additional parameter hideTextGlobally needs special handling in a closure in
+// plugin code
+ExecutionInstruction enterInOutlineTreeDocument<T extends OutlineTreenode<T>>(
+    {required SuperEditorContext editContext,
+    required KeyEvent keyEvent,
+    required bool hideTextGlobally}) {
   if (keyEvent is! KeyDownEvent && keyEvent is! KeyRepeatEvent) {
     return ExecutionInstruction.continueExecution;
   }
@@ -306,8 +308,8 @@ ExecutionInstruction enterInOutlineTreeDocument<T extends OutlineTreenode<T>>({
     }
     if (textNodePosition.offset <= textNode.text.toPlainText().length) {
       // Enter pressed somewhere else in a title node: Jump to start of content,
-      // inserting a ParagraphNode if needed
       if (outlineTreenode.contentNodes.isEmpty) {
+        // ... inserting a ParagraphNode, as there are no content nodes
         final newParagraphNode =
             ParagraphNode(id: uuid.v4(), text: AttributedText(''));
         editContext.editor.execute([
@@ -326,6 +328,7 @@ ExecutionInstruction enterInOutlineTreeDocument<T extends OutlineTreenode<T>>({
               'jumped to content')
         ]);
       } else {
+        // jump to existing content node, nothing to insert
         editContext.editor.execute([
           ChangeSelectionRequest(
               DocumentSelection.collapsed(

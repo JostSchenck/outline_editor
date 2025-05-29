@@ -15,6 +15,7 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
     List<ComponentBuilder>? componentBuilders,
     this.addRequestHandlers = const [],
     this.inlineWidgetBuilders,
+    this.hideTextGlobally = false,
   }) : _componentBuilders = componentBuilders;
 
   final Editor editor;
@@ -23,6 +24,7 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
   final List<ComponentBuilder>? _componentBuilders;
   final List<EditRequestHandler> addRequestHandlers;
   final InlineWidgetBuilderChain? inlineWidgetBuilders;
+  final bool hideTextGlobally;
 
   @override
   void attach(Editor editor) {
@@ -137,7 +139,17 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
   @override
   List<DocumentKeyboardAction> get keyboardActions => [
         upAndDownBehaviorWithModifiers<T>,
-        enterInOutlineTreeDocument<T>,
+        // this keyboard action needs hideTextGlobally passed, so we encapsulate
+        // it into a closure
+        (
+            {required SuperEditorContext editContext,
+            required KeyEvent keyEvent}) {
+          return enterInOutlineTreeDocument<T>(
+            editContext: editContext,
+            keyEvent: keyEvent,
+            hideTextGlobally: hideTextGlobally,
+          );
+        },
         deleteSpecialCasesInOutlineTreeDocument<T>,
         backspaceSpecialCasesInOutlineTreeDocument<T>,
         insertTreenodeOnShiftOrCtrlEnter<T>,
