@@ -37,7 +37,6 @@ class HideShowContentNodesCommand<T extends OutlineTreenode<T>>
   final bool hideContent;
 
   @override
-  // TODO: Will ich das überhaupt in der Undo-History?
   HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
 
   @override

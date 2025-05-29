@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:super_editor/super_editor.dart';
 
-var defaultOutlineEditorStylesheet = defaultStylesheet.copyWith(
+final defaultInlineWidgetBuilders = <InlineWidgetBuilder>[
+  (context, style, placeholder) {
+    if (placeholder is String && placeholder == 'asdf') {
+      return SizedBox(
+        width: 8,
+        child: Container(
+          color: Colors.red,
+        ),
+      );
+    }
+    return null;
+  }
+];
+
+final defaultOutlineEditorStylesheet = defaultStylesheet.copyWith(
   documentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
 
   // TESTING:
-  inlineWidgetBuilders: [
-    (context, style, placeholder) {
-      if (placeholder is String && placeholder == 'asdf') {
-        return SizedBox(
-          width: 8,
-          child: Container(
-            color: Colors.red,
-          ),
-        );
-      }
-      return null;
-    }
-  ],
+  inlineWidgetBuilders: defaultInlineWidgetBuilders,
   rules: [
     StyleRule(
       BlockSelector.all,

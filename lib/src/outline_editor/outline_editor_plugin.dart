@@ -14,6 +14,7 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
     this.defaultTreenodeBuilder = basicOutlineTreenodeBuilder,
     List<ComponentBuilder>? componentBuilders,
     this.addRequestHandlers = const [],
+    this.inlineWidgetBuilders,
   }) : _componentBuilders = componentBuilders;
 
   final Editor editor;
@@ -21,6 +22,7 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
   final TreenodeBuilder defaultTreenodeBuilder;
   final List<ComponentBuilder>? _componentBuilders;
   final List<EditRequestHandler> addRequestHandlers;
+  final InlineWidgetBuilderChain? inlineWidgetBuilders;
 
   @override
   void attach(Editor editor) {
@@ -125,7 +127,11 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
         OutlineTitleComponentBuilder(
           editor: editor,
         ),
-        OutlineParagraphComponentBuilder(editor: editor),
+        OutlineParagraphComponentBuilder(
+          editor: editor,
+          inlineWidgetBuilders:
+              inlineWidgetBuilders ?? defaultInlineWidgetBuilders,
+        ),
       ];
 
   @override

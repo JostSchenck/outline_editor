@@ -159,11 +159,13 @@ class OutlineTitleComponentBuilder implements ComponentBuilder {
     required this.editor,
     this.leadingControlsBuilder,
     this.topControlsBuilder,
+    this.inlineWidgetBuilders,
   });
 
   final Editor editor;
   final SideControlsBuilder? leadingControlsBuilder;
   final TopControlsBuilder? topControlsBuilder;
+  final List<InlineWidgetBuilder>? inlineWidgetBuilders;
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
@@ -182,6 +184,7 @@ class OutlineTitleComponentBuilder implements ComponentBuilder {
     return OutlineTitleComponentViewModel(
       nodeId: node.id,
       outlineIndentLevel: outlineDoc.getTreenodeDepth(node.id),
+      inlineWidgetBuilders: inlineWidgetBuilders ?? [],
       indexInChildren: outlineDoc.getIndexInChildren(node.id),
       hasChildren: outlineDoc
           .getTreenodeForDocumentNodeId(node.id)

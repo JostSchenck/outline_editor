@@ -56,7 +56,7 @@ abstract mixin class OutlineDocument<T extends OutlineTreenode<T>>
     final ret = root.getTreenodeContainingDocumentNode(docNodeId);
     if (ret == null) {
       throw Exception(
-          'Could not find ${T.runtimeType} for docNodeId $docNodeId');
+          'Could not find ${T.runtimeType.toString()} for docNodeId $docNodeId');
     }
     return ret;
   }

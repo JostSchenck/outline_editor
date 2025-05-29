@@ -123,12 +123,14 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
     this.leadingControlsBuilder,
     this.topControlsBuilder,
     this.hideTextGlobally = false,
+    this.inlineWidgetBuilders,
   });
 
   final Editor editor;
   final SideControlsBuilder? leadingControlsBuilder;
   final TopControlsBuilder? topControlsBuilder;
   final bool hideTextGlobally;
+  final List<InlineWidgetBuilder>? inlineWidgetBuilders;
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
@@ -150,7 +152,7 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
       paragraphComponentViewModel: paragraphViewModel,
       outlineIndentLevel: outlineDoc.getTreenodeDepth(node.id),
       indexInChildren: outlineDoc.getIndexInChildren(node.id),
-      inlineWidgetBuilders: paragraphViewModel.inlineWidgetBuilders,
+      inlineWidgetBuilders: inlineWidgetBuilders ?? defaultInlineWidgetBuilders,
       hasChildren: outlineDoc
           .getTreenodeForDocumentNodeId(node.id)
           .treenode

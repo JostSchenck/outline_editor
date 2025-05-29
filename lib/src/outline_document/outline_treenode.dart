@@ -527,7 +527,7 @@ abstract class OutlineTreenode<
     // visibility is false, if this node is collapsed:
     if (isCollapsed) return false;
     if (children.isEmpty) {
-      outlineDocLog.shout('local path not empty, but children is?');
+      outlineDocLog.shout('local path not empty, but no children?');
     }
     return (children[path.first].isTreenodeVisibleByPath(path.sublist(1)));
   }
@@ -544,8 +544,8 @@ abstract class OutlineTreenode<
     final docNodePath = getDocumentNodePathById(docNodeId);
     // Hide DocumentNodes if content is supposed to be hidden, of if the
     // treenode is collapsed; don't hide the title node:
-    if (docNodePath!.docNodeIndex != 0 && result.treenode.isCollapsed ||
-        result.treenode.hasContentHidden) {
+    if (docNodePath!.docNodeIndex != 0 &&
+        (result.treenode.isCollapsed || result.treenode.hasContentHidden)) {
       return false;
     }
     return isTreenodeVisibleByPath(result.path);
