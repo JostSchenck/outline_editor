@@ -90,30 +90,6 @@ class ReparentOutlineTreenodeCommand<T extends OutlineTreenode<T>>
           to: docNodeStartIndexAfter + i,
         )),
     ]);
-    /*commandLog.fine(
-        'executing ReparentOutlineTreenodeCommand, moving $childTreenodeId to OutlineTreenode $newParentTreenodeId');
-    if (childTreenodeId.parent == null) {
-      commandLog.severe('tried reparenting root node, this is illegal');
-      return;
-    }
-    final outlineDoc = context.document as OutlineDocument;
-    final docNodeStartIndexBefore =
-        outlineDoc.getNodeIndexById(childTreenodeId.titleNode.id);
-
-    childTreenodeId.parent!.removeChild(childTreenodeId);
-    newParentTreenodeId.addChild(childTreenodeId, index);
-    final docNodeStartIndexAfter =
-        outlineDoc.getNodeIndexById(childTreenodeId.titleNode.id);
-
-    final movedNodes = childTreenodeId.nodesSubtree;
-    executor.logChanges([
-      for (int i = 0; i < movedNodes.length; i++)
-        DocumentEdit(NodeMovedEvent(
-          nodeId: movedNodes[i].id,
-          from: docNodeStartIndexBefore + i,
-          to: docNodeStartIndexAfter + i,
-        )),
-    ]);*/
   }
 }
 
@@ -206,41 +182,5 @@ class ChangeTreenodeIndentationCommand<T extends OutlineTreenode<T>>
         'reset selection after reparenting',
       );
     }
-    /*commandLog.fine(
-        'executing ChangeTreenodeIndentationCommand, moving $treenode ${moveUpInHierarchy ? 'up' : 'down'}');
-
-    if (moveUpInHierarchy) {
-      final parent = treenode.parent;
-      if (parent == null || parent.parent == null) {
-        commandLog.info('No moving further up in hierarchy, up there already');
-        return;
-      }
-      // final selection = context.composer.selection;
-      executor.executeCommand(ReparentOutlineTreenodeCommand(
-        childTreenodeId: treenode,
-        newParentTreenodeId: parent.parent!,
-        index: parent.childIndex + 1,
-      ));
-      // context.composer.setSelectionWithReason(selection, 'reset selection after reparenting');
-    } else {
-      if (treenode.parent == null) {
-        commandLog.info(
-            'No moving down in hierarchy, no older sibling for root node');
-        return;
-      }
-      if (treenode.childIndex == 0) {
-        commandLog.info('No moving down in hierarchy, no older sibling');
-        return;
-      }
-      final newParent = treenode.parent!.children[treenode.childIndex - 1];
-      final selection = context.composer.selection;
-      executor.executeCommand(ReparentOutlineTreenodeCommand(
-        childTreenodeId: treenode,
-        newParentTreenodeId: newParent,
-        index: newParent.children.length,
-      ));
-      context.composer.setSelectionWithReason(
-          selection, 'reset selection after reparenting');
-    }*/
   }
 }

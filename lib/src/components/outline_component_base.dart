@@ -130,13 +130,6 @@ abstract class OutlineComponentState<T extends OutlineComponent>
               Expanded(
                 child: buildWrappedComponent(context),
               ),
-              // Row(
-              //   mainAxisAlignment: MainAxisAlignment.start,
-              //   crossAxisAlignment: CrossAxisAlignment.center,
-              //   children: [
-              //     if (trailingControls != null) trailingControls,
-              //   ],
-              // ),
             ],
           ),
         ],

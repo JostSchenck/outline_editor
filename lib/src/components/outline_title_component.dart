@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 import 'package:outline_editor/src/components/collapse_expand_button.dart';
 import 'package:outline_editor/src/components/outline_component_base.dart';
@@ -51,6 +52,9 @@ class TitleNode extends TextNode {
   // int get hashCode => super.hashCode;
 }
 
+typedef TrailingWidgetsBuilder = Widget? Function(
+    BuildContext context, Editor editor, String nodeId, double lineHeight);
+
 class OutlineTitleComponentViewModel extends OutlineComponentViewModel
     with TextComponentViewModel {
   OutlineTitleComponentViewModel({
@@ -63,6 +67,7 @@ class OutlineTitleComponentViewModel extends OutlineComponentViewModel
     this.highlightWhenEmpty = false,
     this.selection,
     this.inlineWidgetBuilders = const [],
+    this.trailingWidgetsBuilder,
     required this.selectionColor,
     required this.text,
     required this.textAlignment,
@@ -82,6 +87,7 @@ class OutlineTitleComponentViewModel extends OutlineComponentViewModel
   bool isCollapsed;
   @override
   InlineWidgetBuilderChain inlineWidgetBuilders;
+  TrailingWidgetsBuilder? trailingWidgetsBuilder;
 
   @override
   bool highlightWhenEmpty;
@@ -105,16 +111,18 @@ class OutlineTitleComponentViewModel extends OutlineComponentViewModel
       nodeId: nodeId,
       outlineIndentLevel: outlineIndentLevel,
       indexInChildren: indexInChildren,
+      inlineWidgetBuilders: inlineWidgetBuilders,
+      trailingWidgetsBuilder: trailingWidgetsBuilder,
       isVisible: isVisible,
       hasChildren: hasChildren,
       isCollapsed: isCollapsed,
+      selection: selection,
       selectionColor: selectionColor,
       text: text,
       textAlignment: textAlignment,
       textDirection: textDirection,
       textStyleBuilder: textStyleBuilder,
       highlightWhenEmpty: highlightWhenEmpty,
-      selection: selection,
     );
   }
 
@@ -126,32 +134,38 @@ class OutlineTitleComponentViewModel extends OutlineComponentViewModel
           runtimeType == other.runtimeType &&
           nodeId == other.nodeId &&
           outlineIndentLevel == other.outlineIndentLevel &&
+          indexInChildren == other.indexInChildren &&
+          inlineWidgetBuilders.equals(other.inlineWidgetBuilders) &&
+          trailingWidgetsBuilder == other.trailingWidgetsBuilder &&
           isVisible == other.isVisible &&
           hasChildren == other.hasChildren &&
           isCollapsed == other.isCollapsed &&
-          highlightWhenEmpty == other.highlightWhenEmpty &&
           selection == other.selection &&
           selectionColor == other.selectionColor &&
           text == other.text &&
           textAlignment == other.textAlignment &&
           textDirection == other.textDirection &&
-          textStyleBuilder == other.textStyleBuilder;
+          textStyleBuilder == other.textStyleBuilder &&
+          highlightWhenEmpty == other.highlightWhenEmpty;
 
   @override
   int get hashCode =>
       super.hashCode ^
       nodeId.hashCode ^
       outlineIndentLevel.hashCode ^
+      indexInChildren.hashCode ^
+      inlineWidgetBuilders.hashCode ^
+      trailingWidgetsBuilder.hashCode ^
       isVisible.hashCode ^
       hasChildren.hashCode ^
       isCollapsed.hashCode ^
-      highlightWhenEmpty.hashCode ^
       selection.hashCode ^
       selectionColor.hashCode ^
       text.hashCode ^
       textAlignment.hashCode ^
       textDirection.hashCode ^
-      textStyleBuilder.hashCode;
+      textStyleBuilder.hashCode ^
+      highlightWhenEmpty.hashCode;
 }
 
 class OutlineTitleComponentBuilder implements ComponentBuilder {
@@ -160,12 +174,14 @@ class OutlineTitleComponentBuilder implements ComponentBuilder {
     this.leadingControlsBuilder,
     this.topControlsBuilder,
     this.inlineWidgetBuilders,
+    this.trailingWidgetsBuilder,
   });
 
   final Editor editor;
   final SideControlsBuilder? leadingControlsBuilder;
   final TopControlsBuilder? topControlsBuilder;
-  final List<InlineWidgetBuilder>? inlineWidgetBuilders;
+  final InlineWidgetBuilderChain? inlineWidgetBuilders;
+  final TrailingWidgetsBuilder? trailingWidgetsBuilder;
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
@@ -185,6 +201,7 @@ class OutlineTitleComponentBuilder implements ComponentBuilder {
       nodeId: node.id,
       outlineIndentLevel: outlineDoc.getTreenodeDepth(node.id),
       inlineWidgetBuilders: inlineWidgetBuilders ?? [],
+      trailingWidgetsBuilder: trailingWidgetsBuilder,
       indexInChildren: outlineDoc.getIndexInChildren(node.id),
       hasChildren: outlineDoc
           .getTreenodeForDocumentNodeId(node.id)
@@ -224,6 +241,7 @@ class OutlineTitleComponentBuilder implements ComponentBuilder {
             return null;
           },
       topControlsBuilder: topControlsBuilder,
+      trailingWidgetsBuilder: trailingWidgetsBuilder,
     );
   }
 }
@@ -234,6 +252,7 @@ class OutlineTitleComponent extends OutlineComponent {
     required this.viewModel,
     required super.editor,
     required super.globalKey,
+    this.trailingWidgetsBuilder,
     super.leadingControlsBuilder,
     super.topControlsBuilder,
     super.indentPerLevel,
@@ -243,6 +262,7 @@ class OutlineTitleComponent extends OutlineComponent {
         );
 
   final OutlineTitleComponentViewModel viewModel;
+  final TrailingWidgetsBuilder? trailingWidgetsBuilder;
 
   @override
   State createState() => OutlineTitleComponentState();
@@ -271,7 +291,7 @@ class OutlineTitleComponentState
 
   @override
   Widget buildWrappedComponent(BuildContext context) {
-    return TextComponent(
+    final textComponent = TextComponent(
       key: _textKey,
       text: widget.viewModel.text,
       textStyleBuilder: widget.viewModel.textStyleBuilder,
@@ -286,6 +306,92 @@ class OutlineTitleComponentState
       underlines: widget.viewModel.createUnderlines(),
       textDirection: widget.viewModel.textDirection,
       showDebugPaint: false,
+    );
+    final trailingBuilder = widget.viewModel.trailingWidgetsBuilder;
+    if (trailingBuilder == null) {
+      return textComponent;
+    }
+    return LayoutBuilder(builder: (context, constraints) {
+      return _TextWithTrailing(
+        textKey: _textKey,
+        textComponent: textComponent,
+        trailingBuilder: trailingBuilder,
+        maxTrailingWidth: constraints.maxWidth * 0.5,
+        editor: widget.editor,
+        nodeId: widget.viewModel.nodeId,
+      );
+    });
+  }
+}
+
+class _TextWithTrailing extends StatefulWidget {
+  const _TextWithTrailing({
+    required this.textKey,
+    required this.textComponent,
+    required this.trailingBuilder,
+    required this.maxTrailingWidth,
+    required this.editor,
+    required this.nodeId,
+  });
+
+  final GlobalKey textKey;
+  final Widget textComponent;
+  final TrailingWidgetsBuilder trailingBuilder;
+  final double maxTrailingWidth;
+  final Editor editor;
+  final String nodeId;
+
+  @override
+  State<_TextWithTrailing> createState() => _TextWithTrailingState();
+}
+
+class _TextWithTrailingState extends State<_TextWithTrailing> {
+  double? lineHeight;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = widget.textKey.currentState;
+      if (state is TextComponentState) {
+        final height =
+            state.textLayout.getLineHeightAtPosition(TextPosition(offset: 0));
+        if (mounted) {
+          setState(() {
+            lineHeight = height;
+          });
+        }
+      } else {
+        debugPrint('TextComponentState not yet ready');
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: widget.textComponent),
+        const SizedBox(width: 8),
+        SizedBox(
+          // ConstrainedBox(
+          // constraints: BoxConstraints(
+          //   maxWidth: widget.maxTrailingWidth,
+          // ),
+          child: lineHeight == null
+              ? const SizedBox(
+                  height: 30,
+                  width: 30,
+                  child: ColoredBox(color: Color(0xFFFF0000)))
+              : widget.trailingBuilder(
+                  context,
+                  widget.editor,
+                  widget.nodeId,
+                  lineHeight!,
+                ),
+        ),
+      ],
     );
   }
 }
