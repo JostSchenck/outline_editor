@@ -16,6 +16,7 @@ abstract class OutlineComponentViewModel
   /// this component is located, ie. 0 for the first child, 1 for the
   /// second, etc.
   int get indexInChildren;
+
   set indexInChildren(int indexInChildren);
 
   bool get isVisible;
@@ -113,7 +114,7 @@ abstract class OutlineComponentState<T extends OutlineComponent>
               ],
             ),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             // mainAxisSize: MainAxisSize.min,
             children: [
               // Indent on start side
@@ -121,7 +122,7 @@ abstract class OutlineComponentState<T extends OutlineComponent>
                 width: indentWidth(),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (leadingControls != null) leadingControls,
                   ],
