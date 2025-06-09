@@ -48,10 +48,19 @@ class CollapseExpandButton extends StatelessWidget {
                   color: Color(0xFF999999),
                 ),
               )
-            : const Icon(
-                Icons.horizontal_rule,
-                size: 14,
-                color: Color(0xFFB5B6B7),
+            : AnimatedSwitcher(
+                duration: animationDuration,
+                child: outlineTreenode.isCollapsed
+                    ? Icon(
+                        Icons.more_horiz,
+                        size: 14,
+                        color: Color(0xFFB5B6B7),
+                      )
+                    : Icon(
+                        Icons.horizontal_rule,
+                        size: 14,
+                        color: Color(0xFFB5B6B7),
+                      ),
               ),
       ),
     );
