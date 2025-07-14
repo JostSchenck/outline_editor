@@ -59,6 +59,7 @@ class OutlineTitleComponentViewModel extends OutlineComponentViewModel
     with TextComponentViewModel {
   OutlineTitleComponentViewModel({
     required super.nodeId,
+    required super.createdAt,
     required this.outlineIndentLevel,
     required this.indexInChildren,
     this.isCollapsed = false,
@@ -109,6 +110,7 @@ class OutlineTitleComponentViewModel extends OutlineComponentViewModel
   SingleColumnLayoutComponentViewModel copy() {
     return OutlineTitleComponentViewModel(
       nodeId: nodeId,
+      createdAt: DateTime.now(),
       outlineIndentLevel: outlineIndentLevel,
       indexInChildren: indexInChildren,
       inlineWidgetBuilders: inlineWidgetBuilders,
@@ -199,6 +201,7 @@ class OutlineTitleComponentBuilder implements ComponentBuilder {
 
     return OutlineTitleComponentViewModel(
       nodeId: node.id,
+      createdAt: DateTime.now(),
       outlineIndentLevel: outlineDoc.getTreenodeDepth(node.id),
       inlineWidgetBuilders: inlineWidgetBuilders ?? [],
       trailingWidgetsBuilder: trailingWidgetsBuilder,
