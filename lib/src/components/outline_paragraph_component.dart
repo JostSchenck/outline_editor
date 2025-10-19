@@ -9,6 +9,7 @@ class OutlineParagraphComponentViewModel extends OutlineComponentViewModel
     required this.paragraphComponentViewModel,
     required this.outlineIndentLevel,
     required this.indexInChildren,
+    required super.createdAt,
     this.inlineWidgetBuilders = const [],
     this.isCollapsed = false, // FIXME: sollte nur in Title implementiert werden
     this.isVisible = true,
@@ -88,6 +89,7 @@ class OutlineParagraphComponentViewModel extends OutlineComponentViewModel
       isVisible: isVisible,
       hasChildren: hasChildren,
       isCollapsed: isCollapsed,
+      createdAt: DateTime.now(),
     );
   }
 
@@ -160,6 +162,7 @@ class OutlineParagraphComponentBuilder implements ComponentBuilder {
           .isNotEmpty,
       isCollapsed: outlineDoc.isCollapsed(node.id),
       isVisible: hideTextGlobally ? false : outlineDoc.isVisible(node.id),
+      createdAt: DateTime.now(),
     );
   }
 
