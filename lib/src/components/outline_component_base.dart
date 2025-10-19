@@ -6,7 +6,7 @@ abstract class OutlineComponentViewModel
     extends SingleColumnLayoutComponentViewModel {
   OutlineComponentViewModel({
     required super.nodeId,
-  }) : super(padding: EdgeInsets.zero);
+  }) : super(padding: EdgeInsets.zero, createdAt: null);
 
   int get outlineIndentLevel;
 

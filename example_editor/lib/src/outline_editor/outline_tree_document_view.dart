@@ -133,7 +133,10 @@ class _OutlineTreeDocumentViewState extends State<OutlineTreeDocumentView> {
         documentLayoutKey: _docLayoutKey,
         plugins: {
           OutlineEditorPlugin<BasicOutlineTreenode>(
-              editor: _editor, documentLayoutKey: _docLayoutKey),
+            editor: _editor,
+            documentLayoutKey: _docLayoutKey,
+            hideTextGlobally: () => false,
+          ),
         },
         stylesheet: defaultOutlineEditorStylesheet,
       ),

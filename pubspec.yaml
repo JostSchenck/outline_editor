@@ -1,6 +1,6 @@
 name: outline_editor
 description: "an outline style rich text editor made with super_editor"
-version: 0.0.9
+version: 0.0.10
 publish_to: none
 #homepage:
 
@@ -71,7 +71,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_test_robots: ^0.0.24
   mockito: ^5.4.5
-  super_editor_markdown: ^0.1.7
+  super_editor_markdown: ^0.2.0
   text_table: ^4.0.3
 
 #flutter:

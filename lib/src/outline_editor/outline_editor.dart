@@ -73,6 +73,7 @@ class _OutlineEditorState<T extends OutlineTreenode<T>>
           editor: widget.editor,
           documentLayoutKey: _docLayoutKey,
           defaultTreenodeBuilder: widget.defaultTreenodeBuilder,
+          hideTextGlobally: () => false,
         ),
       },
     );
