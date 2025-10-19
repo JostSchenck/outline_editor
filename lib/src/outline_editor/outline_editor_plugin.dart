@@ -11,11 +11,11 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
   const OutlineEditorPlugin({
     required this.editor,
     required this.documentLayoutKey,
+    required this.hideTextGlobally,
     this.defaultTreenodeBuilder = basicOutlineTreenodeBuilder,
     List<ComponentBuilder>? componentBuilders,
     this.addRequestHandlers = const [],
     this.inlineWidgetBuilders,
-    this.hideTextGlobally = false,
   }) : _componentBuilders = componentBuilders;
 
   final Editor editor;
@@ -24,7 +24,7 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
   final List<ComponentBuilder>? _componentBuilders;
   final List<EditRequestHandler> addRequestHandlers;
   final InlineWidgetBuilderChain? inlineWidgetBuilders;
-  final bool hideTextGlobally;
+  final bool Function() hideTextGlobally;
 
   @override
   void attach(Editor editor) {

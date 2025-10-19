@@ -261,7 +261,7 @@ ExecutionInstruction
 ExecutionInstruction enterInOutlineTreeDocument<T extends OutlineTreenode<T>>(
     {required SuperEditorContext editContext,
     required KeyEvent keyEvent,
-    required bool hideTextGlobally}) {
+    required bool Function() hideTextGlobally}) {
   if (keyEvent is! KeyDownEvent && keyEvent is! KeyRepeatEvent) {
     return ExecutionInstruction.continueExecution;
   }
@@ -309,7 +309,7 @@ ExecutionInstruction enterInOutlineTreeDocument<T extends OutlineTreenode<T>>(
     if (textNodePosition.offset <= textNode.text.length) {
       // Enter pressed somewhere else in a title node: Jump to start of content,
       // if content isn't hidden globally:
-      if (!hideTextGlobally) {
+      if (!hideTextGlobally()) {
         if (outlineTreenode.contentNodes.isEmpty) {
           // ... inserting a ParagraphNode, as there are no content nodes
           final newParagraphNode =

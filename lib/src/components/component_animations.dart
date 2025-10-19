@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-const animationDuration = Duration(milliseconds: 150);
+const animationDuration = Duration(milliseconds: 300);
 const animationCurve = Curves.easeInOut;
 
 // adapted from https://stackoverflow.com/questions/66640920/how-do-you-animate-to-expand-a-container-from-0-height-to-the-height-of-its-cont
@@ -16,7 +16,7 @@ class AnimatedVisibility extends StatefulWidget {
     this.duration = animationDuration,
     this.reverseDuration,
   });
-  
+
   final Widget? child;
 
   /// Show or hide the child
@@ -35,7 +35,8 @@ class AnimatedVisibility extends StatefulWidget {
   AnimatedVisibilityState createState() => AnimatedVisibilityState();
 }
 
-class AnimatedVisibilityState extends State<AnimatedVisibility> with SingleTickerProviderStateMixin {
+class AnimatedVisibilityState extends State<AnimatedVisibility>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 

@@ -55,6 +55,7 @@ class _TestOutlineEditorState extends State<TestOutlineEditor> {
             OutlineEditorPlugin<BasicOutlineTreenode>(
               editor: _editor,
               documentLayoutKey: _docLayoutKey,
+              hideTextGlobally: () => false,
             ),
           },
         ),
