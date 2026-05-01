@@ -37,22 +37,20 @@ class OutlineEditor<T extends OutlineTreenode<T>> extends StatefulWidget {
   final List<SingleColumnLayoutStylePhase> customStylePhases;
   final List<SuperEditorLayerBuilder> documentOverlayBuilders;
   final List<SuperEditorLayerBuilder> documentUnderlayBuilders;
-  final List<DocumentKeyboardAction>? keyboardActions;
+  final List<SuperEditorKeyboardAction>? keyboardActions;
   final TreenodeBuilder defaultTreenodeBuilder;
 
   @override
   State<OutlineEditor<T>> createState() => _OutlineEditorState<T>();
 }
 
-class _OutlineEditorState<T extends OutlineTreenode<T>>
-    extends State<OutlineEditor<T>> {
+class _OutlineEditorState<T extends OutlineTreenode<T>> extends State<OutlineEditor<T>> {
   late GlobalKey _docLayoutKey;
 
   @override
   void initState() {
     super.initState();
-    _docLayoutKey = widget.documentLayoutKey ??
-        GlobalKey(debugLabel: '_OutlineEditorState._docLayoutKey');
+    _docLayoutKey = widget.documentLayoutKey ?? GlobalKey(debugLabel: '_OutlineEditorState._docLayoutKey');
   }
 
   @override

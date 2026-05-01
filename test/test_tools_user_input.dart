@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:super_editor/src/infrastructure/platforms/platform.dart';
 import 'package:super_editor/super_editor.dart';
+import 'package:super_editor/super_editor_test.dart';
 
 final inputSourceVariant = ValueVariant({
   TextInputSource.keyboard,
@@ -15,16 +15,12 @@ final inputSourceVariant = ValueVariant({
 
 final inputAndGestureVariants = ValueVariant<InputAndGestureTuple>(
   {
-    const InputAndGestureTuple(
-        TextInputSource.keyboard, DocumentGestureMode.mouse),
-    const InputAndGestureTuple(
-        TextInputSource.keyboard, DocumentGestureMode.iOS),
-    const InputAndGestureTuple(
-        TextInputSource.keyboard, DocumentGestureMode.android),
+    const InputAndGestureTuple(TextInputSource.keyboard, DocumentGestureMode.mouse),
+    const InputAndGestureTuple(TextInputSource.keyboard, DocumentGestureMode.iOS),
+    const InputAndGestureTuple(TextInputSource.keyboard, DocumentGestureMode.android),
     const InputAndGestureTuple(TextInputSource.ime, DocumentGestureMode.mouse),
     const InputAndGestureTuple(TextInputSource.ime, DocumentGestureMode.iOS),
-    const InputAndGestureTuple(
-        TextInputSource.ime, DocumentGestureMode.android),
+    const InputAndGestureTuple(TextInputSource.ime, DocumentGestureMode.android),
   },
 );
 
@@ -130,22 +126,13 @@ class FakeHardwareKeyboard extends HardwareKeyboard {
   @override
   bool isLogicalKeyPressed(LogicalKeyboardKey key) {
     return switch (key) {
-      LogicalKeyboardKey.shift ||
-      LogicalKeyboardKey.shiftLeft ||
-      LogicalKeyboardKey.shiftRight =>
-        isShiftPressed,
-      LogicalKeyboardKey.alt ||
-      LogicalKeyboardKey.altLeft ||
-      LogicalKeyboardKey.altRight =>
-        isAltPressed,
+      LogicalKeyboardKey.shift || LogicalKeyboardKey.shiftLeft || LogicalKeyboardKey.shiftRight => isShiftPressed,
+      LogicalKeyboardKey.alt || LogicalKeyboardKey.altLeft || LogicalKeyboardKey.altRight => isAltPressed,
       LogicalKeyboardKey.control ||
       LogicalKeyboardKey.controlLeft ||
       LogicalKeyboardKey.controlRight =>
         isControlPressed,
-      LogicalKeyboardKey.meta ||
-      LogicalKeyboardKey.metaLeft ||
-      LogicalKeyboardKey.metaRight =>
-        isMetaPressed,
+      LogicalKeyboardKey.meta || LogicalKeyboardKey.metaLeft || LogicalKeyboardKey.metaRight => isMetaPressed,
       _ => super.isLogicalKeyPressed(key)
     };
   }
@@ -178,8 +165,7 @@ Map<ShortcutActivator, Intent> get defaultFlutterShortcuts {
 /// web platforms during tests.
 ///
 /// This map must be kept up to date with [WidgetsApp._defaultShortcuts].
-const Map<ShortcutActivator, Intent> defaultNonAppleShortcuts =
-    <ShortcutActivator, Intent>{
+const Map<ShortcutActivator, Intent> defaultNonAppleShortcuts = <ShortcutActivator, Intent>{
   // Activation
   SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
   SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
@@ -193,28 +179,19 @@ const Map<ShortcutActivator, Intent> defaultNonAppleShortcuts =
   // Keyboard traversal.
   SingleActivator(LogicalKeyboardKey.tab): NextFocusIntent(),
   SingleActivator(LogicalKeyboardKey.tab, shift: true): PreviousFocusIntent(),
-  SingleActivator(LogicalKeyboardKey.arrowLeft):
-      DirectionalFocusIntent(TraversalDirection.left),
-  SingleActivator(LogicalKeyboardKey.arrowRight):
-      DirectionalFocusIntent(TraversalDirection.right),
-  SingleActivator(LogicalKeyboardKey.arrowDown):
-      DirectionalFocusIntent(TraversalDirection.down),
-  SingleActivator(LogicalKeyboardKey.arrowUp):
-      DirectionalFocusIntent(TraversalDirection.up),
+  SingleActivator(LogicalKeyboardKey.arrowLeft): DirectionalFocusIntent(TraversalDirection.left),
+  SingleActivator(LogicalKeyboardKey.arrowRight): DirectionalFocusIntent(TraversalDirection.right),
+  SingleActivator(LogicalKeyboardKey.arrowDown): DirectionalFocusIntent(TraversalDirection.down),
+  SingleActivator(LogicalKeyboardKey.arrowUp): DirectionalFocusIntent(TraversalDirection.up),
 
   // Scrolling
-  SingleActivator(LogicalKeyboardKey.arrowUp, control: true):
-      ScrollIntent(direction: AxisDirection.up),
-  SingleActivator(LogicalKeyboardKey.arrowDown, control: true):
-      ScrollIntent(direction: AxisDirection.down),
-  SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
-      ScrollIntent(direction: AxisDirection.left),
-  SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
-      ScrollIntent(direction: AxisDirection.right),
-  SingleActivator(LogicalKeyboardKey.pageUp):
-      ScrollIntent(direction: AxisDirection.up, type: ScrollIncrementType.page),
-  SingleActivator(LogicalKeyboardKey.pageDown): ScrollIntent(
-      direction: AxisDirection.down, type: ScrollIncrementType.page),
+  SingleActivator(LogicalKeyboardKey.arrowUp, control: true): ScrollIntent(direction: AxisDirection.up),
+  SingleActivator(LogicalKeyboardKey.arrowDown, control: true): ScrollIntent(direction: AxisDirection.down),
+  SingleActivator(LogicalKeyboardKey.arrowLeft, control: true): ScrollIntent(direction: AxisDirection.left),
+  SingleActivator(LogicalKeyboardKey.arrowRight, control: true): ScrollIntent(direction: AxisDirection.right),
+  SingleActivator(LogicalKeyboardKey.pageUp): ScrollIntent(direction: AxisDirection.up, type: ScrollIncrementType.page),
+  SingleActivator(LogicalKeyboardKey.pageDown):
+      ScrollIntent(direction: AxisDirection.down, type: ScrollIncrementType.page),
 };
 
 /// Default shortcuts for the Apple platforms.
@@ -224,8 +201,7 @@ const Map<ShortcutActivator, Intent> defaultNonAppleShortcuts =
 /// web platforms during tests.
 ///
 /// This map must be kept up to date with [WidgetsApp._defaultAppleOsShortcuts].
-const Map<ShortcutActivator, Intent> defaultAppleShortcuts =
-    <ShortcutActivator, Intent>{
+const Map<ShortcutActivator, Intent> defaultAppleShortcuts = <ShortcutActivator, Intent>{
   // Activation
   SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
   SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
@@ -237,28 +213,19 @@ const Map<ShortcutActivator, Intent> defaultAppleShortcuts =
   // Keyboard traversal
   SingleActivator(LogicalKeyboardKey.tab): NextFocusIntent(),
   SingleActivator(LogicalKeyboardKey.tab, shift: true): PreviousFocusIntent(),
-  SingleActivator(LogicalKeyboardKey.arrowLeft):
-      DirectionalFocusIntent(TraversalDirection.left),
-  SingleActivator(LogicalKeyboardKey.arrowRight):
-      DirectionalFocusIntent(TraversalDirection.right),
-  SingleActivator(LogicalKeyboardKey.arrowDown):
-      DirectionalFocusIntent(TraversalDirection.down),
-  SingleActivator(LogicalKeyboardKey.arrowUp):
-      DirectionalFocusIntent(TraversalDirection.up),
+  SingleActivator(LogicalKeyboardKey.arrowLeft): DirectionalFocusIntent(TraversalDirection.left),
+  SingleActivator(LogicalKeyboardKey.arrowRight): DirectionalFocusIntent(TraversalDirection.right),
+  SingleActivator(LogicalKeyboardKey.arrowDown): DirectionalFocusIntent(TraversalDirection.down),
+  SingleActivator(LogicalKeyboardKey.arrowUp): DirectionalFocusIntent(TraversalDirection.up),
 
   // Scrolling
-  SingleActivator(LogicalKeyboardKey.arrowUp, meta: true):
-      ScrollIntent(direction: AxisDirection.up),
-  SingleActivator(LogicalKeyboardKey.arrowDown, meta: true):
-      ScrollIntent(direction: AxisDirection.down),
-  SingleActivator(LogicalKeyboardKey.arrowLeft, meta: true):
-      ScrollIntent(direction: AxisDirection.left),
-  SingleActivator(LogicalKeyboardKey.arrowRight, meta: true):
-      ScrollIntent(direction: AxisDirection.right),
-  SingleActivator(LogicalKeyboardKey.pageUp):
-      ScrollIntent(direction: AxisDirection.up, type: ScrollIncrementType.page),
-  SingleActivator(LogicalKeyboardKey.pageDown): ScrollIntent(
-      direction: AxisDirection.down, type: ScrollIncrementType.page),
+  SingleActivator(LogicalKeyboardKey.arrowUp, meta: true): ScrollIntent(direction: AxisDirection.up),
+  SingleActivator(LogicalKeyboardKey.arrowDown, meta: true): ScrollIntent(direction: AxisDirection.down),
+  SingleActivator(LogicalKeyboardKey.arrowLeft, meta: true): ScrollIntent(direction: AxisDirection.left),
+  SingleActivator(LogicalKeyboardKey.arrowRight, meta: true): ScrollIntent(direction: AxisDirection.right),
+  SingleActivator(LogicalKeyboardKey.pageUp): ScrollIntent(direction: AxisDirection.up, type: ScrollIncrementType.page),
+  SingleActivator(LogicalKeyboardKey.pageDown):
+      ScrollIntent(direction: AxisDirection.down, type: ScrollIncrementType.page),
 };
 
 /// Default shortcuts for web.
@@ -268,14 +235,12 @@ const Map<ShortcutActivator, Intent> defaultAppleShortcuts =
 /// web platforms during tests.
 ///
 /// This map must be kept up to date with [WidgetsApp._defaultWebShortcuts].
-const Map<ShortcutActivator, Intent> defaultWebShortcuts =
-    <ShortcutActivator, Intent>{
+const Map<ShortcutActivator, Intent> defaultWebShortcuts = <ShortcutActivator, Intent>{
   // Activation
   SingleActivator(LogicalKeyboardKey.space): PrioritizedIntents(
     orderedIntents: <Intent>[
       ActivateIntent(),
-      ScrollIntent(
-          direction: AxisDirection.down, type: ScrollIncrementType.page),
+      ScrollIntent(direction: AxisDirection.down, type: ScrollIncrementType.page),
     ],
   ),
   // On the web, enter activates buttons, but not other controls.
@@ -290,16 +255,11 @@ const Map<ShortcutActivator, Intent> defaultWebShortcuts =
   SingleActivator(LogicalKeyboardKey.tab, shift: true): PreviousFocusIntent(),
 
   // Scrolling
-  SingleActivator(LogicalKeyboardKey.arrowUp):
-      ScrollIntent(direction: AxisDirection.up),
-  SingleActivator(LogicalKeyboardKey.arrowDown):
-      ScrollIntent(direction: AxisDirection.down),
-  SingleActivator(LogicalKeyboardKey.arrowLeft):
-      ScrollIntent(direction: AxisDirection.left),
-  SingleActivator(LogicalKeyboardKey.arrowRight):
-      ScrollIntent(direction: AxisDirection.right),
-  SingleActivator(LogicalKeyboardKey.pageUp):
-      ScrollIntent(direction: AxisDirection.up, type: ScrollIncrementType.page),
-  SingleActivator(LogicalKeyboardKey.pageDown): ScrollIntent(
-      direction: AxisDirection.down, type: ScrollIncrementType.page),
+  SingleActivator(LogicalKeyboardKey.arrowUp): ScrollIntent(direction: AxisDirection.up),
+  SingleActivator(LogicalKeyboardKey.arrowDown): ScrollIntent(direction: AxisDirection.down),
+  SingleActivator(LogicalKeyboardKey.arrowLeft): ScrollIntent(direction: AxisDirection.left),
+  SingleActivator(LogicalKeyboardKey.arrowRight): ScrollIntent(direction: AxisDirection.right),
+  SingleActivator(LogicalKeyboardKey.pageUp): ScrollIntent(direction: AxisDirection.up, type: ScrollIncrementType.page),
+  SingleActivator(LogicalKeyboardKey.pageDown):
+      ScrollIntent(direction: AxisDirection.down, type: ScrollIncrementType.page),
 };

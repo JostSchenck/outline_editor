@@ -2,7 +2,7 @@
 // test tools taken from https://github.com/superlistapp/super_editor
 //
 import 'package:flutter_test/flutter_test.dart';
-import 'package:super_editor/src/core/document_selection.dart';
+import 'package:super_editor/super_editor.dart';
 import 'package:super_editor/src/infrastructure/links.dart';
 
 /// A [UrlLauncher] that logs each attempt to launch a URL, but doesn't
@@ -40,8 +40,7 @@ extension DragExtensions on WidgetTester {
     int frameCount = 10,
   }) async {
     final dragGesture = await startGesture(startLocation);
-    await dragContinuation(dragGesture, totalDragOffset,
-        frameCount: frameCount);
+    await dragContinuation(dragGesture, totalDragOffset, frameCount: frameCount);
 
     return dragGesture;
   }
@@ -68,8 +67,7 @@ extension DragExtensions on WidgetTester {
 ///
 /// Some node positions, like [TextNodePosition], have a concept of affinity (upstream/downstream),
 /// which is used when making particular selection decisions, but doesn't impact equivalency.
-Matcher selectionEquivalentTo(DocumentSelection expectedSelection) =>
-    EquivalentSelectionMatcher(expectedSelection);
+Matcher selectionEquivalentTo(DocumentSelection expectedSelection) => EquivalentSelectionMatcher(expectedSelection);
 
 /// A [Matcher] that compares two selections, ignoring selection affinities.
 ///
@@ -84,8 +82,7 @@ class EquivalentSelectionMatcher extends Matcher {
 
   @override
   Description describe(Description description) {
-    return description
-        .add("given selection is equivalent to expected selection");
+    return description.add("given selection is equivalent to expected selection");
   }
 
   @override
@@ -123,14 +120,12 @@ class EquivalentSelectionMatcher extends Matcher {
       return "The selection doesn't end at the expected node.\nExpected: $expectedSelection\nActual: $target";
     }
 
-    if (!target.base.nodePosition
-        .isEquivalentTo(expectedSelection.base.nodePosition)) {
+    if (!target.base.nodePosition.isEquivalentTo(expectedSelection.base.nodePosition)) {
       // The base node positions aren't the same.
       return 'The selection starts at the correct node, but at a wrong position.\nExpected: $expectedSelection\nActual: $target';
     }
 
-    if (!target.extent.nodePosition
-        .isEquivalentTo(expectedSelection.extent.nodePosition)) {
+    if (!target.extent.nodePosition.isEquivalentTo(expectedSelection.extent.nodePosition)) {
       // The extent node positions aren't the same.
       return 'The selection ends at the correct node, but at a wrong position.\nExpected: $expectedSelection\nActual: $target';
     }

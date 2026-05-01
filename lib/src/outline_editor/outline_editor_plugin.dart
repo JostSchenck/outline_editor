@@ -6,9 +6,8 @@ import 'package:outline_editor/src/outline_editor/keyboard_actions.dart';
 import 'package:outline_editor/src/reactions/node_visibility_reaction.dart';
 import 'package:outline_editor/src/reactions/outline_selection_reaction.dart';
 
-class OutlineEditorPlugin<T extends OutlineTreenode<T>>
-    extends SuperEditorPlugin {
-  const OutlineEditorPlugin({
+class OutlineEditorPlugin<T extends OutlineTreenode<T>> extends SuperEditorPlugin {
+  OutlineEditorPlugin({
     required this.editor,
     required this.documentLayoutKey,
     this.defaultTreenodeBuilder = basicOutlineTreenodeBuilder,
@@ -37,8 +36,7 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
         0,
         NodeVisibilityReaction(
           editor: editor,
-          documentLayoutResolver: () =>
-              documentLayoutKey.currentState as DocumentLayout,
+          documentLayoutResolver: () => documentLayoutKey.currentState as DocumentLayout,
         ));
     editor.reactionPipeline.insert(0, OutlineSelectionReaction<T>());
     editor.requestHandlers.addAll(
@@ -52,21 +50,17 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
         (editor, request) => request is InsertOutlineTreenodeRequest<T>
             ? InsertOutlineTreenodeCommand<T>(
                 existingTreenodeId: request.existingTreenodeId,
-                newTreenode:
-                    request.newTreenode ?? defaultTreenodeBuilder() as T,
+                newTreenode: request.newTreenode ?? defaultTreenodeBuilder() as T,
                 createChild: request.createChild,
                 treenodeIndex: request.treenodeIndex,
                 splitAtDocumentPosition: request.splitAtDocumentPosition,
                 // newDocumentNodeId: request.newDocumentNodeId,
-                moveCollapsedSelectionToInsertedNode:
-                    request.moveCollapsedSelectionToInsertedNode,
-                newDocumentNodeId:
-                    request.splitAtDocumentPosition != null ? uuid.v4() : null,
+                moveCollapsedSelectionToInsertedNode: request.moveCollapsedSelectionToInsertedNode,
+                newDocumentNodeId: request.splitAtDocumentPosition != null ? uuid.v4() : null,
               )
             : null,
         (editor, request) => request is DeleteOutlineTreenodeRequest
-            ? DeleteOutlineTreenodeCommand<T>(
-                outlineTreenodeId: request.outlineTreenodeId)
+            ? DeleteOutlineTreenodeCommand<T>(outlineTreenodeId: request.outlineTreenodeId)
             : null,
         (editor, request) => request is MergeOutlineTreenodesRequest
             ? MergeOutlineTreenodesCommand<T>(
@@ -74,13 +68,10 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
                 mergedTreenodeId: request.mergedTreenodeId,
               )
             : null,
-        (editor, request) =>
-            request is InsertDocumentNodeInOutlineTreenodeRequest
-                ? InsertDocumentNodeInTreenodeContentCommand<T>(
-                    documentNode: request.documentNode,
-                    outlineTreenodeId: request.outlineTreenodeId,
-                    index: request.index)
-                : null,
+        (editor, request) => request is InsertDocumentNodeInOutlineTreenodeRequest
+            ? InsertDocumentNodeInTreenodeContentCommand<T>(
+                documentNode: request.documentNode, outlineTreenodeId: request.outlineTreenodeId, index: request.index)
+            : null,
         (editor, request) => request is MoveDocumentNodeIntoTreenodeRequest
             ? MoveDocumentNodeIntoTreenodeCommand<T>(
                 documentNodeId: request.documentNodeId,
@@ -94,18 +85,14 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
                 index: request.index)
             : null,
         (editor, request) => request is HideShowContentNodesRequest
-            ? HideShowContentNodesCommand<T>(
-                treenodeId: request.treeNodeId,
-                hideContent: request.hideContent)
+            ? HideShowContentNodesCommand<T>(treenodeId: request.treeNodeId, hideContent: request.hideContent)
             : null,
         (editor, request) => request is MoveOutlineTreenodeRequest
-            ? MoveOutlineTreenodeCommand<T>(
-                treenodeId: request.treenodeId, newPath: request.newPath)
+            ? MoveOutlineTreenodeCommand<T>(treenodeId: request.treenodeId, newPath: request.newPath)
             : null,
         (editor, request) => request is ChangeTreenodeIndentationRequest
             ? ChangeTreenodeIndentationCommand<T>(
-                treenodeId: request.treenodeId,
-                moveUpInHierarchy: request.moveUpInHierarchy)
+                treenodeId: request.treenodeId, moveUpInHierarchy: request.moveUpInHierarchy)
             : null,
         ...addRequestHandlers,
       ],
@@ -116,8 +103,7 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
   void detach(Editor editor) {
     // editor.reactionPipeline
     //     .removeWhere((element) => element is OutlineStructureReaction);
-    editor.reactionPipeline
-        .removeWhere((element) => element is NodeVisibilityReaction);
+    editor.reactionPipeline.removeWhere((element) => element is NodeVisibilityReaction);
 
     // TODO: find a way to remove the request handlers. There is no analogon to getters like "componentBuilders"
   }
@@ -131,19 +117,16 @@ class OutlineEditorPlugin<T extends OutlineTreenode<T>>
         ),
         OutlineParagraphComponentBuilder(
           editor: editor,
-          inlineWidgetBuilders:
-              inlineWidgetBuilders ?? defaultInlineWidgetBuilders,
+          inlineWidgetBuilders: inlineWidgetBuilders ?? defaultInlineWidgetBuilders,
         ),
       ];
 
   @override
-  List<DocumentKeyboardAction> get keyboardActions => [
+  List<SuperEditorKeyboardAction> get keyboardActions => [
         upAndDownBehaviorWithModifiers<T>,
         // this keyboard action needs hideTextGlobally passed, so we encapsulate
         // it into a closure
-        (
-            {required SuperEditorContext editContext,
-            required KeyEvent keyEvent}) {
+        ({required SuperEditorContext editContext, required KeyEvent keyEvent}) {
           return enterInOutlineTreeDocument<T>(
             editContext: editContext,
             keyEvent: keyEvent,
